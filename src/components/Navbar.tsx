@@ -1,0 +1,157 @@
+"use client";
+
+import { LogIn, Menu, UserPlus, X } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+
+import { Button } from "@/components/button";
+import Logo from "@/components/Logo";
+import { Typography } from "@/components/typography";
+
+const navItems = [
+  { label: "Home", path: "/", isHash: false },
+  { label: "About", path: "/about", isHash: false },
+  { label: "Teams", path: "/standings", isHash: false },
+  { label: "Shops", path: "/shops", isHash: false },
+];
+
+export default function Navbar() {
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  return (
+    <nav
+      className={`fixed w-full z-50 transition-all duration-300 ${
+        isScrolled || pathname !== "/"
+          ? "bg-primary-900/95 backdrop-blur-md border-b border-primary-700 py-3"
+          : "bg-transparent py-6"
+      }`}
+    >
+      <div className="container mx-auto px-6 flex justify-between items-center">
+        <Link
+          href="/"
+          className="flex items-center gap-2 group"
+          onClick={() => window.scrollTo(0, 0)}
+        >
+          <Logo
+            variant="name"
+            color="white"
+            className="h-10! md:h-12! w-auto group-hover:brightness-110 transition-all"
+          />
+        </Link>
+
+        <div className="hidden md:flex items-center gap-6 lg:gap-10">
+          {navItems.map((item) => (
+            <Link
+              key={item.label}
+              href={item.path}
+              className={`text-gray-light hover:text-secondary-700 font-display font-semibold uppercase tracking-wider text-sm transition-colors relative group ${
+                pathname === item.path ? "text-secondary-700" : ""
+              }`}
+            >
+              <Typography.Small
+                as="span"
+                className="font-display font-semibold uppercase tracking-wider text-sm"
+              >
+                {item.label}
+              </Typography.Small>
+              <span
+                className={`absolute -bottom-1 left-0 h-0.5 bg-secondary-700 transition-all duration-300 ${
+                  pathname === item.path ? "w-full" : "w-0 group-hover:w-full"
+                }`}
+              />
+            </Link>
+          ))}
+          <div className="hidden md:flex items-center gap-2">
+            <Button.Secondary
+              variant="text"
+              size="sm"
+              className="cursor-pointer"
+              prefix={<LogIn size={18} />}
+            >
+              Login
+            </Button.Secondary>
+            <Button.Slant
+              variant="primary"
+              className="flex items-center gap-2 cursor-pointer"
+            >
+              <UserPlus size={18} />
+              Register
+            </Button.Slant>
+          </div>
+        </div>
+
+        <button
+          className="md:hidden text-gray-dark"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          aria-label="Toggle navigation"
+        >
+          <span
+            className={`inline-flex transition-transform duration-300 ${
+              isMobileMenuOpen ? "rotate-90" : "rotate-0"
+            }`}
+          >
+            {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
+          </span>
+        </button>
+      </div>
+
+      <div
+        className={`md:hidden absolute top-full left-0 w-full bg-primary-900 border-b border-primary-700 overflow-hidden transition-all duration-300 ease-out ${
+          isMobileMenuOpen
+            ? "max-h-130 opacity-100 translate-y-0"
+            : "max-h-0 opacity-0 -translate-y-2 pointer-events-none"
+        }`}
+      >
+        <div className="p-6 flex flex-col gap-4">
+          {navItems.map((item, index) => (
+            <Link
+              key={item.label}
+              href={item.path}
+              className={`text-gray-dark text-lg font-display uppercase tracking-wider py-2 border-b border-primary-700 transition-all duration-300 ${
+                isMobileMenuOpen
+                  ? "opacity-100 translate-x-0"
+                  : "opacity-0 -translate-x-2"
+              }`}
+              style={{ transitionDelay: `${80 + index * 60}ms` }}
+            >
+              <Typography.Paragraph
+                as="span"
+                className="font-display uppercase tracking-wider text-lg"
+              >
+                {item.label}
+              </Typography.Paragraph>
+            </Link>
+          ))}
+          <div
+            className={`flex flex-col gap-3 mt-4 transition-all duration-300 ${
+              isMobileMenuOpen
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-2"
+            }`}
+            style={{ transitionDelay: `${80 + navItems.length * 60}ms` }}
+          >
+            <Button.Secondary variant="outline" fullWidth>
+              Login
+            </Button.Secondary>
+            <Button.Primary variant="solid" fullWidth>
+              Register
+            </Button.Primary>
+          </div>
+        </div>
+      </div>
+    </nav>
+  );
+}

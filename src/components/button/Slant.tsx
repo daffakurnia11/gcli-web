@@ -49,7 +49,7 @@ export default function Slant({
       onClick={onClick}
       className={classNames(
         // Base styles
-        "font-display font-bold uppercase tracking-widest",
+        "font-display font-bold uppercase",
         "transition-all duration-200",
         "inline-flex items-center justify-center gap-2",
         "hover:scale-105 active:scale-100",

@@ -6,7 +6,6 @@ interface TextProps {
   disabled?: boolean;
   tabIndex?: number;
   as?: keyof JSX.IntrinsicElements;
-  isScrambled?: boolean;
 }
 
 export interface HeadingProps extends TextProps {

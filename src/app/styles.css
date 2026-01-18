@@ -82,3 +82,12 @@
   --color-gray-light: #C9C8C6;
   --color-gray-dark: #EFEFED;
 }
+
+/* Slanted clip path for CTA buttons */
+.clip-path-slant {
+  clip-path: polygon(10% 0, 100% 0, 100% 100%, 0% 100%);
+}
+
+.clip-path-slant-reverse {
+  clip-path: polygon(0 0, 90% 0, 100% 100%, 0% 100%);
+}

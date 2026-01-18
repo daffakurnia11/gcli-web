@@ -23,6 +23,9 @@ export default function Secondary({
   onClick,
   variant = "solid",
   size = "base",
+  prefix,
+  suffix,
+  fullWidth,
   ...props
 }: SecondaryProps) {
   return (
@@ -38,6 +41,9 @@ export default function Secondary({
       hoverTextColorClass={
         variant === "outline" ? "group-hover:text-black" : undefined
       }
+      prefix={prefix}
+      suffix={suffix}
+      fullWidth={fullWidth}
       {...props}
     >
       {children}

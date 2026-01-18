@@ -7,6 +7,9 @@ interface BaseButtonProps {
   as?: keyof JSX.IntrinsicElements;
   variant?: "solid" | "outline" | "text";
   size?: "lg" | "base" | "sm";
+  prefix?: React.ReactNode;
+  suffix?: React.ReactNode;
+  fullWidth?: boolean;
 }
 
 export type { BaseButtonProps };

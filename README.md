@@ -139,3 +139,64 @@ src/
 ## License
 
 MIT
+
+## Pages & Routes
+
+- `/` is a landing screen with a single CTA that links to the demo page.
+- `/demo` is the main design system showcase (Typography, Buttons, Logo, Colors).
+
+## Global Styles & Theme
+
+- Global styles live in `src/app/styles.css`.
+- Fonts are locally hosted and registered via `@font-face`:
+  - Display: Rajdhani (`public/Rajdhani/*`)
+  - Body: Inter variable (`public/Inter/*`)
+- Tailwind v4 theme tokens are defined with `@theme` and include:
+  - Primary: `--color-primary-900/700/500/300/100`
+  - Secondary (Gold): `--color-secondary-700/500/300`
+  - Tertiary: `--color-tertiary-red/white`
+  - Grays: `--color-gray-light/dark`
+
+## Component Details
+
+### Button Base Behavior
+
+- Base button uses uppercase display font, rounded-sm, and subtle translate/press motion.
+- Size tokens follow an 8pt grid:
+  - `lg`: 56px height, 18px text
+  - `base`: 44px height, 16px text
+  - `sm`: 36px height, 14px text
+- `outline` variants include a sliding background highlight on hover.
+
+**Common Button Props (Primary/Secondary):**
+- `variant`: `"solid"` | `"outline"` | `"text"`
+- `size`: `"lg"` | `"base"` | `"sm"`
+- `prefix` / `suffix`: React nodes for leading/trailing icons
+- `fullWidth`: boolean for block-level buttons
+
+### Slant Button
+
+- Uses a slanted clip-path (`.clip-path-slant` / `.clip-path-slant-reverse`) for the CTA look.
+- Size tokens:
+  - `lg`: 56px height, 18px text
+  - `base`: 48px height, 16px text
+  - `sm`: 40px height, 14px text
+
+**Slant Props:**
+- `variant`: `"primary"` | `"secondary"`
+- `slant`: `"left"` | `"right"`
+- `size`: `"lg"` | `"base"` | `"sm"`
+- `prefix` / `suffix`, `fullWidth`
+
+### Typography
+
+- `Heading` supports `level` 1–6 and `type` `"heading"` | `"display"`.
+- `Paragraph` defaults to `text-sm sm:text-base`.
+- `Small` defaults to `text-xs`.
+
+### Logo
+
+- Uses Next.js `Image` with local assets in `public/Logo`.
+- Variants:
+  - `variant`: `"icon"` | `"name"`
+  - `color`: `"black"` | `"white"`

@@ -23,6 +23,9 @@ export default function Primary({
   onClick,
   variant = "solid",
   size = "base",
+  prefix,
+  suffix,
+  fullWidth,
   ...props
 }: PrimaryProps) {
   return (
@@ -38,6 +41,9 @@ export default function Primary({
       hoverTextColorClass={
         variant === "outline" ? "group-hover:text-black" : undefined
       }
+      prefix={prefix}
+      suffix={suffix}
+      fullWidth={fullWidth}
       {...props}
     >
       {children}

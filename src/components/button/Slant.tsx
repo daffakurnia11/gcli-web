@@ -22,6 +22,10 @@ export interface SlantProps {
   onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
   variant?: "primary" | "secondary";
   slant?: "left" | "right";
+  size?: "lg" | "base" | "sm";
+  prefix?: React.ReactNode;
+  suffix?: React.ReactNode;
+  fullWidth?: boolean;
 }
 
 export default function Slant({
@@ -31,10 +35,13 @@ export default function Slant({
   type = "button",
   onClick,
   variant = "primary",
-  size = "base",
   slant = "left",
+  size = "base",
+  prefix,
+  suffix,
+  fullWidth,
   ...props
-}: SlantProps & { size?: "lg" | "base" | "sm" }) {
+}: SlantProps) {
   return (
     <button
       type={type}
@@ -47,6 +54,7 @@ export default function Slant({
         "inline-flex items-center justify-center gap-2",
         "hover:scale-105 active:scale-100",
         "clip-path-slant",
+        fullWidth && "w-full",
 
         // Slant direction
         slant === "right" && "clip-path-slant-reverse",
@@ -60,11 +68,13 @@ export default function Slant({
         // Disabled state
         disabled && "opacity-50 cursor-not-allowed hover:scale-100",
 
-        className,
+        className
       )}
       {...props}
     >
+      {prefix && <span className="flex-shrink-0">{prefix}</span>}
       {children}
+      {suffix && <span className="flex-shrink-0">{suffix}</span>}
     </button>
   );
 }

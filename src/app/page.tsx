@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { Navbar } from "@/components";
+import { Footer, Navbar } from "@/components";
 import { Button } from "@/components/button";
 
 export default function Home() {
@@ -14,6 +14,7 @@ export default function Home() {
           </Button.Slant>
         </Link>
       </div>
+      <Footer />
     </main>
   );
 }

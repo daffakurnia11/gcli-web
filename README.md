@@ -1,36 +1,141 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GCLI Design System
+
+> A component library and design system for GCLI (GTA Competitive League Indonesia) - a FiveM competitive gaming server.
+
+## Features
+
+- **Typography System** - Heading, Paragraph, Small components with namespace exports
+- **Button Components** - Primary, Secondary, and Slant variants with animations
+- **Logo Component** - Dynamic sizing with icon/name and color variants
+- **Tailwind CSS v4** - Modern utility-first styling
+- **TypeScript** - Full type safety
+- **Next.js 16** - App Router architecture
+
+## Tech Stack
+
+- **Framework:** Next.js 16.1.3
+- **React:** 19.2.3
+- **Styling:** Tailwind CSS v4
+- **TypeScript:** 5.9.3
+- **Fonts:** Rajdhani (display), Inter (body)
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+# Install dependencies
+pnpm install
+
+# Run development server
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to view the design system showcase.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command | Description |
+|---------|-------------|
+| `pnpm dev` | Start development server |
+| `pnpm build` | Build for production |
+| `pnpm start` | Start production server |
+| `pnpm lint` | Run ESLint |
+| `pnpm lint:fix` | Auto-fix ESLint issues |
+| `pnpm typecheck` | Run TypeScript check |
+| `pnpm check` | Run both ESLint + TypeScript |
 
-## Learn More
+## Components
 
-To learn more about Next.js, take a look at the following resources:
+### Typography
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```tsx
+import { Typography } from "@/components/typography";
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+<Typography.Heading level={1} type="display">
+  GCLI League
+</Typography.Heading>
+<Typography.Paragraph>
+  Join the most competitive FiveM server in Indonesia.
+</Typography.Paragraph>
+<Typography.Small>Season 1 Now Live</Typography.Small>
+```
 
-## Deploy on Vercel
+### Button
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```tsx
+import { Button } from "@/components/button";
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+// Primary (gold theme)
+<Button.Primary variant="solid" size="base">
+  Join Now
+</Button.Primary>
+
+// Secondary (neutral theme)
+<Button.Secondary variant="outline" size="base">
+  Learn More
+</Button.Secondary>
+
+// Slant (with clip-path effect)
+<Button.Slant variant="primary" size="lg" slant="left">
+  Join Discord
+</Button.Slant>
+```
+
+**Button Props:**
+- `variant`: `"solid"` | `"outline"` | `"text"`
+- `size`: `"lg"` | `"base"` | `"sm"`
+
+### Logo
+
+```tsx
+import { Logo } from "@/components";
+
+<Logo variant="icon" color="white" />
+<Logo variant="name" color="black" />
+```
+
+**Logo Props:**
+- `variant`: `"icon"` | `"name"`
+- `color`: `"black"` | `"white"`
+
+## Color Palette
+
+| Name | Value |
+|------|-------|
+| Primary 900 | `#141414` |
+| Primary 700 | `#2D2D2D` |
+| Primary 100 | `#D7D7D7` |
+| Secondary 700 | `#D19A1C` (Gold) |
+| Secondary 500 | `#DDB247` |
+| Tertiary Red | `#BA0006` |
+
+## Project Structure
+
+```
+src/
+├── app/                    # Next.js App Router
+│   ├── layout.tsx          # Root layout
+│   ├── page.tsx            # Design system showcase
+│   └── styles.css          # Global styles + theme
+├── components/
+│   ├── button/             # Button components
+│   │   ├── Base.tsx         # Base button logic
+│   │   ├── Primary.tsx      # Primary (gold)
+│   │   ├── Secondary.tsx    # Secondary (neutral)
+│   │   ├── Slant.tsx        # Slant (CTA with clip-path)
+│   │   └── index.tsx        # Barrel exports
+│   ├── typography/         # Typography components
+│   │   ├── Heading.tsx
+│   │   ├── Paragraph.tsx
+│   │   ├── Small.tsx
+│   │   └── index.tsx
+│   ├── Logo.tsx            # Logo component
+│   └── index.tsx           # Component barrel export
+└── types/                  # TypeScript definitions
+    ├── Button.d.ts
+    ├── Logo.d.ts
+    └── Typography.d.ts
+```
+
+## License
+
+MIT

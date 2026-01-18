@@ -1,4 +1,5 @@
 import { Typography } from "@/components/typography";
+import { Logo } from "@/components";
 import { Button } from "@/components/button";
 
 export default function Home() {
@@ -11,10 +12,15 @@ export default function Home() {
             Typography Namespace
           </Typography.Heading>
           <Typography.Paragraph className="text-xs text-primary-300 mb-2">
-            &lt;Typography.Heading /&gt;, &lt;Typography.Paragraph /&gt;, &lt;Typography.Small /&gt;
+            &lt;Typography.Heading /&gt;, &lt;Typography.Paragraph /&gt;,
+            &lt;Typography.Small /&gt;
           </Typography.Paragraph>
           <div className="bg-primary-700 p-4 rounded-lg space-y-2 border-l-2 border-secondary-700">
-            <Typography.Heading level={3} type="display" className="text-secondary-500">
+            <Typography.Heading
+              level={3}
+              type="display"
+              className="text-secondary-500"
+            >
               GCLI League
             </Typography.Heading>
             <Typography.Paragraph>
@@ -32,7 +38,11 @@ export default function Home() {
             Display Type (Rajdhani)
           </Typography.Heading>
           <div className="space-y-4 border-l-2 border-secondary-700 pl-6">
-            <Typography.Heading type="display" level={1} className="text-6xl sm:text-7xl">
+            <Typography.Heading
+              type="display"
+              level={1}
+              className="text-6xl sm:text-7xl"
+            >
               HERO DISPLAY
             </Typography.Heading>
             <Typography.Heading type="display" level={2} className="text-5xl">
@@ -53,12 +63,24 @@ export default function Home() {
             Heading Type (Inter)
           </Typography.Heading>
           <div className="space-y-3 border-l-2 border-primary-700 pl-6">
-            <Typography.Heading level={1}>Heading Level 1 - Main Title</Typography.Heading>
-            <Typography.Heading level={2}>Heading Level 2 - Section Title</Typography.Heading>
-            <Typography.Heading level={3}>Heading Level 3 - Subsection</Typography.Heading>
-            <Typography.Heading level={4}>Heading Level 4 - Component Title</Typography.Heading>
-            <Typography.Heading level={5}>Heading Level 5 - Small Title</Typography.Heading>
-            <Typography.Heading level={6}>Heading Level 6 - Micro Title</Typography.Heading>
+            <Typography.Heading level={1}>
+              Heading Level 1 - Main Title
+            </Typography.Heading>
+            <Typography.Heading level={2}>
+              Heading Level 2 - Section Title
+            </Typography.Heading>
+            <Typography.Heading level={3}>
+              Heading Level 3 - Subsection
+            </Typography.Heading>
+            <Typography.Heading level={4}>
+              Heading Level 4 - Component Title
+            </Typography.Heading>
+            <Typography.Heading level={5}>
+              Heading Level 5 - Small Title
+            </Typography.Heading>
+            <Typography.Heading level={6}>
+              Heading Level 6 - Micro Title
+            </Typography.Heading>
           </div>
         </section>
 
@@ -69,20 +91,39 @@ export default function Home() {
           </Typography.Heading>
           <div className="space-y-2 border-l-2 border-primary-700 pl-6">
             <div className="flex items-center gap-4">
-              <code className="text-xs text-secondary-300">level={3} as="h1"</code>
-              <Typography.Heading level={3} as="h1" className="text-tertiary-red">
+              <code className="text-xs text-secondary-300">
+                level={3} as="h1"
+              </code>
+              <Typography.Heading
+                level={3}
+                as="h1"
+                className="text-tertiary-red"
+              >
                 H1 element with Level 3 styles
               </Typography.Heading>
             </div>
             <div className="flex items-center gap-4">
-              <code className="text-xs text-secondary-300">level={2} as="div"</code>
-              <Typography.Heading level={2} as="div" className="text-secondary-500">
+              <code className="text-xs text-secondary-300">
+                level={2} as="div"
+              </code>
+              <Typography.Heading
+                level={2}
+                as="div"
+                className="text-secondary-500"
+              >
                 Div element with Level 2 styles
               </Typography.Heading>
             </div>
             <div className="flex items-center gap-4">
-              <code className="text-xs text-secondary-300">type="display" as="span"</code>
-              <Typography.Heading type="display" level={4} as="span" className="text-tertiary-white">
+              <code className="text-xs text-secondary-300">
+                type="display" as="span"
+              </code>
+              <Typography.Heading
+                type="display"
+                level={4}
+                as="span"
+                className="text-tertiary-white"
+              >
                 Span element with Display type
               </Typography.Heading>
             </div>
@@ -104,11 +145,15 @@ export default function Home() {
               information.
             </Typography.Paragraph>
             <Typography.Paragraph className="text-secondary-500 text-lg">
-              Emphasized paragraph with larger size and gold color for highlights.
+              Emphasized paragraph with larger size and gold color for
+              highlights.
             </Typography.Paragraph>
 
             {/* Custom element */}
-            <Typography.Paragraph as="div" className="bg-primary-700 p-4 rounded">
+            <Typography.Paragraph
+              as="div"
+              className="bg-primary-700 p-4 rounded"
+            >
               Paragraph as div element with custom background styling.
             </Typography.Paragraph>
           </div>
@@ -123,12 +168,17 @@ export default function Home() {
             <div className="flex items-center gap-2">
               <Typography.Small>Default small text (span)</Typography.Small>
               <span className="text-primary-500">|</span>
-              <Typography.Small className="text-primary-300">Muted small text</Typography.Small>
+              <Typography.Small className="text-primary-300">
+                Muted small text
+              </Typography.Small>
             </div>
             <Typography.Small className="text-secondary-500">
               Gold colored small text for labels and tags
             </Typography.Small>
-            <Typography.Small as="div" className="bg-primary-700 inline-block px-3 py-1 rounded">
+            <Typography.Small
+              as="div"
+              className="bg-primary-700 inline-block px-3 py-1 rounded"
+            >
               Small as div - styled like a badge
             </Typography.Small>
             <Typography.Small as="p" className="text-gray-light">
@@ -143,7 +193,11 @@ export default function Home() {
             Combined Example
           </Typography.Heading>
           <article className="bg-primary-700 p-6 rounded-lg space-y-4">
-            <Typography.Heading type="display" level={2} className="text-secondary-700">
+            <Typography.Heading
+              type="display"
+              level={2}
+              className="text-secondary-700"
+            >
               GCLI League Season 1
             </Typography.Heading>
             <Typography.Paragraph>
@@ -151,9 +205,13 @@ export default function Home() {
               through factions, climb the leaderboard, and prove your dominance.
             </Typography.Paragraph>
             <div className="flex gap-4 text-sm">
-              <Typography.Small className="text-secondary-500">128 Players Online</Typography.Small>
+              <Typography.Small className="text-secondary-500">
+                128 Players Online
+              </Typography.Small>
               <span className="text-primary-500">•</span>
-              <Typography.Small className="text-tertiary-red">Live Season</Typography.Small>
+              <Typography.Small className="text-tertiary-red">
+                Live Season
+              </Typography.Small>
             </div>
           </article>
         </section>
@@ -210,7 +268,9 @@ export default function Home() {
 
           {/* Secondary Variant */}
           <div className="space-y-3 border-l-2 border-primary-700 pl-6 mt-6">
-            <Typography.Heading level={3}>Secondary (Neutral)</Typography.Heading>
+            <Typography.Heading level={3}>
+              Secondary (Neutral)
+            </Typography.Heading>
             <Typography.Paragraph className="text-xs text-primary-300 mb-2">
               &lt;Button.Secondary /&gt; with slide animation
             </Typography.Paragraph>
@@ -343,6 +403,123 @@ export default function Home() {
               <Button.Slant variant="secondary" size="lg">
                 Visit Store
               </Button.Slant>
+            </div>
+          </div>
+        </section>
+
+        {/* ===== LOGO SECTION ===== */}
+        <section className="space-y-4">
+          <Typography.Heading level={2} className="text-secondary-500">
+            Logo Component
+          </Typography.Heading>
+          <Typography.Paragraph className="text-xs text-primary-300 mb-2">
+            &lt;Logo variant="icon|name" color="black|white" /&gt; - Dynamic
+            container sizing
+          </Typography.Paragraph>
+
+          {/* Icon Variants */}
+          <div className="space-y-3 border-l-2 border-secondary-700 pl-6">
+            <Typography.Heading level={3}>Icon Variant</Typography.Heading>
+            <div className="flex flex-wrap items-end gap-4">
+              <div className="w-16 h-16">
+                <Logo variant="icon" color="white" />
+              </div>
+              <div className="w-24 h-24">
+                <Logo variant="icon" color="white" />
+              </div>
+              <div className="w-32 h-32">
+                <Logo variant="icon" color="white" />
+              </div>
+              <div className="w-16 h-16 bg-white rounded">
+                <Logo variant="icon" color="black" />
+              </div>
+              <div className="w-24 h-24 bg-white rounded">
+                <Logo variant="icon" color="white" />
+              </div>
+              <div className="w-32 h-32 bg-white rounded">
+                <Logo variant="icon" color="white" />
+              </div>
+            </div>
+          </div>
+
+          {/* Name Variants */}
+          <div className="space-y-3 border-l-2 border-primary-700 pl-6 mt-6">
+            <Typography.Heading level={3}>Name Variant</Typography.Heading>
+            <div className="flex flex-wrap items-end gap-4">
+              <div className="w-32 h-16">
+                <Logo variant="name" color="white" />
+              </div>
+              <div className="w-48 h-24">
+                <Logo variant="name" color="white" />
+              </div>
+              <div className="w-64 h-32">
+                <Logo variant="name" color="white" />
+              </div>
+            </div>
+            <div className="flex flex-wrap items-end gap-4">
+              <div className="w-32 h-16 bg-white rounded">
+                <Logo variant="name" color="black" />
+              </div>
+              <div className="w-48 h-24 bg-white rounded">
+                <Logo variant="name" color="white" />
+              </div>
+              <div className="w-64 h-32 bg-white rounded">
+                <Logo variant="name" color="white" />
+              </div>
+            </div>
+          </div>
+
+          {/* Real Examples */}
+          <div className="space-y-3 border-l-2 border-secondary-700 pl-6 mt-6">
+            <Typography.Heading level={3}>Real Examples</Typography.Heading>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* Hero style */}
+              <div className="col-span-3 bg-gradient-to-br from-primary-900 to-secondary-700 p-8 rounded-lg flex flex-col items-center justify-center">
+                <div className="w-32 h-32 mb-4">
+                  <Logo variant="icon" color="white" />
+                </div>
+                <Typography.Heading
+                  type="display"
+                  level={2}
+                  className="text-white text-center uppercase"
+                >
+                  GTA <span className="text-secondary-500">Competitive</span>{" "}
+                  League
+                </Typography.Heading>
+              </div>
+              {/* Navbar style */}
+              <div>
+                <Typography.Heading level={6} className="mb-3">
+                  Navbar Usage
+                </Typography.Heading>
+                <div className="bg-primary-900 p-6 rounded-lg flex items-center justify-center">
+                  <div className="w-48 h-12">
+                    <Logo variant="name" color="white" />
+                  </div>
+                </div>
+              </div>
+              {/* Footer style */}
+              <div>
+                <Typography.Heading level={6} className="mb-3">
+                  Footer Usage
+                </Typography.Heading>
+                <div className="bg-primary-700 p-6 rounded-lg flex items-center justify-center">
+                  <div className="w-48 h-12">
+                    <Logo variant="name" color="white" />
+                  </div>
+                </div>
+              </div>
+              {/* Card style */}
+              <div>
+                <Typography.Heading level={6} className="mb-3">
+                  Card Usage
+                </Typography.Heading>
+                <div className="bg-primary-900 border-2 border-secondary-700 p-6 rounded-lg">
+                  <div className="w-full h-24 flex items-center justify-center">
+                    <Logo variant="name" color="white" />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>

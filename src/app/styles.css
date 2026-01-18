@@ -1,1 +1,84 @@
 @import "tailwindcss";
+
+/* Rajdhani Font */
+@font-face {
+  font-family: 'Rajdhani';
+  src: url('/Rajdhani/Rajdhani-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Rajdhani';
+  src: url('/Rajdhani/Rajdhani-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Rajdhani';
+  src: url('/Rajdhani/Rajdhani-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Rajdhani';
+  src: url('/Rajdhani/Rajdhani-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Rajdhani';
+  src: url('/Rajdhani/Rajdhani-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+/* Inter Font - Variable */
+@font-face {
+  font-family: 'Inter';
+  src: url('/Inter/Inter-VariableFont_opsz,wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Inter';
+  src: url('/Inter/Inter-Italic-VariableFont_opsz,wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: italic;
+}
+
+@layer base {
+  .font-display {
+    font-family: 'Rajdhani', sans-serif;
+  }
+
+  .font-sans {
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+@theme {
+  /* Primary */
+  --color-primary-900: #141414;
+  --color-primary-700: #2D2D2D;
+  --color-primary-500: #484848;
+  --color-primary-300: #8C8C8C;
+  --color-primary-100: #D7D7D7;
+
+  /* Secondary (Gold) */
+  --color-secondary-700: #D19A1C;
+  --color-secondary-500: #DDB247;
+  --color-secondary-300: #F6CD6B;
+
+  /* Tertiary */
+  --color-tertiary-red: #BA0006;
+  --color-tertiary-white: #FFFFFF;
+
+  /* Gray */
+  --color-gray-light: #C9C8C6;
+  --color-gray-dark: #EFEFED;
+}

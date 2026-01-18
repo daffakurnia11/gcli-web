@@ -1,6 +1,6 @@
-import { Typography } from "@/components/typography";
 import { Logo } from "@/components";
 import { Button } from "@/components/button";
+import { Typography } from "@/components/typography";
 
 export default function Home() {
   return (
@@ -92,7 +92,7 @@ export default function Home() {
           <div className="space-y-2 border-l-2 border-primary-700 pl-6">
             <div className="flex items-center gap-4">
               <code className="text-xs text-secondary-300">
-                level={3} as="h1"
+                level={3} as=&quot;h1&quot;
               </code>
               <Typography.Heading
                 level={3}
@@ -104,7 +104,7 @@ export default function Home() {
             </div>
             <div className="flex items-center gap-4">
               <code className="text-xs text-secondary-300">
-                level={2} as="div"
+                level={2} as=&quot;div&quot;
               </code>
               <Typography.Heading
                 level={2}
@@ -116,7 +116,7 @@ export default function Home() {
             </div>
             <div className="flex items-center gap-4">
               <code className="text-xs text-secondary-300">
-                type="display" as="span"
+                type=&quot;display&quot; as=&quot;span&quot;
               </code>
               <Typography.Heading
                 type="display"
@@ -229,24 +229,24 @@ export default function Home() {
               &lt;Button.Primary /&gt;
             </Typography.Paragraph>
             <div className="flex flex-wrap gap-3">
-              <Button.Primary style="solid" size="lg">
+              <Button.Primary variant="solid" size="lg">
                 Primary Large
               </Button.Primary>
-              <Button.Primary style="solid" size="base">
+              <Button.Primary variant="solid" size="base">
                 Primary Base
               </Button.Primary>
-              <Button.Primary style="solid" size="sm">
+              <Button.Primary variant="solid" size="sm">
                 Primary Small
               </Button.Primary>
             </div>
             <div className="flex flex-wrap gap-3">
-              <Button.Primary style="outline" size="lg">
+              <Button.Primary variant="outline" size="lg">
                 Outline Large
               </Button.Primary>
-              <Button.Primary style="outline" size="base">
+              <Button.Primary variant="outline" size="base">
                 Outline Base
               </Button.Primary>
-              <Button.Primary style="outline" size="sm">
+              <Button.Primary variant="outline" size="sm">
                 Outline Small
               </Button.Primary>
             </div>
@@ -254,13 +254,13 @@ export default function Home() {
               ✨ Outline buttons have slide-in fill animation on hover
             </Typography.Small>
             <div className="flex flex-wrap gap-3">
-              <Button.Primary style="text" size="lg">
+              <Button.Primary variant="text" size="lg">
                 Text Large
               </Button.Primary>
-              <Button.Primary style="text" size="base">
+              <Button.Primary variant="text" size="base">
                 Text Base
               </Button.Primary>
-              <Button.Primary style="text" size="sm">
+              <Button.Primary variant="text" size="sm">
                 Text Small
               </Button.Primary>
             </div>
@@ -275,35 +275,35 @@ export default function Home() {
               &lt;Button.Secondary /&gt; with slide animation
             </Typography.Paragraph>
             <div className="flex flex-wrap gap-3">
-              <Button.Secondary style="solid" size="lg">
+              <Button.Secondary variant="solid" size="lg">
                 Secondary Large
               </Button.Secondary>
-              <Button.Secondary style="solid" size="base">
+              <Button.Secondary variant="solid" size="base">
                 Secondary Base
               </Button.Secondary>
-              <Button.Secondary style="solid" size="sm">
+              <Button.Secondary variant="solid" size="sm">
                 Secondary Small
               </Button.Secondary>
             </div>
             <div className="flex flex-wrap gap-3">
-              <Button.Secondary style="outline" size="lg">
+              <Button.Secondary variant="outline" size="lg">
                 Outline Large
               </Button.Secondary>
-              <Button.Secondary style="outline" size="base">
+              <Button.Secondary variant="outline" size="base">
                 Outline Base
               </Button.Secondary>
-              <Button.Secondary style="outline" size="sm">
+              <Button.Secondary variant="outline" size="sm">
                 Outline Small
               </Button.Secondary>
             </div>
             <div className="flex flex-wrap gap-3">
-              <Button.Secondary style="text" size="lg">
+              <Button.Secondary variant="text" size="lg">
                 Text Large
               </Button.Secondary>
-              <Button.Secondary style="text" size="base">
+              <Button.Secondary variant="text" size="base">
                 Text Base
               </Button.Secondary>
-              <Button.Secondary style="text" size="sm">
+              <Button.Secondary variant="text" size="sm">
                 Text Small
               </Button.Secondary>
             </div>
@@ -313,10 +313,10 @@ export default function Home() {
           <div className="space-y-3 border-l-2 border-primary-700 pl-6 mt-6">
             <Typography.Heading level={3}>Disabled State</Typography.Heading>
             <div className="flex flex-wrap gap-3">
-              <Button.Primary style="solid" size="base" disabled>
+              <Button.Primary variant="solid" size="base" disabled>
                 Disabled Primary
               </Button.Primary>
-              <Button.Secondary style="solid" size="base" disabled>
+              <Button.Secondary variant="solid" size="base" disabled>
                 Disabled Secondary
               </Button.Secondary>
             </div>
@@ -326,13 +326,13 @@ export default function Home() {
           <div className="space-y-3 border-l-2 border-primary-700 pl-6 mt-6">
             <Typography.Heading level={3}>Usage Examples</Typography.Heading>
             <div className="flex flex-wrap gap-3">
-              <Button.Primary style="solid" size="lg">
+              <Button.Primary variant="solid" size="lg">
                 Join Now
               </Button.Primary>
-              <Button.Secondary style="outline" size="base">
+              <Button.Secondary variant="outline" size="base">
                 Learn More
               </Button.Secondary>
-              <Button.Secondary style="text" size="sm">
+              <Button.Secondary variant="text" size="sm">
                 View Leaderboard
               </Button.Secondary>
             </div>
@@ -413,8 +413,8 @@ export default function Home() {
             Logo Component
           </Typography.Heading>
           <Typography.Paragraph className="text-xs text-primary-300 mb-2">
-            &lt;Logo variant="icon|name" color="black|white" /&gt; - Dynamic
-            container sizing
+            &lt;Logo variant=&quot;icon|name&quot; color=&quot;black|white&quot;
+            /&gt; - Dynamic container sizing
           </Typography.Paragraph>
 
           {/* Icon Variants */}
@@ -531,51 +531,51 @@ export default function Home() {
           </Typography.Heading>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="space-y-1">
-              <div className="h-16 bg-primary-900 rounded border border-primary-700"></div>
+              <div className="h-16 bg-primary-900 rounded border border-primary-700" />
               <Typography.Small>primary-900</Typography.Small>
             </div>
             <div className="space-y-1">
-              <div className="h-16 bg-primary-700 rounded"></div>
+              <div className="h-16 bg-primary-700 rounded" />
               <Typography.Small>primary-700</Typography.Small>
             </div>
             <div className="space-y-1">
-              <div className="h-16 bg-primary-500 rounded"></div>
+              <div className="h-16 bg-primary-500 rounded" />
               <Typography.Small>primary-500</Typography.Small>
             </div>
             <div className="space-y-1">
-              <div className="h-16 bg-primary-300 rounded"></div>
+              <div className="h-16 bg-primary-300 rounded" />
               <Typography.Small>primary-300</Typography.Small>
             </div>
             <div className="space-y-1">
-              <div className="h-16 bg-primary-100 rounded"></div>
+              <div className="h-16 bg-primary-100 rounded" />
               <Typography.Small>primary-100</Typography.Small>
             </div>
             <div className="space-y-1">
-              <div className="h-16 bg-secondary-700 rounded"></div>
+              <div className="h-16 bg-secondary-700 rounded" />
               <Typography.Small>secondary-700</Typography.Small>
             </div>
             <div className="space-y-1">
-              <div className="h-16 bg-secondary-500 rounded"></div>
+              <div className="h-16 bg-secondary-500 rounded" />
               <Typography.Small>secondary-500</Typography.Small>
             </div>
             <div className="space-y-1">
-              <div className="h-16 bg-secondary-300 rounded"></div>
+              <div className="h-16 bg-secondary-300 rounded" />
               <Typography.Small>secondary-300</Typography.Small>
             </div>
             <div className="space-y-1">
-              <div className="h-16 bg-tertiary-red rounded"></div>
+              <div className="h-16 bg-tertiary-red rounded" />
               <Typography.Small>tertiary-red</Typography.Small>
             </div>
             <div className="space-y-1">
-              <div className="h-16 bg-tertiary-white rounded"></div>
+              <div className="h-16 bg-tertiary-white rounded" />
               <Typography.Small>tertiary-white</Typography.Small>
             </div>
             <div className="space-y-1">
-              <div className="h-16 bg-gray-light rounded"></div>
+              <div className="h-16 bg-gray-light rounded" />
               <Typography.Small>gray-light</Typography.Small>
             </div>
             <div className="space-y-1">
-              <div className="h-16 bg-gray-dark rounded"></div>
+              <div className="h-16 bg-gray-dark rounded" />
               <Typography.Small>gray-dark</Typography.Small>
             </div>
           </div>

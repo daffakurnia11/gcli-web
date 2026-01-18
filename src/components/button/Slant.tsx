@@ -1,12 +1,11 @@
-import { BaseButtonProps } from "@/types/Button";
 import classNames from "classnames";
 import React from "react";
 
 // Size styles for Slant buttons
-const sizeStyles: Record<Required<BaseButtonProps>["size"], string> = {
-  lg: "h-14 px-10 text-xl",     // 56px height, 18px font
-  base: "h-12 px-8 text-lg",    // 48px height, 16px font
-  sm: "h-10 px-6 text-base",    // 40px height, 14px font
+const sizeStyles: Record<"lg" | "base" | "sm", string> = {
+  lg: "h-14 px-10 text-xl", // 56px height, 18px font
+  base: "h-12 px-8 text-lg", // 48px height, 16px font
+  sm: "h-10 px-6 text-base", // 40px height, 14px font
 };
 
 // Variant styles
@@ -15,7 +14,12 @@ const variantStyles: Record<"primary" | "secondary", string> = {
   secondary: "bg-primary-100 text-black hover:bg-gray-light",
 };
 
-export interface SlantProps extends BaseButtonProps {
+export interface SlantProps {
+  children: React.ReactNode | string;
+  className?: string;
+  disabled?: boolean;
+  type?: "button" | "submit" | "reset";
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
   variant?: "primary" | "secondary";
   slant?: "left" | "right";
 }
@@ -30,7 +34,7 @@ export default function Slant({
   size = "base",
   slant = "left",
   ...props
-}: SlantProps) {
+}: SlantProps & { size?: "lg" | "base" | "sm" }) {
   return (
     <button
       type={type}
@@ -48,15 +52,15 @@ export default function Slant({
         slant === "right" && "clip-path-slant-reverse",
 
         // Size
-        sizeStyles[size],
+        sizeStyles[size || "base"],
 
         // Variant
-        variantStyles[variant],
+        variantStyles[variant || "primary"],
 
         // Disabled state
         disabled && "opacity-50 cursor-not-allowed hover:scale-100",
 
-        className
+        className,
       )}
       {...props}
     >

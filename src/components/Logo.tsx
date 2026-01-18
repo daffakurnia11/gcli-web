@@ -1,8 +1,12 @@
-import { LogoProps } from "@/types/Logo";
 import classNames from "classnames";
-import React from "react";
+import Image from "next/image";
 
-const logoPaths: Record<LogoProps["variant"], Record<LogoProps["color"], string>> = {
+import { LogoProps } from "@/types/Logo";
+
+const logoPaths: Record<
+  NonNullable<LogoProps["variant"]>,
+  Record<NonNullable<LogoProps["color"]>, string>
+> = {
   icon: {
     black: "/Logo/logo-black.png",
     white: "/Logo/logo-white.png",
@@ -19,9 +23,12 @@ export default function Logo({
   color = "white",
 }: LogoProps) {
   return (
-    <img
+    <Image
       src={logoPaths[variant][color]}
       alt="GCLI Logo"
+      width={0}
+      height={0}
+      sizes="100vw"
       className={classNames("w-full h-full object-contain", className)}
     />
   );

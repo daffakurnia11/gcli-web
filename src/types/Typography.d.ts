@@ -11,9 +11,9 @@ interface TextProps {
 
 export interface HeadingProps extends TextProps {
   level: 1 | 2 | 3 | 4 | 5 | 6;
-  type?: 'heading' | 'display'
+  type?: "heading" | "display";
 }
 
-export type ParagraphProps = TextProps
+export type ParagraphProps = TextProps;
 
-export type SmallProps = TextProps
+export type SmallProps = TextProps;

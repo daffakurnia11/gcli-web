@@ -1,20 +1,26 @@
-import { BaseButtonProps } from "@/types/Button";
 import classNames from "classnames";
 import React from "react";
+
+import { BaseButtonProps } from "@/types/Button";
+
 import type { PrimaryProps } from "./Primary";
 import type { SecondaryProps } from "./Secondary";
 
 // Size styles - following 8pt grid and touch target guidelines
 const sizeStyles: Record<Required<BaseButtonProps>["size"], string> = {
-  lg: "h-14 px-8 text-lg leading-tight",    // 56px height, 18px font
+  lg: "h-14 px-8 text-lg leading-tight", // 56px height, 18px font
   base: "h-11 px-6 text-base leading-tight", // 44px height, 16px font
-  sm: "h-9 px-4 text-sm leading-tight",     // 36px height, 14px font
+  sm: "h-9 px-4 text-sm leading-tight", // 36px height, 14px font
 };
 
-export interface BaseButtonPropsInternal extends BaseButtonProps {
-  variantStyles: Record<Required<BaseButtonProps>["style"], string>;
+export interface BaseButtonPropsInternal extends Omit<
+  BaseButtonProps,
+  "variant"
+> {
+  variantStyles: Record<string, string>;
   slideColor?: string;
   hoverTextColorClass?: string;
+  variant?: "solid" | "outline" | "text";
 }
 
 export interface ButtonComponent extends React.FC<BaseButtonPropsInternal> {
@@ -29,13 +35,13 @@ function BaseButton({
   type = "button",
   onClick,
   variantStyles,
-  style: styleProp = "solid",
+  variant = "solid",
   size = "base",
   slideColor,
   hoverTextColorClass,
   ...props
 }: BaseButtonPropsInternal) {
-  const isOutline = styleProp === "outline" && slideColor;
+  const isOutline = variant === "outline" && slideColor;
 
   return (
     <button
@@ -54,14 +60,14 @@ function BaseButton({
         sizeStyles[size],
 
         // Variant + style (base styles without hover background for outline)
-        styleProp === "outline" && slideColor
-          ? variantStyles[styleProp]?.replace(/hover:bg-[^ ]+\s*/g, "")
-          : variantStyles[styleProp],
+        variant === "outline" && slideColor
+          ? variantStyles[variant]?.replace(/hover:bg-[^ ]+\s*/g, "")
+          : variantStyles[variant],
 
         // Disabled state
         disabled && "opacity-50 cursor-not-allowed hover:translate-y-0",
 
-        className
+        className,
       )}
       {...props}
     >
@@ -74,7 +80,12 @@ function BaseButton({
       )}
 
       {/* Content with hover color change */}
-      <span className={classNames("relative z-10 transition-colors duration-300", hoverTextColorClass)}>
+      <span
+        className={classNames(
+          "relative z-10 transition-colors duration-300",
+          hoverTextColorClass,
+        )}
+      >
         {children}
       </span>
     </button>

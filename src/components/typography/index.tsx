@@ -1,8 +1,14 @@
 import React from "react";
+
+import type {
+  HeadingProps,
+  ParagraphProps,
+  SmallProps,
+} from "@/types/Typography";
+
 import Heading from "./Heading";
 import Paragraph from "./Paragraph";
 import Small from "./Small";
-import type { HeadingProps, ParagraphProps, SmallProps } from "@/types/Typography";
 
 export interface TypographyComponent {
   Heading: React.FC<HeadingProps>;
@@ -23,4 +29,9 @@ export { default as Paragraph } from "./Paragraph";
 export { default as Small } from "./Small";
 
 // Type exports
-export type { TextProps, HeadingProps, ParagraphProps, SmallProps } from "@/types/Typography";
+export type {
+  HeadingProps,
+  ParagraphProps,
+  SmallProps,
+  TextProps,
+} from "@/types/Typography";

@@ -1,6 +1,7 @@
-import { HeadingProps } from "@/types/Typography";
 import classNames from "classnames";
 import React from "react";
+
+import { HeadingProps } from "@/types/Typography";
 
 const headingStyles: Record<HeadingProps["level"], string> = {
   1: "text-5xl sm:text-6xl",
@@ -16,7 +17,7 @@ export default function Heading({
   level,
   children,
   className,
-  type = 'heading',
+  type = "heading",
   ...props
 }: HeadingProps) {
   const Component: React.ElementType = (
@@ -31,7 +32,7 @@ export default function Heading({
         "font-bold",
         headingType,
         headingStyles[level],
-        className
+        className,
       )}
     >
       {children}

@@ -1,6 +1,7 @@
-import { ParagraphProps } from "@/types/Typography";
 import classNames from "classnames";
 import React from "react";
+
+import { ParagraphProps } from "@/types/Typography";
 export default function Paragraph({
   as = "p",
   children,

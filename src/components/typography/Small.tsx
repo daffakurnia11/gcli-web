@@ -1,6 +1,7 @@
-import { SmallProps } from "@/types/Typography";
 import classNames from "classnames";
 import React from "react";
+
+import { SmallProps } from "@/types/Typography";
 
 export default function Small({
   as = "span",

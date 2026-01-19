@@ -15,9 +15,7 @@ export default function Footer() {
             <Logo variant="name" color="white" />
             </div>
             <Typography.Paragraph className="text-gray-dark max-w-sm mb-8 leading-relaxed">
-              The premier destination for competitive FiveM roleplay in
-              Indonesia. Join a community of elite players and forge your path
-              to dominance.
+              A FiveM server built for teams who want organized PvP, meaningful preparation, and league-driven competition — not random deathmatch.
             </Typography.Paragraph>
             <div className="flex gap-4">
               {[Twitter, Instagram, Youtube, MessageSquare].map((Icon) => (

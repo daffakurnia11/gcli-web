@@ -12,6 +12,8 @@
     "check": "pnpm run lint && pnpm run typecheck"
   },
   "dependencies": {
+    "@icons-pack/react-simple-icons": "^13.8.0",
+    "axios": "^1.13.2",
     "classnames": "^2.5.1",
     "framer-motion": "^12.27.1",
     "lucide-react": "^0.562.0",

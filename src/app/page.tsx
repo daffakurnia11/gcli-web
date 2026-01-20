@@ -1,11 +1,9 @@
-import Link from "next/link";
-
 import { Footer, Navbar } from "@/components";
-import { Button } from "@/components/button";
 
 import GameLoop from "./_components/GameLoop";
 import Hero from "./_components/Hero";
 import SellingPoint from "./_components/SellingPoint";
+import ServerInfo from "./_components/ServerInfo";
 import TeamCarousel from "./_components/TeamCarousel";
 
 export default function Home() {
@@ -15,14 +13,15 @@ export default function Home() {
       <Hero />
       <SellingPoint />
       <GameLoop />
+      <ServerInfo />
       <TeamCarousel />
-      <div className="w-full h-dvh flex items-center justify-center">
+      {/* <div className="w-full h-dvh flex items-center justify-center">
         <Link href="/demo">
           <Button.Slant variant="primary">
             Go to Demo Component Page
           </Button.Slant>
         </Link>
-      </div>
+      </div> */}
       <Footer />
     </main>
   );

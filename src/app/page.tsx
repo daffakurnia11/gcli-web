@@ -2,6 +2,7 @@ import { Footer, Navbar } from "@/components";
 
 import GameLoop from "./_components/GameLoop";
 import Hero from "./_components/Hero";
+import HomeCTA from "./_components/HomeCTA";
 import SellingPoint from "./_components/SellingPoint";
 import ServerInfo from "./_components/ServerInfo";
 import Standings from "./_components/Standings";
@@ -17,6 +18,7 @@ export default function Home() {
       <ServerInfo />
       <TeamCarousel />
       <Standings />
+      <HomeCTA />
       {/* <div className="w-full h-dvh flex items-center justify-center">
         <Link href="/demo">
           <Button.Slant variant="primary">

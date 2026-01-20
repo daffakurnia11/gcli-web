@@ -4,6 +4,7 @@ import GameLoop from "./_components/GameLoop";
 import Hero from "./_components/Hero";
 import SellingPoint from "./_components/SellingPoint";
 import ServerInfo from "./_components/ServerInfo";
+import Standings from "./_components/Standings";
 import TeamCarousel from "./_components/TeamCarousel";
 
 export default function Home() {
@@ -15,6 +16,7 @@ export default function Home() {
       <GameLoop />
       <ServerInfo />
       <TeamCarousel />
+      <Standings />
       {/* <div className="w-full h-dvh flex items-center justify-center">
         <Link href="/demo">
           <Button.Slant variant="primary">

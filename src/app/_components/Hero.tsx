@@ -9,7 +9,7 @@ import { Typography } from "@/components/typography";
 
 export default function Hero() {
   return (
-    <section className="relative h-dvh flex flex-col items-center justify-center">
+    <section className="relative h-dvh min-h-155 flex flex-col items-center justify-center">
       {/* Background Image - Los Santos/City Style */}
       <div className="absolute inset-0 z-0">
         <Image
@@ -42,7 +42,7 @@ export default function Hero() {
           <Typography.Heading
             type="display"
             level={1}
-            className="text-6xl! sm:text-7xl! text-center"
+            className="text-5xl! sm:text-7xl! text-center uppercase"
           >
             GTA <span className="text-secondary-700">Competitive</span> League
           </Typography.Heading>

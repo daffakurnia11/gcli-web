@@ -1,32 +1,24 @@
-import { Footer, Navbar } from "@/components";
+import { CorePillarsMolecules } from "@/molecules";
 
 import GameLoop from "./_components/GameLoop";
 import Hero from "./_components/Hero";
 import HomeCTA from "./_components/HomeCTA";
-import SellingPoint from "./_components/SellingPoint";
 import ServerInfo from "./_components/ServerInfo";
 import Standings from "./_components/Standings";
 import TeamCarousel from "./_components/TeamCarousel";
 
-export default function Home() {
+export default function HomePage() {
   return (
     <main className="bg-primary-900 h-full min-h-dvh text-gray-dark">
-      <Navbar />
       <Hero />
-      <SellingPoint />
+      <section className="container mx-auto py-20">
+        <CorePillarsMolecules />
+      </section>
       <GameLoop />
       <ServerInfo />
       <TeamCarousel />
       <Standings />
       <HomeCTA />
-      {/* <div className="w-full h-dvh flex items-center justify-center">
-        <Link href="/demo">
-          <Button.Slant variant="primary">
-            Go to Demo Component Page
-          </Button.Slant>
-        </Link>
-      </div> */}
-      <Footer />
     </main>
   );
 }

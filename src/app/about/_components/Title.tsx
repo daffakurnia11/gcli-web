@@ -3,11 +3,10 @@
 import { motion } from "framer-motion";
 
 import { Typography } from "@/components/typography";
-import { GameLoopMolecules } from "@/molecules";
 
-export default function GameLoop() {
+export default function Title() {
   return (
-    <section className="container mx-auto py-20">
+    <section className="w-full max-w-4xl mx-auto pt-30 pb-10 px-4">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -16,10 +15,10 @@ export default function GameLoop() {
       >
         <Typography.Heading
           level={2}
-          as={"h2"}
+          as={"h1"}
           className="text-center uppercase tracking-widest"
         >
-          Game Loop
+          About
         </Typography.Heading>
       </motion.div>
       <motion.div
@@ -27,9 +26,18 @@ export default function GameLoop() {
         whileInView={{ opacity: 1, scaleX: 1 }}
         viewport={{ once: true, amount: 0.8 }}
         transition={{ duration: 0.3, delay: 0.5 }}
-        className="h-1 w-24 bg-secondary-700 mt-6 mb-10 content-none mx-auto"
+        className="h-1 w-24 bg-secondary-700 mt-6 mb-4 content-none mx-auto"
       />
-      <GameLoopMolecules />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.8 }}
+        transition={{ duration: 0.3, delay: 0.3 }}
+      >
+      <Typography.Paragraph className="text-center text-primary-300">
+        GCLI is a team-based competitive league, not a traditional roleplay server and not a free-for-all PvP server.
+      </Typography.Paragraph>
+      </motion.div>
     </section>
   );
 }

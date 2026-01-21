@@ -3,9 +3,9 @@
 import { motion } from "framer-motion";
 
 import { Typography } from "@/components/typography";
-import { GameLoopMolecules } from "@/molecules";
+import { CorePillarsMolecules } from "@/molecules";
 
-export default function GameLoop() {
+export default function CorePillars() {
   return (
     <section className="container mx-auto py-20">
       <motion.div
@@ -15,11 +15,11 @@ export default function GameLoop() {
         transition={{ duration: 0.5 }}
       >
         <Typography.Heading
-          level={2}
+          level={3}
           as={"h2"}
           className="text-center uppercase tracking-widest"
         >
-          Game Loop
+          Core Pillars
         </Typography.Heading>
       </motion.div>
       <motion.div
@@ -29,7 +29,7 @@ export default function GameLoop() {
         transition={{ duration: 0.3, delay: 0.5 }}
         className="h-1 w-24 bg-secondary-700 mt-6 mb-10 content-none mx-auto"
       />
-      <GameLoopMolecules />
+      <CorePillarsMolecules />
     </section>
   );
 }

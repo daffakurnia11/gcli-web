@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Typography } from "@/components/typography";
 import { GameLoopMolecules } from "@/molecules";
 
-export default function GameLoop() {
+export default function PlayerToDo() {
   return (
     <section className="container mx-auto py-20">
       <motion.div
@@ -15,11 +15,11 @@ export default function GameLoop() {
         transition={{ duration: 0.5 }}
       >
         <Typography.Heading
-          level={2}
+          level={3}
           as={"h2"}
           className="text-center uppercase tracking-widest"
         >
-          Game Loop
+          What You Have To Do
         </Typography.Heading>
       </motion.div>
       <motion.div

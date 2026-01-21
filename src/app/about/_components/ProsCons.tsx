@@ -1,3 +1,6 @@
+"use client";
+
+import { motion } from "framer-motion";
 import { Sword, Swords, User, Users } from "lucide-react";
 import Image from "next/image";
 
@@ -18,7 +21,13 @@ export default function ProsCons() {
         <div className="absolute inset-0 bg-linear-to-b from-primary-900 via-primary-900/60 to-primary-900" />
       </div>
       <div className="container mx-auto flex sm:flex-row flex-col items-center justify-center gap-8">
-        <div className="border border-secondary-500 py-4 px-6 w-full max-w-sm bg-primary-900/50 backdrop-blur-lg flex flex-col gap-4 sm:items-end">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+          className="border border-secondary-500 py-4 px-6 w-full max-w-sm bg-primary-900/50 backdrop-blur-lg flex flex-col gap-4 sm:items-end"
+        >
           <Typography.Heading level={6} as={"h4"} className="uppercase mb-3">
             Who This Is For
           </Typography.Heading>
@@ -38,8 +47,14 @@ export default function ProsCons() {
               Competitive Mindset
             </Typography.Paragraph>
           </div>
-        </div>
-        <div className="border border-tertiary-red py-4 px-6 w-full max-w-sm bg-primary-900/50 backdrop-blur-lg flex flex-col gap-4 items-start">
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.3, delay: 0.3 }}
+          className="border border-tertiary-red py-4 px-6 w-full max-w-sm bg-primary-900/50 backdrop-blur-lg flex flex-col gap-4 items-start"
+        >
           <Typography.Heading level={6} as={"h4"} className="uppercase mb-3">
             Who This Is Not For
           </Typography.Heading>
@@ -59,7 +74,7 @@ export default function ProsCons() {
               Solo Hero
             </Typography.Paragraph>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

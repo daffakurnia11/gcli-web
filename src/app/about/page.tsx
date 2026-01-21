@@ -8,7 +8,9 @@ import Title from "./_components/Title";
 import Vision from "./_components/Vision";
 
 export const metadata: Metadata = {
-  title: "About Us",
+  title: {
+    absolute: "About | GCLI",
+  },
   description: "Learn about GCLI's vision, core pillars, and what makes us Indonesia's leading competitive FiveM server. Discover our community values, player expectations, and the pros and cons of joining our competitive GTA V gaming league.",
   keywords: [
     "GCLI about",

@@ -10,7 +10,9 @@ import Standings from "./_components/Standings";
 import TeamCarousel from "./_components/TeamCarousel";
 
 export const metadata: Metadata = {
-  title: "Home",
+  title: {
+    absolute: "Home | GCLI",
+  },
   description: "Join GCLI - Indonesia's premier competitive FiveM gaming server. Experience professional GTA V multiplayer leagues, team competitions, and an active gaming community. Check our server stats, team standings, and join the competition today.",
   keywords: [
     "GCLI home",

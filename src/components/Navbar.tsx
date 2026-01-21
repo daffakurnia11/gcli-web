@@ -75,21 +75,14 @@ export default function Navbar() {
             </Link>
           ))}
           <div className="hidden md:flex items-center gap-2">
-            <Button.Secondary
-              variant="text"
-              size="sm"
-              className="cursor-pointer"
-              prefix={<LogIn size={18} />}
-            >
-              Login
-            </Button.Secondary>
-            <Button.Slant
-              variant="primary"
-              className="flex items-center gap-2 cursor-pointer"
-            >
-              <UserPlus size={18} />
-              Register
-            </Button.Slant>
+            <Link href={"/auth"}>
+              <Button.Slant
+                variant="primary"
+                className="flex items-center gap-2 cursor-pointer"
+              >
+                Join Now
+              </Button.Slant>
+            </Link>
           </div>
         </div>
 
@@ -143,12 +136,11 @@ export default function Navbar() {
             }`}
             style={{ transitionDelay: `${80 + navItems.length * 60}ms` }}
           >
-            <Button.Secondary variant="outline" fullWidth>
-              Login
-            </Button.Secondary>
-            <Button.Primary variant="solid" fullWidth>
-              Register
-            </Button.Primary>
+            <Link href={"/auth"}>
+              <Button.Primary variant="solid" fullWidth>
+                Join Now
+              </Button.Primary>
+            </Link>
           </div>
         </div>
       </div>

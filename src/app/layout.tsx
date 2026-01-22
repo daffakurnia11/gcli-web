@@ -2,6 +2,8 @@ import "./styles.css";
 
 import type { Metadata } from "next";
 
+import { auth } from "@/lib/auth";
+import { SessionProvider } from "@/components/providers/SessionProvider";
 import { Footer, Navbar } from "@/components";
 
 export const metadata: Metadata = {
@@ -45,17 +47,21 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth();
+
   return (
     <html lang="en">
       <body className="antialiased">
-        <Navbar />
-        {children}
-        <Footer />
+        <SessionProvider session={session}>
+          <Navbar />
+          {children}
+          <Footer />
+        </SessionProvider>
       </body>
     </html>
   );

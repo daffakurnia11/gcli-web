@@ -2,11 +2,21 @@
 
 import { SiDiscord, SiSteam } from "@icons-pack/react-simple-icons";
 import { motion } from "framer-motion";
+import { signIn } from "next-auth/react";
 
 import { Button } from "@/components/button";
 import { Typography } from "@/components/typography";
 
 export default function Login() {
+  const handleDiscordSignIn = () => {
+    signIn("discord", { callbackUrl: "/" });
+  };
+
+  const handleSteamSignIn = () => {
+    // Redirect to Steam OpenID login
+    window.location.href = `${window.location.origin}/api/auth/signin/steam`;
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -20 }}
@@ -28,6 +38,7 @@ export default function Login() {
           fullWidth
           className="bg-[#5865F2]! border-[#5865F2]! cursor-pointer"
           prefix={<SiDiscord className="text-tertiary-white" />}
+          onClick={handleDiscordSignIn}
         >
           Continue with Discord
         </Button.Primary>
@@ -36,6 +47,7 @@ export default function Login() {
           fullWidth
           className="bg-[#000000]! border-[#000000]! text-tertiary-white cursor-pointer"
           prefix={<SiSteam className="text-tertiary-white" />}
+          onClick={handleSteamSignIn}
         >
           Continue with Steam
         </Button.Primary>

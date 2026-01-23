@@ -2,9 +2,9 @@ import "./styles.css";
 
 import type { Metadata } from "next";
 
-import { auth } from "@/lib/auth";
-import { SessionProvider } from "@/components/providers/SessionProvider";
 import { Footer, Navbar } from "@/components";
+import { SessionProvider } from "@/components/providers/SessionProvider";
+import { auth } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: {

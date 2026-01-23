@@ -157,7 +157,7 @@ interface DiscordProxyData {
 /**
  * Combined API response with both raw Discord response and transformed data
  */
-interface DiscordProxyResponse {
+interface _DiscordProxyResponse {
   raw: DiscordInviteResponse;
   data: DiscordProxyData;
 }

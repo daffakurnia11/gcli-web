@@ -88,7 +88,7 @@ interface FiveMProxyData {
 /**
  * Combined API response with both raw FiveM responses and transformed data
  */
-interface FiveMProxyResponse {
+interface _FiveMProxyResponse {
   status: number;
   message: string;
   raw: {

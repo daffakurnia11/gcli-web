@@ -1,0 +1,497 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model bank_accounts_new {
+  id           String  @id @db.VarChar(50)
+  amount       Int?    @default(0)
+  transactions String? @db.LongText
+  auth         String? @db.LongText
+  isFrozen     Int?    @default(0)
+  creator      String? @db.VarChar(50)
+}
+
+model bans {
+  id       Int     @id @default(autoincrement())
+  name     String? @db.VarChar(50)
+  license  String? @db.VarChar(50)
+  discord  String? @db.VarChar(50)
+  ip       String? @db.VarChar(50)
+  reason   String? @db.Text
+  expire   Int?
+  bannedby String  @default("LeBanhammer") @db.VarChar(255)
+
+  @@index([discord], map: "discord")
+  @@index([ip], map: "ip")
+  @@index([license], map: "license")
+}
+
+model management_outfits {
+  id         Int     @id @default(autoincrement())
+  job_name   String  @db.VarChar(50)
+  type       String  @db.VarChar(50)
+  minrank    Int     @default(0)
+  name       String  @default("Cool Outfit") @db.VarChar(50)
+  gender     String  @default("male") @db.VarChar(50)
+  model      String? @db.VarChar(50)
+  props      String? @db.Text
+  components String? @db.Text
+}
+
+model npwd_calls {
+  id          Int     @id @default(autoincrement())
+  identifier  String? @db.VarChar(48)
+  transmitter String  @db.VarChar(255)
+  receiver    String  @db.VarChar(255)
+  is_accepted Int?    @default(0) @db.TinyInt
+  isAnonymous Int     @default(0) @db.TinyInt
+  start       String? @db.VarChar(255)
+  end         String? @db.VarChar(255)
+
+  @@index([identifier], map: "identifier")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model npwd_darkchat_channel_members {
+  channel_id             Int
+  user_identifier        String                 @db.VarChar(255)
+  is_owner               Int                    @default(0) @db.TinyInt
+  npwd_darkchat_channels npwd_darkchat_channels @relation(fields: [channel_id], references: [id], onUpdate: Restrict, map: "npwd_darkchat_channel_members_npwd_darkchat_channels_id_fk")
+
+  @@index([channel_id], map: "npwd_darkchat_channel_members_npwd_darkchat_channels_id_fk")
+  @@ignore
+}
+
+model npwd_darkchat_channels {
+  id                            Int                             @id @default(autoincrement())
+  channel_identifier            String                          @unique(map: "darkchat_channels_channel_identifier_uindex")
+  label                         String?                         @default("") @db.VarChar(255)
+  npwd_darkchat_channel_members npwd_darkchat_channel_members[] @ignore
+  npwd_darkchat_messages        npwd_darkchat_messages[]
+}
+
+model npwd_darkchat_messages {
+  id                     Int                    @id @default(autoincrement())
+  channel_id             Int
+  message                String                 @db.VarChar(255)
+  user_identifier        String                 @db.VarChar(255)
+  createdAt              DateTime               @default(now()) @db.Timestamp(0)
+  is_image               Int                    @default(0) @db.TinyInt
+  npwd_darkchat_channels npwd_darkchat_channels @relation(fields: [channel_id], references: [id], onUpdate: Restrict, map: "darkchat_messages_darkchat_channels_id_fk")
+
+  @@index([channel_id], map: "darkchat_messages_darkchat_channels_id_fk")
+}
+
+model npwd_marketplace_listings {
+  id          Int      @id @default(autoincrement())
+  identifier  String?  @db.VarChar(48)
+  username    String?  @db.VarChar(255)
+  name        String?  @db.VarChar(50)
+  number      String   @db.VarChar(255)
+  title       String?  @db.VarChar(255)
+  url         String?  @db.VarChar(255)
+  description String   @db.VarChar(255)
+  createdAt   DateTime @default(now()) @db.Timestamp(0)
+  updatedAt   DateTime @default(now()) @db.Timestamp(0)
+  reported    Int      @default(0) @db.TinyInt
+
+  @@index([identifier], map: "identifier")
+}
+
+model npwd_match_profiles {
+  id               Int                @id @default(autoincrement())
+  identifier       String             @unique(map: "identifier_UNIQUE") @db.VarChar(48)
+  name             String             @db.VarChar(90)
+  image            String             @db.VarChar(255)
+  bio              String?            @db.VarChar(512)
+  location         String?            @db.VarChar(45)
+  job              String?            @db.VarChar(45)
+  tags             String             @default("") @db.VarChar(255)
+  voiceMessage     String?            @db.VarChar(512)
+  createdAt        DateTime           @default(now()) @db.Timestamp(0)
+  updatedAt        DateTime           @default(now()) @db.Timestamp(0)
+  npwd_match_views npwd_match_views[]
+}
+
+model npwd_match_views {
+  id                  Int                 @id @default(autoincrement())
+  identifier          String              @db.VarChar(48)
+  profile             Int
+  liked               Int?                @default(0) @db.TinyInt
+  createdAt           DateTime            @default(now()) @db.Timestamp(0)
+  updatedAt           DateTime            @default(now()) @db.Timestamp(0)
+  npwd_match_profiles npwd_match_profiles @relation(fields: [profile], references: [id], onUpdate: Restrict, map: "match_profile")
+
+  @@index([identifier], map: "identifier")
+  @@index([profile], map: "match_profile_idx")
+}
+
+model npwd_messages {
+  id              Int      @id @default(autoincrement())
+  message         String   @db.VarChar(512)
+  user_identifier String   @db.VarChar(48)
+  conversation_id String   @db.VarChar(512)
+  isRead          Int      @default(0) @db.TinyInt
+  createdAt       DateTime @default(now()) @db.Timestamp(0)
+  updatedAt       DateTime @default(now()) @db.Timestamp(0)
+  visible         Int      @default(1) @db.TinyInt
+  author          String   @db.VarChar(255)
+  is_embed        Int      @default(0) @db.TinyInt
+  embed           String   @default("") @db.VarChar(512)
+
+  @@index([user_identifier], map: "user_identifier")
+}
+
+model npwd_messages_conversations {
+  id                         Int                          @id @default(autoincrement())
+  conversation_list          String                       @db.VarChar(225)
+  label                      String?                      @default("") @db.VarChar(60)
+  createdAt                  DateTime                     @default(now()) @db.Timestamp(0)
+  updatedAt                  DateTime                     @default(now()) @db.Timestamp(0)
+  last_message_id            Int?
+  is_group_chat              Int                          @default(0) @db.TinyInt
+  npwd_messages_participants npwd_messages_participants[]
+}
+
+model npwd_messages_participants {
+  id                          Int                         @id @default(autoincrement())
+  conversation_id             Int
+  participant                 String                      @db.VarChar(225)
+  unread_count                Int?                        @default(0)
+  npwd_messages_conversations npwd_messages_conversations @relation(fields: [conversation_id], references: [id], onUpdate: Restrict, map: "message_participants_npwd_messages_conversations_id_fk")
+
+  @@index([conversation_id], map: "message_participants_npwd_messages_conversations_id_fk")
+}
+
+model npwd_notes {
+  id         Int    @id @default(autoincrement())
+  identifier String @db.VarChar(48)
+  title      String @db.VarChar(255)
+  content    String @db.VarChar(255)
+
+  @@index([identifier], map: "identifier")
+}
+
+model npwd_phone_contacts {
+  id         Int     @id @default(autoincrement())
+  identifier String? @db.VarChar(48)
+  avatar     String? @db.VarChar(255)
+  number     String? @db.VarChar(20)
+  display    String  @default("") @db.VarChar(255)
+
+  @@index([identifier], map: "identifier")
+}
+
+model npwd_phone_gallery {
+  id         Int     @id @default(autoincrement())
+  identifier String? @db.VarChar(48)
+  image      String  @db.VarChar(255)
+
+  @@index([identifier], map: "identifier")
+}
+
+model npwd_twitter_likes {
+  id                    Int                   @id @default(autoincrement())
+  profile_id            Int
+  tweet_id              Int
+  npwd_twitter_profiles npwd_twitter_profiles @relation(fields: [profile_id], references: [id], onUpdate: Restrict, map: "profile")
+  npwd_twitter_tweets   npwd_twitter_tweets   @relation(fields: [tweet_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "tweet")
+
+  @@unique([profile_id, tweet_id], map: "unique_combination")
+  @@index([profile_id], map: "profile_idx")
+  @@index([tweet_id], map: "tweet_idx")
+}
+
+model npwd_twitter_profiles {
+  id                   Int                    @id @default(autoincrement())
+  profile_name         String                 @unique(map: "profile_name_UNIQUE") @db.VarChar(90)
+  identifier           String                 @db.VarChar(48)
+  avatar_url           String?                @default("https://i.fivemanage.com/images/3ClWwmpwkFhL.png") @db.VarChar(255)
+  createdAt            DateTime               @default(now()) @db.Timestamp(0)
+  updatedAt            DateTime               @default(now()) @db.Timestamp(0)
+  npwd_twitter_likes   npwd_twitter_likes[]
+  npwd_twitter_reports npwd_twitter_reports[]
+  npwd_twitter_tweets  npwd_twitter_tweets[]
+
+  @@index([identifier], map: "identifier")
+}
+
+model npwd_twitter_reports {
+  id                    Int                   @id @default(autoincrement())
+  profile_id            Int
+  tweet_id              Int
+  npwd_twitter_profiles npwd_twitter_profiles @relation(fields: [profile_id], references: [id], onUpdate: Restrict, map: "report_profile")
+  npwd_twitter_tweets   npwd_twitter_tweets   @relation(fields: [tweet_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "report_tweet")
+
+  @@unique([profile_id, tweet_id], map: "unique_combination")
+  @@index([profile_id], map: "profile_idx")
+  @@index([tweet_id], map: "tweet_idx")
+}
+
+model npwd_twitter_tweets {
+  id                    Int                    @id @default(autoincrement())
+  message               String                 @db.VarChar(1000)
+  createdAt             DateTime               @default(now()) @db.Timestamp(0)
+  updatedAt             DateTime               @default(now()) @db.Timestamp(0)
+  likes                 Int                    @default(0)
+  identifier            String                 @db.VarChar(48)
+  visible               Int                    @default(1) @db.TinyInt
+  images                String?                @default("") @db.VarChar(1000)
+  retweet               Int?
+  profile_id            Int
+  npwd_twitter_likes    npwd_twitter_likes[]
+  npwd_twitter_reports  npwd_twitter_reports[]
+  npwd_twitter_profiles npwd_twitter_profiles  @relation(fields: [profile_id], references: [id], onUpdate: Restrict, map: "npwd_twitter_tweets_npwd_twitter_profiles_id_fk")
+
+  @@index([profile_id], map: "npwd_twitter_tweets_npwd_twitter_profiles_id_fk")
+}
+
+model ox_doorlock {
+  id   Int    @id @default(autoincrement()) @db.UnsignedInt
+  name String @db.VarChar(50)
+  data String @db.LongText
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model ox_inventory {
+  owner       String?   @db.VarChar(60)
+  name        String    @db.VarChar(100)
+  data        String?   @db.LongText
+  lastupdated DateTime? @default(now()) @db.Timestamp(0)
+
+  @@unique([owner, name], map: "owner")
+  @@ignore
+}
+
+model player_groups {
+  citizenid String  @db.VarChar(50)
+  group     String  @db.VarChar(50)
+  type      String  @db.VarChar(50)
+  grade     Int     @db.UnsignedTinyInt
+  players   players @relation(fields: [citizenid], references: [citizenid], onDelete: Cascade, map: "fk_citizenid")
+
+  @@id([citizenid, type, group])
+}
+
+model player_jobs_activity {
+  id            Int      @id @default(autoincrement()) @db.UnsignedInt
+  citizenid     String?  @db.VarChar(50)
+  job           String   @db.VarChar(255)
+  last_checkin  Int
+  last_checkout Int?
+  players       players? @relation(fields: [citizenid], references: [citizenid], onDelete: Cascade, onUpdate: Restrict, map: "player_jobs_activity_ibfk_1")
+
+  @@index([citizenid, job], map: "citizenid_job")
+  @@index([id(sort: Desc)], map: "id")
+  @@index([last_checkout], map: "last_checkout")
+}
+
+model player_mails {
+  id        Int       @id @default(autoincrement())
+  citizenid String?   @db.VarChar(50)
+  sender    String?   @db.VarChar(50)
+  subject   String?   @db.VarChar(50)
+  message   String?   @db.Text
+  read      Int?      @default(0) @db.TinyInt
+  mailid    Int?
+  date      DateTime? @default(now()) @db.Timestamp(0)
+  button    String?   @db.Text
+
+  @@index([citizenid], map: "citizenid")
+}
+
+model player_outfit_codes {
+  id       Int    @id @default(autoincrement())
+  outfitid Int
+  code     String @default("") @db.VarChar(50)
+
+  @@index([outfitid], map: "FK_player_outfit_codes_player_outfits")
+}
+
+model player_outfits {
+  id         Int     @id @default(autoincrement())
+  citizenid  String? @db.VarChar(50)
+  outfitname String  @default("0") @db.VarChar(50)
+  model      String? @db.VarChar(50)
+  props      String? @db.Text
+  components String? @db.Text
+
+  @@unique([citizenid, outfitname, model], map: "citizenid_outfitname_model")
+  @@index([citizenid], map: "citizenid")
+}
+
+model player_transactions {
+  id           String  @id @db.VarChar(50)
+  isFrozen     Int?    @default(0)
+  transactions String? @db.LongText
+}
+
+model player_vehicles {
+  id              Int      @id @default(autoincrement())
+  license         String?  @db.VarChar(50)
+  citizenid       String?  @db.VarChar(50)
+  vehicle         String?  @db.VarChar(50)
+  hash            String?  @db.VarChar(50)
+  mods            String?  @db.LongText
+  plate           String   @unique(map: "plate") @db.VarChar(15)
+  fakeplate       String?  @db.VarChar(50)
+  garage          String?  @db.VarChar(50)
+  fuel            Int?     @default(100)
+  engine          Float?   @default(1000) @db.Float
+  body            Float?   @default(1000) @db.Float
+  state           Int?     @default(1)
+  depotprice      Int      @default(0)
+  drivingdistance Int?
+  status          String?  @db.Text
+  coords          String?  @db.Text
+  glovebox        String?  @db.LongText
+  trunk           String?  @db.LongText
+  players         players? @relation(fields: [citizenid], references: [citizenid], onDelete: Cascade, map: "player_vehicles_ibfk_1")
+
+  @@index([citizenid], map: "citizenid")
+}
+
+model players {
+  id                   Int                    @default(autoincrement())
+  userId               Int?                   @db.UnsignedInt
+  citizenid            String                 @id @db.VarChar(50)
+  cid                  Int?
+  license              String                 @db.VarChar(255)
+  name                 String                 @db.VarChar(255)
+  money                String                 @db.Text
+  charinfo             String?                @db.Text
+  job                  String                 @db.Text
+  gang                 String?                @db.Text
+  position             String                 @db.Text
+  metadata             String                 @db.Text
+  inventory            String?                @db.LongText
+  phone_number         String?                @db.VarChar(20)
+  last_updated         DateTime               @default(now()) @db.Timestamp(0)
+  last_logged_out      DateTime?              @db.Timestamp(0)
+  player_groups        player_groups[]
+  player_jobs_activity player_jobs_activity[]
+  player_vehicles      player_vehicles[]
+
+  @@index([id], map: "id")
+  @@index([last_updated], map: "last_updated")
+  @@index([license], map: "license")
+}
+
+model playerskins {
+  id        Int    @id @default(autoincrement())
+  citizenid String @db.VarChar(255)
+  model     String @db.VarChar(255)
+  skin      String @db.Text
+  active    Int    @default(1) @db.TinyInt
+
+  @@index([active], map: "active")
+  @@index([citizenid], map: "citizenid")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model real_vehicleshop {
+  id           Int?
+  information  String? @db.LongText
+  vehicles     String? @db.LongText
+  categories   String? @db.LongText
+  feedbacks    String? @db.LongText
+  complaints   String? @db.LongText
+  preorders    String? @db.LongText
+  employees    String? @db.LongText
+  soldvehicles String? @db.LongText
+  transactions String? @db.LongText
+  perms        String? @db.LongText
+
+  @@ignore
+}
+
+model tl_crafting_locations {
+  id      Int    @id @default(autoincrement())
+  name    String @db.VarChar(64)
+  x       Float
+  y       Float
+  z       Float
+  heading Float
+}
+
+model tl_gangstash_locations {
+  id      Int    @id @default(autoincrement())
+  name    String @db.VarChar(64)
+  x       Float
+  y       Float
+  z       Float
+  heading Float
+}
+
+model users {
+  userId       Int            @id @default(autoincrement()) @db.UnsignedInt
+  username     String?        @db.VarChar(255)
+  license      String?        @db.VarChar(50)
+  license2     String?        @db.VarChar(50)
+  fivem        String?        @db.VarChar(20)
+  discord      String?        @db.VarChar(30)
+  steam        String?        @db.VarChar(50)
+  web_accounts web_accounts[]
+}
+
+model web_accounts {
+  id             Int          @id @default(autoincrement())
+  email          String       @unique @db.VarChar(255)
+  password       String?      @db.VarChar(255)
+  email_verified Boolean      @default(false)
+
+  // Link to FiveM users table
+  user_id        Int?         @db.UnsignedInt
+  discord_id     String?      @unique @db.VarChar(30)
+  steam_hex      String?      @unique @db.VarChar(50)
+  fivem_id       String?      @db.VarChar(20)
+
+  // Relations
+  profile        web_profile?
+  sessions       web_sessions[]
+  user           users?       @relation(fields: [user_id], references: [userId], onDelete: SetNull)
+
+  created_at     DateTime     @default(now()) @db.Timestamp(0)
+  updated_at     DateTime     @updatedAt @db.Timestamp(0)
+
+  @@index([user_id])
+  @@index([discord_id])
+  @@index([steam_hex])
+  @@index([fivem_id])
+}
+
+model web_profile {
+  id             Int          @id @default(autoincrement())
+  account_id     Int          @unique
+
+  real_name      String?      @db.VarChar(255)
+  fivem_name     String?      @db.VarChar(255)
+  age            Int?         @db.UnsignedTinyInt
+  birth_date     DateTime?    @db.Timestamp(0)
+  province_id    String?      @db.VarChar(50)
+  province_name  String?      @db.VarChar(100)
+  city_id        String?      @db.VarChar(50)
+  city_name      String?      @db.VarChar(100)
+
+  account        web_accounts @relation(fields: [account_id], references: [id], onDelete: Cascade)
+
+  created_at     DateTime     @default(now()) @db.Timestamp(0)
+  updated_at     DateTime     @updatedAt @db.Timestamp(0)
+}
+
+model web_sessions {
+  id            Int          @id @default(autoincrement())
+  session_token String       @unique @db.VarChar(255)
+  user_id       Int
+  expires       DateTime     @db.Timestamp(0)
+
+  account       web_accounts @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+}

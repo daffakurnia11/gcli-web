@@ -24,6 +24,57 @@ export default function AuthSetupPage() {
   const isRehydrated = useAppSelector((state) => state._persist?.rehydrated ?? false);
 
   useEffect(() => {
+    const steamDataParam = searchParams.get("steam_data");
+    if (!steamDataParam) {
+      return;
+    }
+
+    const decodeSteamData = (encoded: string) => {
+      const normalized = encoded.replace(/ /g, "+").replace(/-/g, "+").replace(/_/g, "/");
+      const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+      return JSON.parse(atob(padded));
+    };
+
+    try {
+      const data = decodeSteamData(steamDataParam) as {
+        steamHex?: string;
+        id?: string;
+        steamId64?: string;
+        username?: string;
+        avatar?: string;
+        image?: string;
+      };
+
+      const payload = {
+        steamId64:
+          (typeof data.steamId64 === "string" && data.steamId64) ||
+          (typeof data.id === "string" && data.id) ||
+          null,
+        steamHex: typeof data.steamHex === "string" ? data.steamHex : null,
+        username: typeof data.username === "string" ? data.username : null,
+        image:
+          typeof data.avatar === "string"
+            ? data.avatar
+            : typeof data.image === "string"
+              ? data.image
+              : null,
+      };
+
+      try {
+        sessionStorage.setItem("steam_data", JSON.stringify(payload));
+      } catch {
+        // Ignore storage failures (private mode, quota, etc.)
+      }
+
+      const url = new URL(window.location.href);
+      url.searchParams.delete("steam_data");
+      window.history.replaceState({}, "", url.toString());
+    } catch (error) {
+      console.error("Error parsing steam data from URL:", error);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
     // Wait for redux-persist to rehydrate before validating
     if (!isRehydrated) {
       return;

@@ -3,12 +3,18 @@
 import { SiDiscord, SiSteam } from "@icons-pack/react-simple-icons";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { signIn, signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/button";
 import { Typography } from "@/components/typography";
-import { setSubmissionError, useAppDispatch, useAppSelector } from "@/store";
+import {
+  resetAuthSetup,
+  setIsSubmitting,
+  setSubmissionError,
+  useAppDispatch,
+  useAppSelector,
+} from "@/store";
 
 import Stepper from "./Stepper";
 
@@ -46,6 +52,7 @@ export default function AccountLink({ showStepper = true }: AccountLinkProps) {
   const discordEmail = useAppSelector((state) => state.authSetup.discordEmail);
   const discordImage = useAppSelector((state) => state.authSetup.discordImage);
   const submissionError = useAppSelector((state) => state.authSetup.submissionError);
+  const isSubmitting = useAppSelector((state) => state.authSetup.isSubmitting);
   const isAccountInfoComplete = Boolean(
     accountInfo.realName &&
       accountInfo.fivemName &&
@@ -61,7 +68,8 @@ export default function AccountLink({ showStepper = true }: AccountLinkProps) {
     !isAccountInfoComplete ||
     !isCredentialsComplete ||
     !isConnectedToDiscord ||
-    !isConnectedToSteam;
+    !isConnectedToSteam ||
+    isSubmitting;
 
   // Handle Discord connection
   const handleDiscordConnect = async () => {
@@ -183,15 +191,55 @@ export default function AccountLink({ showStepper = true }: AccountLinkProps) {
       console.warn("Account Setup Payload:", payload);
     }
 
+    // Submit to API
+    dispatch(setIsSubmitting(true));
+
     try {
-      sessionStorage.removeItem("auth_setup_credentials");
+      const response = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = (await response.json()) as {
+        success?: boolean;
+        error?: string;
+        message?: string;
+      };
+
+      if (!response.ok) {
+        dispatch(setSubmissionError(data.error ?? "Registration failed"));
+        return;
+      }
+
+      if (data.success) {
+        // Sign out from NextAuth to clear session cookies FIRST
+        await signOut({ redirect: false });
+
+        // Clear ALL storage BEFORE resetting Redux state
+        try {
+          sessionStorage.clear();
+          localStorage.clear();
+        } catch {
+          // Ignore storage failures.
+        }
+
+        // Now reset Redux state (with storage cleared, nothing will be re-persisted)
+        dispatch(resetAuthSetup());
+
+        // Redirect to auth page
+        window.location.href = "/auth/";
+        return;
+      }
     } catch {
-      // Ignore storage failures.
+      dispatch(setSubmissionError("Network error. Please try again."));
+    } finally {
+      dispatch(setIsSubmitting(false));
     }
   };
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+     
     setIsMounted(true);
   }, []);
 
@@ -273,7 +321,7 @@ export default function AccountLink({ showStepper = true }: AccountLinkProps) {
             onClick={handleSubmit}
             disabled={isJoinDisabled}
           >
-            Join Now
+            {isSubmitting ? "Creating..." : "Create Now"}
           </Button.Primary>
         </div>
 

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
 import { z } from "zod";
@@ -9,7 +10,10 @@ import { Form } from "@/components/form";
 import { Typography } from "@/components/typography";
 import { useCities, useProvinces } from "@/hooks/useIndonesiaRegions";
 import { formatZodError } from "@/lib/formValidation";
-import { type AccountInfoFormData,accountInfoSchema } from "@/schemas/authSetup";
+import {
+  type AccountInfoFormData,
+  accountInfoSchema,
+} from "@/schemas/authSetup";
 import {
   setAccountInfoErrors,
   setCityName,
@@ -99,7 +103,9 @@ export default function Information({ showStepper = true }: InformationProps) {
       return true;
     } catch (error) {
       if (error instanceof z.ZodError) {
-        dispatch(setAccountInfoErrors(formatZodError<AccountInfoFormData>(error)));
+        dispatch(
+          setAccountInfoErrors(formatZodError<AccountInfoFormData>(error)),
+        );
       }
       return false;
     }
@@ -128,111 +134,120 @@ export default function Information({ showStepper = true }: InformationProps) {
           </Typography.Heading>
           <div className="h-1 w-24 bg-secondary-700 mt-6 mb-10 mx-auto" />
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Real Name */}
-          <Form.Text
-            name="realName"
-            label="Real Name"
-            placeholder="Enter your full name"
-            value={accountInfo.realName}
-            onChange={(e) => handleInputChange("realName", e.target.value)}
-            error={errors.realName}
-            helperText="Your legal full name"
-            autoComplete="name"
-            fullWidth
-          />
-
-          {/* FiveM Account Name */}
-          <Form.Text
-            name="fivemName"
-            label="FiveM Account Name"
-            placeholder="Enter your FiveM in-game name"
-            value={accountInfo.fivemName}
-            onChange={(e) => handleInputChange("fivemName", e.target.value)}
-            error={errors.fivemName}
-            helperText="Your in-game name (alphanumeric + underscore)"
-            autoComplete="username"
-            fullWidth
-          />
-
-          {/* Age and Birth Date - Two columns on larger screens */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <Form.Number
-              name="age"
-              label="Age"
-              placeholder="Enter your age"
-              value={ageValue}
-              onChange={(e) => handleInputChange("age", e.target.value)}
-              error={errors.age}
-              helperText="Players must be 13+ years old"
-              min={13}
-              max={120}
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Real Name */}
+            <Form.Text
+              name="realName"
+              label="Real Name"
+              placeholder="Enter your full name"
+              value={accountInfo.realName}
+              onChange={(e) => handleInputChange("realName", e.target.value)}
+              error={errors.realName}
+              helperText="Your legal full name"
+              autoComplete="name"
               fullWidth
             />
 
-            <Form.Date
-              name="birthDate"
-              label="Birth Date"
-              placeholder="Select your birth date"
-              value={accountInfo.birthDate}
-              onChange={(value) => handleInputChange("birthDate", value)}
-              error={errors.birthDate}
-              helperText="For age verification"
-              max={new Date().toISOString().split("T")[0]}
-              fullWidth
-            />
-          </div>
-
-          {/* Province and City - Two columns on larger screens */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <Form.Select
-              name="province"
-              label="Province"
-              placeholder={
-                isLoadingProvinces ? "Loading..." : "Select province"
-              }
-              options={provinces}
-              value={accountInfo.province}
-              onChange={(value) => handleInputChange("province", value)}
-              error={errors.province || provincesErrorMessage}
-              helperText="Select your province"
-              disabled={isLoadingProvinces}
+            {/* FiveM Account Name */}
+            <Form.Text
+              name="fivemName"
+              label="FiveM Account Name"
+              placeholder="Enter your FiveM in-game name"
+              value={accountInfo.fivemName}
+              onChange={(e) => handleInputChange("fivemName", e.target.value)}
+              error={errors.fivemName}
+              helperText="Your in-game name (alphanumeric + underscore)"
+              autoComplete="username"
               fullWidth
             />
 
-            <Form.Select
-              name="city"
-              label="City"
-              placeholder={
-                !accountInfo.province
-                  ? "Select province first"
-                  : isLoadingCities
-                    ? "Loading..."
-                    : "Select city"
-              }
-              options={cities}
-              value={accountInfo.city}
-              onChange={(value) => handleInputChange("city", value)}
-              error={errors.city || citiesErrorMessage}
-              helperText="Select your city"
-              disabled={!accountInfo.province || isLoadingCities}
-              fullWidth
-            />
-          </div>
+            {/* Age and Birth Date - Two columns on larger screens */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <Form.Number
+                name="age"
+                label="Age"
+                placeholder="Enter your age"
+                value={ageValue}
+                onChange={(e) => handleInputChange("age", e.target.value)}
+                error={errors.age}
+                helperText="Players must be 13+ years old"
+                min={13}
+                max={120}
+                fullWidth
+              />
 
-          {/* Navigation Buttons */}
-          <div className="flex justify-end pt-4">
-            <Button.Primary
-              variant="solid"
-              type="submit"
-              className="min-w-32"
-            >
-              Continue
-            </Button.Primary>
-          </div>
-        </form>
+              <Form.Date
+                name="birthDate"
+                label="Birth Date"
+                placeholder="Select your birth date"
+                value={accountInfo.birthDate}
+                onChange={(value) => handleInputChange("birthDate", value)}
+                error={errors.birthDate}
+                helperText="For age verification"
+                max={new Date().toISOString().split("T")[0]}
+                fullWidth
+              />
+            </div>
+
+            {/* Province and City - Two columns on larger screens */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <Form.Select
+                name="province"
+                label="Province"
+                placeholder={
+                  isLoadingProvinces ? "Loading..." : "Select province"
+                }
+                options={provinces}
+                value={accountInfo.province}
+                onChange={(value) => handleInputChange("province", value)}
+                error={errors.province || provincesErrorMessage}
+                helperText="Select your province"
+                disabled={isLoadingProvinces}
+                fullWidth
+              />
+
+              <Form.Select
+                name="city"
+                label="City"
+                placeholder={
+                  !accountInfo.province
+                    ? "Select province first"
+                    : isLoadingCities
+                      ? "Loading..."
+                      : "Select city"
+                }
+                options={cities}
+                value={accountInfo.city}
+                onChange={(value) => handleInputChange("city", value)}
+                error={errors.city || citiesErrorMessage}
+                helperText="Select your city"
+                disabled={!accountInfo.province || isLoadingCities}
+                fullWidth
+              />
+            </div>
+
+            {/* Navigation Buttons */}
+            <div className="flex justify-between pt-4">
+              <Link href={"/auth/"}>
+                <Button.Secondary
+                  variant="outline"
+                  type="submit"
+                  className="min-w-32"
+                >
+                  Back to Login
+                </Button.Secondary>
+              </Link>
+              <Button.Primary
+                variant="solid"
+                type="submit"
+                className="min-w-32"
+              >
+                Continue
+              </Button.Primary>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
     </>
   );
 }

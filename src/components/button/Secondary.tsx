@@ -1,6 +1,8 @@
 import React from "react";
 
-import BaseButton, { BaseButtonPropsInternal } from "./Base";
+import type { BaseButtonPropsInternal } from "@/types/Button";
+
+import BaseButton from "./Base";
 
 // Secondary variant styles (neutral theme)
 const secondaryStyles: Record<string, string> = {

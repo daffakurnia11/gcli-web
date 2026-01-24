@@ -1,6 +1,8 @@
 import classNames from "classnames";
 import React from "react";
 
+import type { SlantProps } from "@/types/Button";
+
 // Size styles for Slant buttons
 const sizeStyles: Record<"lg" | "base" | "sm", string> = {
   lg: "h-14 px-10 text-xl", // 56px height, 18px font
@@ -13,20 +15,6 @@ const variantStyles: Record<"primary" | "secondary", string> = {
   primary: "bg-secondary-700 text-black hover:bg-primary-100",
   secondary: "bg-primary-100 text-black hover:bg-gray-light",
 };
-
-export interface SlantProps {
-  children: React.ReactNode | string;
-  className?: string;
-  disabled?: boolean;
-  type?: "button" | "submit" | "reset";
-  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
-  variant?: "primary" | "secondary";
-  slant?: "left" | "right";
-  size?: "lg" | "base" | "sm";
-  prefix?: React.ReactNode;
-  suffix?: React.ReactNode;
-  fullWidth?: boolean;
-}
 
 export default function Slant({
   children,

@@ -42,8 +42,8 @@ export interface TextInputProps extends BaseInputProps {
  * Props for Number input component
  */
 export interface NumberInputProps extends Omit<BaseInputProps, "onChange" | "onBlur" | "onFocus"> {
-  value?: number;
-  defaultValue?: number;
+  value?: number | string;
+  defaultValue?: number | string;
   min?: number;
   max?: number;
   step?: number;

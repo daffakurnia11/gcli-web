@@ -6,13 +6,7 @@ import Link from "next/link";
 
 import { Button } from "@/components/button";
 import { Typography } from "@/components/typography";
-
-export interface DiscordInfoCardProps {
-  serverName: string | null;
-  inviteLink: string | null;
-  onlineMembers: number;
-  totalMembers: number;
-}
+import type { DiscordInfoCardProps } from "@/types/components/Cards";
 
 export function DiscordInfoCard({
   serverName,

@@ -3,7 +3,7 @@ import "./styles.css";
 import type { Metadata } from "next";
 
 import { Footer, Navbar } from "@/components";
-import { SessionProvider } from "@/components/providers/SessionProvider";
+import { AppProviders } from "@/components/providers/AppProviders";
 import { auth } from "@/lib/auth";
 
 export const metadata: Metadata = {
@@ -57,11 +57,11 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        <SessionProvider session={session}>
+        <AppProviders session={session}>
           <Navbar />
           {children}
           <Footer />
-        </SessionProvider>
+        </AppProviders>
       </body>
     </html>
   );

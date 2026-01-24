@@ -130,6 +130,7 @@ export function DateInput({
   const [isEditingMinute, setIsEditingMinute] = useState(false);
 
   const [isOpen, setIsOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const [viewMonth, setViewMonth] = useState(selectedDate || new Date());
   const [calendarView, setCalendarView] = useState<
     "days" | "months" | "years" | "time"
@@ -139,6 +140,11 @@ export function DateInput({
   );
   const triggerRef = useRef<HTMLButtonElement>(null);
   const calendarRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsMounted(true);
+  }, []);
 
   const handleSelect = (date: Date) => {
     // Set the time if enableTime is true
@@ -506,11 +512,11 @@ export function DateInput({
         aria-expanded={isOpen}
         aria-labelledby={dateId}
       >
-        <span className={selectedDate ? "" : "text-primary-300"}>
-          {selectedDate
+        <span className={selectedDate && isMounted ? "" : "text-primary-300"} suppressHydrationWarning>
+          {selectedDate && isMounted
             ? enableTime
-              ? `${selectedDate.toLocaleDateString()} ${selectedDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12 })}`
-              : selectedDate.toLocaleDateString()
+              ? formatDate(selectedDate, true).replace("T", " ")
+              : formatDate(selectedDate)
             : placeholder ||
               (enableTime ? "Select date and time..." : "Select date...")}
         </span>

@@ -1,10 +1,7 @@
 import classNames from "classnames";
 import React from "react";
 
-import { BaseButtonProps } from "@/types/Button";
-
-import type { PrimaryProps } from "./Primary";
-import type { SecondaryProps } from "./Secondary";
+import type { BaseButtonProps, BaseButtonPropsInternal } from "@/types/Button";
 
 // Size styles - following 8pt grid and touch target guidelines
 const sizeStyles: Record<
@@ -15,19 +12,6 @@ const sizeStyles: Record<
   base: "h-11 px-6 text-base leading-tight", // 44px height, 16px font
   sm: "h-9 px-4 text-sm leading-tight", // 36px height, 14px font
 };
-
-export interface BaseButtonPropsInternal
-  extends Omit<BaseButtonProps, "variant"> {
-  variantStyles: Record<string, string>;
-  slideColor?: string;
-  hoverTextColorClass?: string;
-  variant?: "solid" | "outline" | "text";
-}
-
-export interface ButtonComponent extends React.FC<BaseButtonPropsInternal> {
-  Primary: React.FC<PrimaryProps>;
-  Secondary: React.FC<SecondaryProps>;
-}
 
 function BaseButton({
   children,

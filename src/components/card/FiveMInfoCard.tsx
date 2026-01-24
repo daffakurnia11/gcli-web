@@ -6,13 +6,7 @@ import Link from "next/link";
 
 import { Button } from "@/components/button";
 import { Typography } from "@/components/typography";
-
-export interface FiveMInfoCardProps {
-  serverName: string | null;
-  connectUrl: string | null;
-  onlinePlayers: number;
-  totalPlayers: number;
-}
+import type { FiveMInfoCardProps } from "@/types/components/Cards";
 
 export function FiveMInfoCard({
   serverName,

@@ -61,11 +61,21 @@ export function Select({
   const selectedValue = isControlled ? controlledValue : internalValue;
 
   const [isOpen, setIsOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
 
-  const selectedOption = options.find((opt) => opt.value === selectedValue);
+  const selectedOption = isMounted
+    ? options.find((opt) => opt.value === selectedValue)
+    : undefined;
+
+  const effectiveDisabled = isMounted ? disabled : true;
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsMounted(true);
+  }, []);
 
   const handleSelect = (optionValue: string) => {
     const option = options.find((opt) => opt.value === optionValue);
@@ -83,14 +93,14 @@ export function Select({
   };
 
   const handleToggle = () => {
-    if (!disabled) {
+    if (!effectiveDisabled) {
       setIsOpen((prev) => !prev);
       setFocusedIndex(-1);
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
-    if (disabled) return;
+    if (effectiveDisabled) return;
 
     switch (e.key) {
       case "Enter":
@@ -216,7 +226,7 @@ export function Select({
         type="button"
         id={selectId}
         name={name}
-        disabled={disabled}
+        disabled={effectiveDisabled}
         onClick={handleToggle}
         onFocus={(e) => {
           onFocus?.(e as unknown as React.FocusEvent<HTMLSelectElement>);
@@ -251,8 +261,13 @@ export function Select({
         aria-expanded={isOpen}
         aria-labelledby={selectId}
       >
-        <span className={selectedOption ? "" : "text-primary-300"}>
-          {selectedOption ? selectedOption.label : placeholder || "Select..."}
+        <span
+          className={selectedOption && isMounted ? "" : "text-primary-300"}
+          suppressHydrationWarning
+        >
+          {selectedOption && isMounted
+            ? selectedOption.label
+            : placeholder || "Select..."}
         </span>
         <ChevronDown
           size={sizeConfig.icon}
@@ -329,7 +344,7 @@ export function Select({
         error={error}
         helperText={helperText}
         required={required}
-        disabled={disabled}
+        disabled={effectiveDisabled}
       >
         {selectElement}
       </FieldWrapper>

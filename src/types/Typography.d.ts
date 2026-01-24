@@ -16,3 +16,9 @@ export interface HeadingProps extends TextProps {
 export type ParagraphProps = TextProps;
 
 export type SmallProps = TextProps;
+
+export interface TypographyComponent {
+  Heading: React.FC<HeadingProps>;
+  Paragraph: React.FC<ParagraphProps>;
+  Small: React.FC<SmallProps>;
+}

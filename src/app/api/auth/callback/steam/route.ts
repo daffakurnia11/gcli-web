@@ -1,34 +1,23 @@
-import { SignJWT } from "jose";
 import { NextRequest, NextResponse } from "next/server";
 
-import { extractSteamId, fetchSteamProfile } from "@/lib/steam-auth";
-
-const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET || "");
-
-// Create a JWT token for the user
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function createToken(steamId: string, profile: any) {
-  const token = await new SignJWT({
-    sub: steamId,
-    name: profile.personaname,
-    picture: profile.avatarfull,
-    provider: "steam",
-  })
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt()
-    .setExpirationTime("30d")
-    .sign(secret);
-
-  return token;
-}
+import {
+  extractSteamId,
+  fetchSteamProfile,
+  sanitizeCallbackPath,
+  steamId64ToHex,
+} from "@/lib/steam-auth";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
+
+  // Extract callback URL from query parameters
+  const callbackUrl = sanitizeCallbackPath(searchParams.get("callbackUrl"));
 
   // Extract Steam ID from OpenID response
   const steamId = extractSteamId(searchParams);
 
   if (!steamId) {
+    console.error("Failed to extract Steam ID");
     return NextResponse.redirect(new URL("/auth?error=SteamSignInError", request.url));
   }
 
@@ -36,27 +25,28 @@ export async function GET(request: NextRequest) {
   const profile = await fetchSteamProfile(steamId);
 
   if (!profile) {
+    console.error("Failed to fetch Steam profile");
     return NextResponse.redirect(new URL("/auth?error=SteamProfileError", request.url));
   }
 
-  // Create JWT token
-  const token = await createToken(steamId, profile);
+  // Convert SteamID64 to Steam Hex format for FiveM
+  const steamHex = steamId64ToHex(profile.steamid);
 
-  // Create response and set cookie
-  const response = NextResponse.redirect(new URL("/", request.url));
+  // Create redirect URL with Steam data in query parameters
+  const redirectUrl = new URL(callbackUrl || "/", request.url);
 
-  // Set the next-auth session token cookie
-  response.cookies.set({
-    name: "next-auth.session-token",
-    value: token,
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
-    path: "/",
-  });
+  // Add Steam connection data as URL parameter (base64 encoded)
+  const steamData = {
+    id: profile.steamid,
+    steamHex,
+    username: profile.personaname,
+    image: profile.avatarfull,
+  };
 
-  return response;
+  const steamDataEncoded = Buffer.from(JSON.stringify(steamData)).toString("base64");
+  redirectUrl.searchParams.set("steam_data", steamDataEncoded);
+
+  return NextResponse.redirect(redirectUrl);
 }
 
 export async function POST(request: NextRequest) {

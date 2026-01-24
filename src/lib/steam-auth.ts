@@ -1,22 +1,36 @@
-export interface SteamProfile {
-  steamid: string;
-  personaname: string;
-  avatarfull: string;
-}
+import type { SteamProfile } from "@/types/api/Steam";
 
 // Generate Steam OpenID login URL
-export function getSteamAuthUrl(): string {
+export function getSteamAuthUrl(callbackUrl?: string): string {
   const baseUrl = "https://steamcommunity.com/openid/login";
+  const returnUrl = new URL(`${process.env.NEXTAUTH_URL}/api/auth/callback/steam`);
+
+  // Pass callbackUrl as a query parameter
+  const safeCallbackUrl = sanitizeCallbackPath(callbackUrl);
+  if (safeCallbackUrl) {
+    returnUrl.searchParams.set("callbackUrl", safeCallbackUrl);
+  }
+
   const params = new URLSearchParams({
     "openid.ns": "http://specs.openid.net/auth/2.0",
     "openid.mode": "checkid_setup",
-    "openid.return_to": `${process.env.NEXTAUTH_URL}/api/auth/callback/steam`,
+    "openid.return_to": returnUrl.toString(),
     "openid.realm": process.env.NEXTAUTH_URL || "",
     "openid.claimed_id": "http://specs.openid.net/auth/2.0/identifier_select",
     "openid.identity": "http://specs.openid.net/auth/2.0/identifier_select",
   });
 
   return `${baseUrl}?${params.toString()}`;
+}
+
+export function sanitizeCallbackPath(callbackUrl?: string | null): string | null {
+  if (!callbackUrl) {
+    return null;
+  }
+  if (callbackUrl.startsWith("/") && !callbackUrl.startsWith("//")) {
+    return callbackUrl;
+  }
+  return null;
 }
 
 // Extract Steam ID from OpenID response
@@ -27,6 +41,21 @@ export function extractSteamId(searchParams: URLSearchParams): string | null {
   // Format: https://steamcommunity.com/openid/id/7656119XXXXXXXXX
   const parts = claimedId.split("/");
   return parts[parts.length - 1] || null;
+}
+
+/**
+ * Convert SteamID64 to Steam Hex format for FiveM
+ * Example: "76561198387594752" → "steam:11000013c5de980"
+ */
+export function steamId64ToHex(steamId64: string): string {
+  try {
+    const steamId64BigInt = BigInt(steamId64);
+    const steamHex = steamId64BigInt.toString(16).toLowerCase();
+    return `steam:${steamHex}`;
+  } catch (error) {
+    console.error("Error converting SteamID64 to hex:", error);
+    return steamId64; // Fallback to original ID
+  }
 }
 
 // Fetch Steam user profile using Web API

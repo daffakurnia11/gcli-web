@@ -11,6 +11,9 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "cdn.discordapp.com", pathname: "/**" },
     ],
   },
+  outputFileTracingIncludes: {
+    "/**": ["./src/generated/prisma/**", "./node_modules/.prisma/client/**"],
+  },
 };
 
 export default nextConfig;

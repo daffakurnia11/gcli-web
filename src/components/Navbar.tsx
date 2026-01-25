@@ -54,9 +54,6 @@ export default function Navbar() {
     return () => document.removeEventListener("click", handleClick);
   }, [isUserMenuOpen]);
 
-  useEffect(() => {
-    setIsUserMenuOpen(false);
-  }, [isMobileMenuOpen]);
 
   return (
     <nav
@@ -146,7 +143,10 @@ export default function Navbar() {
 
         <button
           className="md:hidden text-gray-dark"
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          onClick={() => {
+            setIsMobileMenuOpen((prev) => !prev);
+            setIsUserMenuOpen(false);
+          }}
           aria-label="Toggle navigation"
         >
           <span

@@ -1,6 +1,8 @@
 "use client";
 
 import classNames from "classnames";
+import { Eye, EyeOff } from "lucide-react";
+import { useState } from "react";
 
 import type { FormSize, TextInputProps } from "@/types/Form";
 
@@ -47,6 +49,18 @@ export function Text({
   const hasError = Boolean(error);
   const sizeClass = sizeStyles[size];
   const wrapperSizeClass = wrapperSizeStyles[size];
+  const isPasswordField = type === "password";
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const resolvedType =
+    isPasswordField && isPasswordVisible ? "text" : type;
+  const needsSuffix = Boolean(suffix);
+  const rightPaddingClass = isPasswordField
+    ? needsSuffix
+      ? "pr-20"
+      : "pr-14"
+    : needsSuffix
+      ? "pr-10"
+      : "";
 
   const baseInputStyles = `
     ${wrapperSizeClass}
@@ -77,7 +91,7 @@ export function Text({
       <input
         id={inputId}
         name={name}
-        type={type}
+        type={resolvedType}
         value={value}
         defaultValue={defaultValue}
         placeholder={placeholder}
@@ -92,15 +106,30 @@ export function Text({
           baseInputStyles,
           sizeClass,
           Boolean(prefix) && "pl-10",
-          Boolean(suffix) && "pr-10",
+          rightPaddingClass,
           className,
         )}
         aria-invalid={hasError}
       />
       {suffix && (
-        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-primary-300 flex items-center pointer-events-none">
+        <div
+          className={classNames(
+            "absolute top-1/2 -translate-y-1/2 text-primary-300 flex items-center pointer-events-none",
+            isPasswordField ? "right-12" : "right-3",
+          )}
+        >
           {suffix}
         </div>
+      )}
+      {isPasswordField && (
+        <button
+          type="button"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-primary-100 hover:text-secondary-700 transition-colors cursor-pointer"
+          onClick={() => setIsPasswordVisible((prev) => !prev)}
+          aria-label={isPasswordVisible ? "Hide password" : "Show password"}
+        >
+          {isPasswordVisible ? <EyeOff size={16} /> : <Eye size={16} />}
+        </button>
       )}
     </div>
   );

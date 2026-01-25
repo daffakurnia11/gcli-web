@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { z } from "zod";
 
 import { Button } from "@/components/button";
 import { Form } from "@/components/form";
 import { Typography } from "@/components/typography";
 import { useCities, useProvinces } from "@/hooks/useIndonesiaRegions";
+import { useUniqueCheck } from "@/hooks/useUniqueCheck";
 import { readAuthSetupPayload, updateAuthSetupPayload } from "@/lib/authSetupPayload";
 import { formatZodError } from "@/lib/formValidation";
 import {
@@ -28,16 +29,84 @@ type InformationProps = {
 export default function Information({ showStepper = true }: InformationProps) {
   const router = useRouter();
 
-  const [accountInfo, setAccountInfo] = useState<AccountInfoFormData>({
-    name: "",
-    username: "",
-    age: "",
-    birthDate: "",
-    province: { id: 0, name: "" },
-    city: { id: 0, name: "" },
+  const [accountInfo, setAccountInfo] = useState<AccountInfoFormData>(() => {
+    const payload = readAuthSetupPayload() as {
+      accountInfo?: AccountInfoFormData & {
+        realName?: string;
+        fivemName?: string;
+        province?: unknown;
+        city?: unknown;
+      };
+      provinceName?: string;
+      cityName?: string;
+    };
+
+    if (payload.accountInfo) {
+      const raw = payload.accountInfo as AccountInfoFormData & {
+        realName?: string;
+        fivemName?: string;
+        province?: unknown;
+        city?: unknown;
+      };
+      return {
+        name: raw.name || raw.realName || "",
+        username: raw.username || raw.fivemName || "",
+        age: raw.age ?? "",
+        birthDate: raw.birthDate ?? "",
+        province: {
+          id:
+            typeof raw.province === "object" &&
+            raw.province !== null &&
+            "id" in raw.province
+              ? Number(raw.province.id)
+              : Number.parseInt(
+                  typeof raw.province === "string" ? raw.province : "0",
+                  10,
+                ),
+          name:
+            typeof raw.province === "object" &&
+            raw.province !== null &&
+            "name" in raw.province
+              ? String(raw.province.name)
+              : payload.provinceName ?? "",
+        },
+        city: {
+          id:
+            typeof raw.city === "object" && raw.city !== null && "id" in raw.city
+              ? Number(raw.city.id)
+              : Number.parseInt(typeof raw.city === "string" ? raw.city : "0", 10),
+          name:
+            typeof raw.city === "object" && raw.city !== null && "name" in raw.city
+              ? String(raw.city.name)
+              : payload.cityName ?? "",
+        },
+      };
+    }
+
+    return {
+      name: "",
+      username: "",
+      age: "",
+      birthDate: "",
+      province: { id: 0, name: "" },
+      city: { id: 0, name: "" },
+    };
   });
   const [errors, setErrors] = useState<FormErrors<AccountInfoFormData>>({});
   const ageValue = accountInfo.age === "" ? "" : Number(accountInfo.age);
+  const ageNumber = Number.isFinite(ageValue) ? ageValue : null;
+  const today = new Date();
+  const maxBirthDate =
+    ageNumber && ageNumber > 0
+      ? new Date(
+          today.getFullYear() - ageNumber,
+          today.getMonth(),
+          today.getDate(),
+        )
+      : today;
+  const minBirthDate = new Date(today.getFullYear() - 120, today.getMonth(), today.getDate());
+  const maxBirthDateValue = maxBirthDate.toISOString().split("T")[0];
+  const minBirthDateValue = minBirthDate.toISOString().split("T")[0];
 
   const {
     data: provincesData,
@@ -57,24 +126,34 @@ export default function Information({ showStepper = true }: InformationProps) {
 
   const provinces = useMemo<SelectOption[]>(() => {
     const list = provincesData?.data ?? [];
-    return list.map((province: Province) => ({
-      value: province.id,
-      label: province.name,
-    }));
+    return list
+      .map((province: Province) => ({
+        value: province.id,
+        label: province.name,
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label));
   }, [provincesData]);
 
   const cities = useMemo<SelectOption[]>(() => {
     const list = citiesData?.data ?? [];
-    return list.map((city: City) => ({
-      value: city.id,
-      label: city.name,
-    }));
+    return list
+      .map((city: City) => ({
+        value: city.id,
+        label: city.name,
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label));
   }, [citiesData]);
 
   const provincesErrorMessage =
     provincesError instanceof Error ? provincesError.message : "";
   const citiesErrorMessage =
     citiesError instanceof Error ? citiesError.message : "";
+  const usernameValidation = useUniqueCheck(
+    "username",
+    accountInfo.username,
+    (value) => /^[a-zA-Z0-9_]+$/.test(value),
+  );
+  const usernameTaken = usernameValidation.isValid && usernameValidation.exists;
 
   // Handle input change
   const handleInputChange = (field: keyof AccountInfoFormData, value: string) => {
@@ -112,6 +191,33 @@ export default function Information({ showStepper = true }: InformationProps) {
       return;
     }
 
+    if (field === "age") {
+      const nextAge = Number.parseInt(value, 10);
+      if (Number.isFinite(nextAge) && nextAge > 0) {
+        const nextBirthDate = new Date(
+          today.getFullYear() - nextAge,
+          today.getMonth(),
+          today.getDate(),
+        )
+          .toISOString()
+          .split("T")[0];
+        setAccountInfo((prev) => ({
+          ...prev,
+          age: value,
+          birthDate: nextBirthDate,
+        }));
+      } else {
+        setAccountInfo((prev) => ({ ...prev, age: value }));
+      }
+      if (errors.age) {
+        setErrors((prev) => ({ ...prev, age: undefined }));
+      }
+      if (errors.birthDate) {
+        setErrors((prev) => ({ ...prev, birthDate: undefined }));
+      }
+      return;
+    }
+
     setAccountInfo((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));
@@ -141,57 +247,6 @@ export default function Information({ showStepper = true }: InformationProps) {
       router.push("/auth/setup?step=2");
     }
   };
-
-  useEffect(() => {
-    const payload = readAuthSetupPayload() as {
-      accountInfo?: AccountInfoFormData & {
-        realName?: string;
-        fivemName?: string;
-        province?: unknown;
-        city?: unknown;
-      };
-      provinceName?: string;
-      cityName?: string;
-    };
-    if (payload.accountInfo) {
-      const raw = payload.accountInfo;
-      const nextAccountInfo: AccountInfoFormData = {
-        name: "name" in raw ? raw.name : raw.realName ?? "",
-        username: "username" in raw ? raw.username : raw.fivemName ?? "",
-        age: raw.age ?? "",
-        birthDate: raw.birthDate ?? "",
-        province: {
-          id:
-            typeof raw.province === "object" &&
-            raw.province !== null &&
-            "id" in raw.province
-              ? Number(raw.province.id)
-              : Number.parseInt(
-                  typeof raw.province === "string" ? raw.province : "0",
-                  10,
-                ),
-          name:
-            typeof raw.province === "object" &&
-            raw.province !== null &&
-            "name" in raw.province
-              ? String(raw.province.name)
-              : payload.provinceName ?? "",
-        },
-        city: {
-          id:
-            typeof raw.city === "object" && raw.city !== null && "id" in raw.city
-              ? Number(raw.city.id)
-              : Number.parseInt(typeof raw.city === "string" ? raw.city : "0", 10),
-          name:
-            typeof raw.city === "object" && raw.city !== null && "name" in raw.city
-              ? String(raw.city.name)
-              : payload.cityName ?? "",
-        },
-      };
-      setAccountInfo(nextAccountInfo);
-      updateAuthSetupPayload({ accountInfo: nextAccountInfo });
-    }
-  }, []);
 
   return (
     <>
@@ -228,8 +283,12 @@ export default function Information({ showStepper = true }: InformationProps) {
               placeholder="Enter your FiveM in-game name"
               value={accountInfo.username}
               onChange={(e) => handleInputChange("username", e.target.value)}
-              error={errors.username}
-              helperText="Your in-game name (alphanumeric + underscore)"
+              error={errors.username || (usernameTaken ? "FiveM name already exists" : "")}
+              helperText={
+                usernameValidation.isLoading
+                  ? "Checking availability..."
+                  : "Your in-game name (alphanumeric + underscore)"
+              }
               autoComplete="username"
               fullWidth
             />
@@ -257,7 +316,8 @@ export default function Information({ showStepper = true }: InformationProps) {
                 onChange={(value) => handleInputChange("birthDate", value)}
                 error={errors.birthDate}
                 helperText="For age verification"
-                max={new Date().toISOString().split("T")[0]}
+                min={minBirthDateValue}
+                max={maxBirthDateValue}
                 fullWidth
               />
             </div>

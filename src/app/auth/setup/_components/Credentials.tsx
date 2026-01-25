@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { z } from "zod";
 
 import { Button } from "@/components/button";
 import { Form } from "@/components/form";
 import { Typography } from "@/components/typography";
+import { useUniqueCheck } from "@/hooks/useUniqueCheck";
 import {
   readAuthSetupPayload,
   updateAuthSetupPayload,
@@ -27,12 +28,24 @@ type CredentialsProps = {
 export default function Credentials({ showStepper = true }: CredentialsProps) {
   const router = useRouter();
 
-  const [password, setPassword] = useState<PasswordFormData>({
-    email: "",
-    password: "",
-    confirmPassword: "",
+  const [password, setPassword] = useState<PasswordFormData>(() => {
+    const payload = readAuthSetupPayload();
+    if (payload.credentials) {
+      return payload.credentials;
+    }
+    return {
+      email: "",
+      password: "",
+      confirmPassword: "",
+    };
   });
   const [errors, setErrors] = useState<FormErrors<PasswordFormData>>({});
+  const emailValidation = useUniqueCheck(
+    "email",
+    password.email,
+    (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
+  );
+  const emailTaken = emailValidation.isValid && emailValidation.exists;
 
   // Handle input change
   const handleInputChange = (field: keyof PasswordFormData, value: string) => {
@@ -71,13 +84,6 @@ export default function Credentials({ showStepper = true }: CredentialsProps) {
     }
   };
 
-  useEffect(() => {
-    const payload = readAuthSetupPayload();
-    if (payload.credentials) {
-      setPassword(payload.credentials);
-    }
-  }, []);
-
   return (
     <>
       {showStepper && <Stepper currentStep={2} />}
@@ -101,8 +107,12 @@ export default function Credentials({ showStepper = true }: CredentialsProps) {
             placeholder="Enter your email address"
             value={password.email}
             onChange={(e) => handleInputChange("email", e.target.value)}
-            error={errors.email}
-            helperText="We'll send account updates to this email"
+            error={errors.email || (emailTaken ? "Email already registered" : "")}
+            helperText={
+              emailValidation.isLoading
+                ? "Checking availability..."
+                : "We'll send account updates to this email"
+            }
             autoComplete="email"
             fullWidth
           />

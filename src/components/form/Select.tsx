@@ -2,7 +2,7 @@
 
 import classNames from "classnames";
 import { ChevronDown } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { FormSize, SelectProps } from "@/types/Form";
 
@@ -63,14 +63,23 @@ export function Select({
   const [isOpen, setIsOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(-1);
+  const [searchTerm, setSearchTerm] = useState("");
   const triggerRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
 
   const selectedOption = isMounted
     ? options.find((opt) => opt.value === selectedValue)
     : undefined;
 
   const effectiveDisabled = isMounted ? disabled : true;
+  const filteredOptions = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return options;
+    }
+    const normalized = searchTerm.trim().toLowerCase();
+    return options.filter((option) => option.label.toLowerCase().includes(normalized));
+  }, [options, searchTerm]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -88,14 +97,24 @@ export function Select({
       }
       setIsOpen(false);
       setFocusedIndex(-1);
+      setSearchTerm("");
       triggerRef.current?.focus();
     }
   };
 
   const handleToggle = () => {
     if (!effectiveDisabled) {
-      setIsOpen((prev) => !prev);
-      setFocusedIndex(-1);
+      setIsOpen((prev) => {
+        const next = !prev;
+        if (!next) {
+          setSearchTerm("");
+          setFocusedIndex(-1);
+        }
+        return next;
+      });
+      if (!isOpen) {
+        setFocusedIndex(-1);
+      }
     }
   };
 
@@ -107,7 +126,7 @@ export function Select({
       case " ":
         e.preventDefault();
         if (isOpen && focusedIndex >= 0) {
-          const option = options[focusedIndex];
+          const option = filteredOptions[focusedIndex];
           if (option && !option.disabled) {
             handleSelect(option.value);
           }
@@ -121,7 +140,7 @@ export function Select({
           setIsOpen(true);
           setFocusedIndex(-1);
         } else {
-          const nextIndex = options.findIndex(
+          const nextIndex = filteredOptions.findIndex(
             (opt, i) => i > focusedIndex && !opt.disabled,
           );
           if (nextIndex >= 0) {
@@ -132,7 +151,7 @@ export function Select({
       case "ArrowUp":
         e.preventDefault();
         if (isOpen) {
-          const prevIndex = options
+          const prevIndex = filteredOptions
             .map((opt, i) => ({ opt, i }))
             .reverse()
             .find((item) => item.i < focusedIndex && !item.opt.disabled)?.i;
@@ -144,7 +163,7 @@ export function Select({
       case "Home":
         e.preventDefault();
         if (isOpen) {
-          const firstEnabled = options.findIndex((opt) => !opt.disabled);
+          const firstEnabled = filteredOptions.findIndex((opt) => !opt.disabled);
           if (firstEnabled >= 0) {
             setFocusedIndex(firstEnabled);
           }
@@ -153,7 +172,7 @@ export function Select({
       case "End":
         e.preventDefault();
         if (isOpen) {
-          const lastEnabled = options
+          const lastEnabled = filteredOptions
             .map((opt, i) => ({ opt, i }))
             .reverse()
             .find((item) => !item.opt.disabled)?.i;
@@ -201,6 +220,53 @@ export function Select({
     }
   };
 
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    switch (e.key) {
+      case "ArrowDown": {
+        e.preventDefault();
+        const nextIndex = filteredOptions.findIndex(
+          (opt, i) => i > focusedIndex && !opt.disabled,
+        );
+        if (nextIndex >= 0) {
+          setFocusedIndex(nextIndex);
+        } else if (filteredOptions.length > 0) {
+          const firstEnabled = filteredOptions.findIndex((opt) => !opt.disabled);
+          if (firstEnabled >= 0) {
+            setFocusedIndex(firstEnabled);
+          }
+        }
+        break;
+      }
+      case "ArrowUp": {
+        e.preventDefault();
+        const prevIndex = filteredOptions
+          .map((opt, i) => ({ opt, i }))
+          .reverse()
+          .find((item) => item.i < focusedIndex && !item.opt.disabled)?.i;
+        if (prevIndex !== undefined) {
+          setFocusedIndex(prevIndex);
+        }
+        break;
+      }
+      case "Enter": {
+        e.preventDefault();
+        if (focusedIndex >= 0) {
+          const option = filteredOptions[focusedIndex];
+          if (option && !option.disabled) {
+            handleSelect(option.value);
+          }
+        }
+        break;
+      }
+      case "Escape":
+        e.preventDefault();
+        setIsOpen(false);
+        setFocusedIndex(-1);
+        triggerRef.current?.focus();
+        break;
+    }
+  };
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -217,6 +283,16 @@ export function Select({
 
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      searchRef.current?.focus();
+    });
   }, [isOpen]);
 
   const selectElement = (
@@ -297,7 +373,24 @@ export function Select({
           )}
           tabIndex={-1}
         >
-          {options.map((option, index) => {
+          <li className="px-3 py-2">
+            <input
+              ref={searchRef}
+              type="text"
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setFocusedIndex(-1);
+              }}
+              onKeyDown={handleSearchKeyDown}
+              placeholder="Search..."
+              className="w-full rounded-md bg-primary-800 border border-primary-700 px-3 py-2 text-sm text-primary-100 placeholder:text-primary-400 focus:border-secondary-700 focus:outline-none"
+            />
+          </li>
+          {filteredOptions.length === 0 && (
+            <li className="px-4 py-3 text-sm text-primary-400">No results</li>
+          )}
+          {filteredOptions.map((option, index) => {
             const isSelected = option.value === selectedValue;
             const isFocused = focusedIndex === index;
 

@@ -1,12 +1,12 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo } from "react";
 
 import {
+  type AuthSetupPayload,
   readAuthSetupPayload,
   updateAuthSetupPayload,
-  type AuthSetupPayload,
 } from "@/lib/authSetupPayload";
 
 import AccountLink from "./AccountLink";
@@ -19,21 +19,14 @@ export default function AccountLinkWrapper({
   showStepper = true,
 }: AccountLinkWrapperProps) {
   const searchParams = useSearchParams();
-  const [discordInfo, setDiscordInfo] = useState<AuthSetupPayload["discord"] | null>(
-    null,
+  const storedDiscord = useMemo(
+    () => readAuthSetupPayload().discord ?? null,
+    [],
   );
-
-  useEffect(() => {
-    const payload = readAuthSetupPayload();
-    if (payload.discord) {
-      setDiscordInfo(payload.discord);
-    }
-  }, []);
-
-  useEffect(() => {
-    const discordDataParam = searchParams.get("discord_data");
+  const discordDataParam = searchParams.get("discord_data");
+  const parsedDiscord = useMemo(() => {
     if (!discordDataParam) {
-      return;
+      return null;
     }
 
     try {
@@ -50,26 +43,36 @@ export default function AccountLinkWrapper({
         image?: string | null;
       };
 
-      if (data.id) {
-        const payload = {
-          id: data.id,
-          username: data.username || "Discord User",
-          name: data.name ?? null,
-          email: data.email ?? null,
-          image: data.image ?? null,
-          connected: true,
-        };
-        updateAuthSetupPayload({ discord: payload });
-        setDiscordInfo(payload);
+      if (!data.id) {
+        return null;
       }
 
-      const url = new URL(window.location.href);
-      url.searchParams.delete("discord_data");
-      window.history.replaceState({}, "", url.toString());
+      return {
+        id: data.id,
+        username: data.username || "Discord User",
+        name: data.name ?? null,
+        email: data.email ?? null,
+        image: data.image ?? null,
+        connected: true,
+      };
     } catch (error) {
       console.error("Error parsing discord data from URL:", error);
+      return null;
     }
-  }, [searchParams]);
+  }, [discordDataParam]);
+  const discordInfo: AuthSetupPayload["discord"] | null = parsedDiscord ?? storedDiscord;
+
+  useEffect(() => {
+    if (!parsedDiscord) {
+      return;
+    }
+
+    updateAuthSetupPayload({ discord: parsedDiscord });
+
+    const url = new URL(window.location.href);
+    url.searchParams.delete("discord_data");
+    window.history.replaceState({}, "", url.toString());
+  }, [parsedDiscord]);
 
   return <AccountLink showStepper={showStepper} discordInfo={discordInfo} />;
 }

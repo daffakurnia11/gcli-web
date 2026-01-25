@@ -30,14 +30,69 @@ type AccountLinkProps = {
 
 export default function AccountLink({ showStepper = true, discordInfo }: AccountLinkProps) {
   const router = useRouter();
-  const [isMounted, setIsMounted] = useState(false);
   const [submissionError, setSubmissionError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [accountInfo, setAccountInfo] = useState<AccountInfoFormData | null>(null);
-  const [credentials, setCredentials] = useState<{
+  const [accountInfo] = useState<AccountInfoFormData | null>(() => {
+    const payload = readAuthSetupPayload() as {
+      accountInfo?: {
+        name?: string;
+        username?: string;
+        realName?: string;
+        fivemName?: string;
+        age?: string;
+        birthDate?: string;
+        province?: { id?: number | string; name?: string } | string;
+        city?: { id?: number | string; name?: string } | string;
+      };
+      provinceName?: string;
+      cityName?: string;
+    };
+
+    if (!payload.accountInfo) {
+      return null;
+    }
+
+    const raw = payload.accountInfo;
+    return {
+      name: raw.name ?? raw.realName ?? "",
+      username: raw.username ?? raw.fivemName ?? "",
+      age: raw.age ?? "",
+      birthDate: raw.birthDate ?? "",
+      province:
+        typeof raw.province === "object" && raw.province !== null
+          ? {
+              id: Number(raw.province.id ?? 0),
+              name: raw.province.name ?? payload.provinceName ?? "",
+            }
+          : {
+              id: Number.parseInt(raw.province ?? "0", 10),
+              name: payload.provinceName ?? "",
+            },
+      city:
+        typeof raw.city === "object" && raw.city !== null
+          ? {
+              id: Number(raw.city.id ?? 0),
+              name: raw.city.name ?? payload.cityName ?? "",
+            }
+          : {
+              id: Number.parseInt(raw.city ?? "0", 10),
+              name: payload.cityName ?? "",
+            },
+    };
+  });
+  const [credentials] = useState<{
     email: string;
     password: string;
-  } | null>(null);
+  } | null>(() => {
+    const payload = readAuthSetupPayload();
+    if (!payload.credentials) {
+      return null;
+    }
+    return {
+      email: payload.credentials.email,
+      password: payload.credentials.password,
+    };
+  });
 
   const isAccountInfoComplete = useMemo(() => {
     if (!accountInfo) {
@@ -174,73 +229,11 @@ export default function AccountLink({ showStepper = true, discordInfo }: Account
   };
 
   useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  useEffect(() => {
-    const payload = readAuthSetupPayload() as {
-      accountInfo?: {
-        name?: string;
-        username?: string;
-        realName?: string;
-        fivemName?: string;
-        age?: string;
-        birthDate?: string;
-        province?: { id?: number | string; name?: string } | string;
-        city?: { id?: number | string; name?: string } | string;
-      };
-      provinceName?: string;
-      cityName?: string;
-    };
-    if (payload.accountInfo) {
-      const raw = payload.accountInfo;
-      const normalized = {
-        name: raw.name ?? raw.realName ?? "",
-        username: raw.username ?? raw.fivemName ?? "",
-        age: raw.age ?? "",
-        birthDate: raw.birthDate ?? "",
-        province:
-          typeof raw.province === "object" && raw.province !== null
-            ? {
-                id: Number(raw.province.id ?? 0),
-                name: raw.province.name ?? payload.provinceName ?? "",
-              }
-            : {
-                id: Number.parseInt(raw.province ?? "0", 10),
-                name: payload.provinceName ?? "",
-              },
-        city:
-          typeof raw.city === "object" && raw.city !== null
-            ? {
-                id: Number(raw.city.id ?? 0),
-                name: raw.city.name ?? payload.cityName ?? "",
-              }
-            : {
-                id: Number.parseInt(raw.city ?? "0", 10),
-                name: payload.cityName ?? "",
-              },
-      };
-      setAccountInfo(normalized);
-      updateAuthSetupPayload({ accountInfo: normalized });
-    }
-    if (payload.credentials) {
-      setCredentials({
-        email: payload.credentials.email,
-        password: payload.credentials.password,
-      });
-    }
-  }, []);
-
-  useEffect(() => {
     if (!discordInfo) {
       return;
     }
     updateAuthSetupPayload({ discord: discordInfo });
   }, [discordInfo]);
-
-  if (!isMounted) {
-    return null;
-  }
 
   return (
     <>

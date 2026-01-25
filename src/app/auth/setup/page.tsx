@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 import { readAuthSetupPayload, updateAuthSetupPayload } from "@/lib/authSetupPayload";
 
@@ -18,17 +18,7 @@ export default function AuthSetupPage() {
   const { data: session, status } = useSession();
   const stepParam = searchParams.get("step") || "1";
   const currentStep = parseInt(stepParam, 10) as 1 | 2 | 3;
-  const [isMounted, setIsMounted] = useState(false);
-
   useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!isMounted) {
-      return;
-    }
-
     const discordDataParam = searchParams.get("discord_data");
     if (!discordDataParam) {
       return;
@@ -68,13 +58,9 @@ export default function AuthSetupPage() {
     } catch (error) {
       console.error("Error parsing discord data from URL:", error);
     }
-  }, [isMounted, searchParams]);
+  }, [searchParams]);
 
   useEffect(() => {
-    if (!isMounted) {
-      return;
-    }
-
     if (status === "authenticated" && session?.user && session.provider === "discord") {
       const rawDiscordId = session.user.discordId || session.user.id;
       const discordId = rawDiscordId ? `discord:${rawDiscordId.replace(/^discord:/, "")}` : "";
@@ -152,7 +138,7 @@ export default function AuthSetupPage() {
     };
 
     validateStepAccess();
-  }, [currentStep, router, isMounted, session, status]);
+  }, [currentStep, router, session, status]);
 
   // Render the appropriate step
   let content: React.ReactNode;
@@ -169,10 +155,6 @@ export default function AuthSetupPage() {
       break;
     default:
       content = <Information showStepper={false} />;
-  }
-
-  if (!isMounted) {
-    return null;
   }
 
   return (

@@ -1,7 +1,8 @@
-import { type NextRequest,NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { NextResponse } from "next/server";
 
-export async function middleware(request: NextRequest) {
+import { auth } from "@/lib/auth";
+
+export default auth((request) => {
   const nextUrl = request.nextUrl;
   const pathname = nextUrl.pathname;
 
@@ -12,12 +13,9 @@ export async function middleware(request: NextRequest) {
   ) {
     return NextResponse.next();
   }
-  const token = await getToken({
-    req: request,
-    secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
-  });
-  const isAuthenticated = Boolean(token);
-  const isRegistered = Boolean(token?.isRegistered);
+
+  const isAuthenticated = Boolean(request.auth);
+  const isRegistered = Boolean(request.auth?.user?.isRegistered);
   const isAuthPage = pathname === "/auth" || pathname === "/auth/";
   const isSetupPage = pathname.startsWith("/auth/setup");
   const isDashboardPage =
@@ -28,7 +26,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/auth", nextUrl));
   }
 
-  if (nextUrl.pathname.startsWith("/auth")) {
+  if (pathname.startsWith("/auth")) {
     if (isAuthenticated && isRegistered) {
       return NextResponse.redirect(new URL("/dashboard", nextUrl));
     }
@@ -48,7 +46,7 @@ export async function middleware(request: NextRequest) {
   }
 
   return NextResponse.next();
-}
+});
 
 export const config = {
   matcher: ["/:path*"],

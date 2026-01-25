@@ -1,8 +1,7 @@
-import { NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
+import { NextResponse, type NextRequest } from "next/server";
 
-import { auth } from "@/lib/auth";
-
-export default auth((request) => {
+export async function middleware(request: NextRequest) {
   const nextUrl = request.nextUrl;
   const pathname = nextUrl.pathname;
 
@@ -14,8 +13,12 @@ export default auth((request) => {
     return NextResponse.next();
   }
 
-  const isAuthenticated = Boolean(request.auth);
-  const isRegistered = Boolean(request.auth?.user?.isRegistered);
+  const token = await getToken({
+    req: request,
+    secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
+  });
+  const isAuthenticated = Boolean(token);
+  const isRegistered = Boolean(token?.isRegistered);
   const isAuthPage = pathname === "/auth" || pathname === "/auth/";
   const isSetupPage = pathname.startsWith("/auth/setup");
   const isDashboardPage =
@@ -46,7 +49,7 @@ export default auth((request) => {
   }
 
   return NextResponse.next();
-});
+}
 
 export const config = {
   matcher: ["/:path*"],

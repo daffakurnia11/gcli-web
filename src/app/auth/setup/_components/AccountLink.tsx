@@ -1,74 +1,68 @@
 "use client";
 
-import { SiDiscord, SiSteam } from "@icons-pack/react-simple-icons";
+import { SiDiscord } from "@icons-pack/react-simple-icons";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { signIn, signOut } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/button";
 import { Typography } from "@/components/typography";
 import {
-  resetAuthSetup,
-  setIsSubmitting,
-  setSubmissionError,
-  useAppDispatch,
-  useAppSelector,
-} from "@/store";
+  clearAuthSetupPayload,
+  readAuthSetupPayload,
+  updateAuthSetupPayload,
+} from "@/lib/authSetupPayload";
+import type { AccountInfoFormData } from "@/schemas/authSetup";
 
 import Stepper from "./Stepper";
 
 type AccountLinkProps = {
   showStepper?: boolean;
+  discordInfo: {
+    id: string;
+    username: string;
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+    connected: boolean;
+  } | null;
 };
 
-export default function AccountLink({ showStepper = true }: AccountLinkProps) {
+export default function AccountLink({ showStepper = true, discordInfo }: AccountLinkProps) {
   const router = useRouter();
-  const dispatch = useAppDispatch();
   const [isMounted, setIsMounted] = useState(false);
+  const [submissionError, setSubmissionError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [accountInfo, setAccountInfo] = useState<AccountInfoFormData | null>(null);
+  const [credentials, setCredentials] = useState<{
+    email: string;
+    password: string;
+  } | null>(null);
 
-  // Select state from Redux store
-  const accountInfo = useAppSelector((state) => state.authSetup.accountInfo);
-  const provinceName = useAppSelector((state) => state.authSetup.provinceName);
-  const cityName = useAppSelector((state) => state.authSetup.cityName);
-  const password = useAppSelector((state) => state.authSetup.password);
-  const isConnectedToDiscord = useAppSelector(
-    (state) => state.authSetup.isConnectedToDiscord,
-  );
-  const isConnectedToSteam = useAppSelector(
-    (state) => state.authSetup.isConnectedToSteam,
-  );
-  const discordUsername = useAppSelector(
-    (state) => state.authSetup.discordUsername,
-  );
-  const steamUsername = useAppSelector(
-    (state) => state.authSetup.steamUsername,
-  );
-  const steamImage = useAppSelector((state) => state.authSetup.steamImage);
-  const steamId64 = useAppSelector((state) => state.authSetup.steamId64);
-  const steamHex = useAppSelector((state) => state.authSetup.steamHex);
-  const discordId = useAppSelector((state) => state.authSetup.discordId);
-  const discordName = useAppSelector((state) => state.authSetup.discordName);
-  const discordEmail = useAppSelector((state) => state.authSetup.discordEmail);
-  const discordImage = useAppSelector((state) => state.authSetup.discordImage);
-  const submissionError = useAppSelector((state) => state.authSetup.submissionError);
-  const isSubmitting = useAppSelector((state) => state.authSetup.isSubmitting);
-  const isAccountInfoComplete = Boolean(
-    accountInfo.realName &&
-      accountInfo.fivemName &&
-      accountInfo.age &&
-      accountInfo.birthDate &&
-      accountInfo.province &&
-      accountInfo.city,
-  );
+  const isAccountInfoComplete = useMemo(() => {
+    if (!accountInfo) {
+      return false;
+    }
+    return Boolean(
+      accountInfo.name &&
+        accountInfo.username &&
+        accountInfo.age &&
+        accountInfo.birthDate &&
+        accountInfo.province.id &&
+        accountInfo.city.id,
+    );
+  }, [accountInfo]);
 
-  const isCredentialsComplete = Boolean(password.email && password.password);
+  const isCredentialsComplete = useMemo(() => {
+    return Boolean(credentials?.email && credentials?.password);
+  }, [credentials]);
+
+  const isConnectedToDiscord = Boolean(discordInfo?.connected);
 
   const isJoinDisabled =
     !isAccountInfoComplete ||
     !isCredentialsComplete ||
     !isConnectedToDiscord ||
-    !isConnectedToSteam ||
     isSubmitting;
 
   // Handle Discord connection
@@ -77,20 +71,10 @@ export default function AccountLink({ showStepper = true }: AccountLinkProps) {
       return;
     }
     // Clear error when attempting to connect
-    dispatch(setSubmissionError(""));
-    // Redirect to Discord OAuth
-    await signIn("discord", { callbackUrl: "/auth/setup?step=3" });
-  };
-
-  // Handle Steam connection
-  const handleSteamConnect = () => {
-    if (isConnectedToSteam) {
-      return;
-    }
-    // Clear error when attempting to connect
-    dispatch(setSubmissionError(""));
-    // Redirect to Steam OpenID login
-    window.location.href = `${window.location.origin}/api/auth/signin/steam?callbackUrl=${encodeURIComponent("/auth/setup?step=3")}`;
+    setSubmissionError("");
+    // Redirect to Discord OAuth (connect only)
+    const callbackUrl = encodeURIComponent("/auth/setup?step=3");
+    window.location.href = `/api/auth/connect/discord?callbackUrl=${callbackUrl}`;
   };
 
   // Handle back navigation
@@ -103,7 +87,7 @@ export default function AccountLink({ showStepper = true }: AccountLinkProps) {
     e.preventDefault();
 
     // Clear previous error
-    dispatch(setSubmissionError(""));
+    setSubmissionError("");
 
     if (!isAccountInfoComplete) {
       router.push("/auth/setup?step=1");
@@ -117,72 +101,36 @@ export default function AccountLink({ showStepper = true }: AccountLinkProps) {
 
     // Require Discord connection to proceed
     if (!isConnectedToDiscord) {
-      dispatch(setSubmissionError("Please connect your Discord account to continue"));
+      setSubmissionError("Please connect your Discord account to continue");
       return;
     }
 
-    if (!isConnectedToSteam) {
-      dispatch(setSubmissionError("Please connect your Steam account to continue"));
+    if (!accountInfo || !credentials || !discordInfo) {
+      setSubmissionError("Please complete the previous steps first.");
       return;
     }
-
-    // Prepare payload data
-    const cachedSteam = (() => {
-      if (typeof window === "undefined") {
-        return null;
-      }
-      try {
-        const raw = sessionStorage.getItem("steam_data");
-        if (!raw) {
-          return null;
-        }
-        return JSON.parse(raw) as {
-          steamId64?: string;
-          steamHex?: string;
-          username?: string;
-          image?: string;
-        };
-      } catch {
-        return null;
-      }
-    })();
-
-    const resolvedSteamId64 = steamId64 || cachedSteam?.steamId64 || null;
-    const resolvedSteamHex = steamHex || cachedSteam?.steamHex || null;
-    const resolvedSteamUsername = steamUsername || cachedSteam?.username || null;
-    const resolvedSteamImage = steamImage || cachedSteam?.image || null;
 
     const payload = {
       accountInfo: {
-        ...accountInfo,
-        province: {
-          id: accountInfo.province,
-          name: provinceName,
-        },
-        city: {
-          id: accountInfo.city,
-          name: cityName,
-        },
+        name: accountInfo.name,
+        username: accountInfo.username,
+        age: accountInfo.age,
+        birthDate: accountInfo.birthDate,
+        province: accountInfo.province,
+        city: accountInfo.city,
       },
       credentials: {
-        email: password.email,
-        password: password.password,
+        email: credentials.email,
+        password: credentials.password,
       },
       socialConnections: {
         discord: {
-          id: discordId,
-          username: discordUsername,
-          name: discordName,
-          email: discordEmail,
-          image: discordImage,
-          connected: isConnectedToDiscord,
-        },
-        steam: {
-          id: resolvedSteamId64,
-          steamHex: resolvedSteamHex,
-          username: resolvedSteamUsername,
-          image: resolvedSteamImage,
-          connected: isConnectedToSteam || Boolean(resolvedSteamHex),
+          id: discordInfo.id,
+          username: discordInfo.username,
+          name: discordInfo.name,
+          email: discordInfo.email,
+          image: discordInfo.image,
+          connected: discordInfo.connected,
         },
       },
     };
@@ -192,7 +140,7 @@ export default function AccountLink({ showStepper = true }: AccountLinkProps) {
     }
 
     // Submit to API
-    dispatch(setIsSubmitting(true));
+    setIsSubmitting(true);
 
     try {
       const response = await fetch("/api/register", {
@@ -208,40 +156,87 @@ export default function AccountLink({ showStepper = true }: AccountLinkProps) {
       };
 
       if (!response.ok) {
-        dispatch(setSubmissionError(data.error ?? "Registration failed"));
+        setSubmissionError(data.error ?? "Registration failed");
         return;
       }
 
       if (data.success) {
-        // Sign out from NextAuth to clear session cookies FIRST
-        await signOut({ redirect: false });
-
-        // Clear ALL storage BEFORE resetting Redux state
-        try {
-          sessionStorage.clear();
-          localStorage.clear();
-        } catch {
-          // Ignore storage failures.
-        }
-
-        // Now reset Redux state (with storage cleared, nothing will be re-persisted)
-        dispatch(resetAuthSetup());
-
+        clearAuthSetupPayload();
         // Redirect to auth page
         window.location.href = "/auth/";
         return;
       }
     } catch {
-      dispatch(setSubmissionError("Network error. Please try again."));
+      setSubmissionError("Network error. Please try again.");
     } finally {
-      dispatch(setIsSubmitting(false));
+      setIsSubmitting(false);
     }
   };
 
   useEffect(() => {
-     
     setIsMounted(true);
   }, []);
+
+  useEffect(() => {
+    const payload = readAuthSetupPayload() as {
+      accountInfo?: {
+        name?: string;
+        username?: string;
+        realName?: string;
+        fivemName?: string;
+        age?: string;
+        birthDate?: string;
+        province?: { id?: number | string; name?: string } | string;
+        city?: { id?: number | string; name?: string } | string;
+      };
+      provinceName?: string;
+      cityName?: string;
+    };
+    if (payload.accountInfo) {
+      const raw = payload.accountInfo;
+      const normalized = {
+        name: raw.name ?? raw.realName ?? "",
+        username: raw.username ?? raw.fivemName ?? "",
+        age: raw.age ?? "",
+        birthDate: raw.birthDate ?? "",
+        province:
+          typeof raw.province === "object" && raw.province !== null
+            ? {
+                id: Number(raw.province.id ?? 0),
+                name: raw.province.name ?? payload.provinceName ?? "",
+              }
+            : {
+                id: Number.parseInt(raw.province ?? "0", 10),
+                name: payload.provinceName ?? "",
+              },
+        city:
+          typeof raw.city === "object" && raw.city !== null
+            ? {
+                id: Number(raw.city.id ?? 0),
+                name: raw.city.name ?? payload.cityName ?? "",
+              }
+            : {
+                id: Number.parseInt(raw.city ?? "0", 10),
+                name: payload.cityName ?? "",
+              },
+      };
+      setAccountInfo(normalized);
+      updateAuthSetupPayload({ accountInfo: normalized });
+    }
+    if (payload.credentials) {
+      setCredentials({
+        email: payload.credentials.email,
+        password: payload.credentials.password,
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!discordInfo) {
+      return;
+    }
+    updateAuthSetupPayload({ discord: discordInfo });
+  }, [discordInfo]);
 
   if (!isMounted) {
     return null;
@@ -291,16 +286,6 @@ export default function AccountLink({ showStepper = true }: AccountLinkProps) {
             {isConnectedToDiscord ? "Connected to Discord" : "Continue with Discord"}
           </Button.Primary>
 
-          <Button.Primary
-            size="lg"
-            fullWidth
-            className="bg-[#000000]! border-[#000000]! text-tertiary-white cursor-pointer"
-            prefix={<SiSteam className="text-tertiary-white" />}
-            onClick={handleSteamConnect}
-            disabled={isConnectedToSteam}
-          >
-            {isConnectedToSteam ? "Connected to Steam" : "Continue with Steam"}
-          </Button.Primary>
         </div>
 
         {/* Action Buttons */}
@@ -330,9 +315,6 @@ export default function AccountLink({ showStepper = true }: AccountLinkProps) {
           <Typography.Small className="text-primary-300 text-center">
             Connecting your accounts allows us to verify your identity and link your
             in-game progress.
-          </Typography.Small>
-          <Typography.Small className="text-primary-300 text-center">
-            Discord and Steam are required to join GCLI Server via FiveM.
           </Typography.Small>
         </div>
       </motion.div>

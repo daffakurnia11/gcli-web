@@ -10,8 +10,8 @@ declare module "next-auth" {
       discordName?: string | null;
       discordEmail?: string | null;
       discordImage?: string | null;
-      steamHex?: string | null;
-      steamId64?: string | null;
+      username?: string | null;
+      isRegistered?: boolean | null;
     } & DefaultSession["user"];
     provider?: string;
   }
@@ -25,7 +25,7 @@ declare module "next-auth/jwt" {
     discordName?: string | null;
     discordEmail?: string | null;
     discordImage?: string | null;
-    steamHex?: string | null;
-    steamId64?: string | null;
+    username?: string | null;
+    isRegistered?: boolean | null;
   }
 }

@@ -7,16 +7,16 @@ import { prisma } from "@/lib/prisma";
 // Request body schema
 const registerSchema = z.object({
   accountInfo: z.object({
-    realName: z.string().min(1),
-    fivemName: z.string().min(1),
+    name: z.string().min(1),
+    username: z.string().min(1),
     age: z.string(),
     birthDate: z.string(),
     province: z.object({
-      id: z.string(),
+      id: z.number(),
       name: z.string(),
     }),
     city: z.object({
-      id: z.string(),
+      id: z.number(),
       name: z.string(),
     }),
   }),
@@ -30,13 +30,6 @@ const registerSchema = z.object({
       username: z.string(),
       name: z.string().nullable().optional(),
       email: z.string().email().nullable().optional(),
-      image: z.string().nullable().optional(),
-      connected: z.boolean(),
-    }),
-    steam: z.object({
-      id: z.string().nullable().optional(),
-      steamHex: z.string(),
-      username: z.string().nullable().optional(),
       image: z.string().nullable().optional(),
       connected: z.boolean(),
     }),
@@ -87,20 +80,6 @@ export async function POST(req: Request) {
       }
     }
 
-    // Check if Steam hex already exists
-    if (validatedData.socialConnections.steam.connected) {
-      const existingSteam = await prisma.web_accounts.findUnique({
-        where: { steam_hex: validatedData.socialConnections.steam.steamHex },
-      });
-
-      if (existingSteam) {
-        return NextResponse.json(
-          { error: "Steam account already linked to another user" },
-          { status: 400 },
-        );
-      }
-    }
-
     // Hash password
     const passwordHash = await bcrypt.hash(
       validatedData.credentials.password,
@@ -121,13 +100,13 @@ export async function POST(req: Request) {
 
     // Create web account with profile and link to FiveM users table if exists
     const profileData = {
-      real_name: validatedData.accountInfo.realName,
-      fivem_name: validatedData.accountInfo.fivemName,
+      real_name: validatedData.accountInfo.name,
+      fivem_name: validatedData.accountInfo.username,
       age,
       birth_date: birthDate,
-      province_id: validatedData.accountInfo.province.id,
+      province_id: String(validatedData.accountInfo.province.id),
       province_name: validatedData.accountInfo.province.name,
-      city_id: validatedData.accountInfo.city.id,
+      city_id: String(validatedData.accountInfo.city.id),
       city_name: validatedData.accountInfo.city.name,
     };
 
@@ -138,9 +117,25 @@ export async function POST(req: Request) {
             email: validatedData.credentials.email,
             password: passwordHash,
             email_verified: false,
-            steam_hex: validatedData.socialConnections.steam.connected
-              ? validatedData.socialConnections.steam.steamHex
-              : null,
+            discord: validatedData.socialConnections.discord.connected
+              ? {
+                  upsert: {
+                    create: {
+                      discord_id: validatedData.socialConnections.discord.id,
+                      username: validatedData.socialConnections.discord.username,
+                      global_name: validatedData.socialConnections.discord.name ?? null,
+                      email: validatedData.socialConnections.discord.email ?? null,
+                      image: validatedData.socialConnections.discord.image ?? null,
+                    },
+                    update: {
+                      username: validatedData.socialConnections.discord.username,
+                      global_name: validatedData.socialConnections.discord.name ?? null,
+                      email: validatedData.socialConnections.discord.email ?? null,
+                      image: validatedData.socialConnections.discord.image ?? null,
+                    },
+                  },
+                }
+              : undefined,
             profile: {
               upsert: {
                 create: profileData,
@@ -161,9 +156,17 @@ export async function POST(req: Request) {
             discord_id: validatedData.socialConnections.discord.connected
               ? validatedData.socialConnections.discord.id
               : null,
-            steam_hex: validatedData.socialConnections.steam.connected
-              ? validatedData.socialConnections.steam.steamHex
-              : null,
+            discord: validatedData.socialConnections.discord.connected
+              ? {
+                  create: {
+                    discord_id: validatedData.socialConnections.discord.id,
+                    username: validatedData.socialConnections.discord.username,
+                    global_name: validatedData.socialConnections.discord.name ?? null,
+                    email: validatedData.socialConnections.discord.email ?? null,
+                    image: validatedData.socialConnections.discord.image ?? null,
+                  },
+                }
+              : undefined,
             profile: {
               create: profileData,
             },
@@ -190,26 +193,12 @@ export async function POST(req: Request) {
           },
         });
 
-        // Update FiveM user with steam hex if provided and not already set
-        if (
-          validatedData.socialConnections.steam.connected &&
-          validatedData.socialConnections.steam.steamHex &&
-          !existingUser.steam
-        ) {
-          await prisma.users.update({
-            where: { userId: existingUser.userId },
-            data: { steam: validatedData.socialConnections.steam.steamHex },
-          });
-        }
       } else {
         // Create new FiveM user entry
         const newUser = await prisma.users.create({
           data: {
-            username: validatedData.accountInfo.fivemName,
+            username: validatedData.accountInfo.username,
             discord: validatedData.socialConnections.discord.id,
-            steam: validatedData.socialConnections.steam.connected
-              ? validatedData.socialConnections.steam.steamHex
-              : null,
           },
         });
 

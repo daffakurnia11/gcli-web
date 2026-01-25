@@ -1,19 +1,22 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
 
 import { Button } from "@/components/button";
 import { Form } from "@/components/form";
 import { Typography } from "@/components/typography";
-import { formatZodError } from "@/lib/formValidation";
-import { type PasswordFormData,passwordSchema } from "@/schemas/authSetup";
 import {
-  setPasswordErrors,
-  updatePasswordField,
-  useAppDispatch,
-  useAppSelector,
-} from "@/store";
+  readAuthSetupPayload,
+  updateAuthSetupPayload,
+} from "@/lib/authSetupPayload";
+import { formatZodError } from "@/lib/formValidation";
+import {
+  type FormErrors,
+  type PasswordFormData,
+  passwordSchema,
+} from "@/schemas/authSetup";
 
 import Stepper from "./Stepper";
 
@@ -22,27 +25,32 @@ type CredentialsProps = {
 };
 
 export default function Credentials({ showStepper = true }: CredentialsProps) {
-  const dispatch = useAppDispatch();
   const router = useRouter();
 
-  // Select state from Redux store
-  const password = useAppSelector((state) => state.authSetup.password);
-  const errors = useAppSelector((state) => state.authSetup.passwordErrors);
+  const [password, setPassword] = useState<PasswordFormData>({
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [errors, setErrors] = useState<FormErrors<PasswordFormData>>({});
 
   // Handle input change
   const handleInputChange = (field: keyof PasswordFormData, value: string) => {
-    dispatch(updatePasswordField({ field, value }));
+    setPassword((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
+    }
   };
 
   // Validate form using Zod
   const validateForm = (): boolean => {
     try {
       passwordSchema.parse(password);
-      dispatch(setPasswordErrors({}));
+      setErrors({});
       return true;
     } catch (error) {
       if (error instanceof z.ZodError) {
-        dispatch(setPasswordErrors(formatZodError<PasswordFormData>(error)));
+        setErrors(formatZodError<PasswordFormData>(error));
       }
       return false;
     }
@@ -58,22 +66,17 @@ export default function Credentials({ showStepper = true }: CredentialsProps) {
     e.preventDefault();
 
     if (validateForm()) {
-      try {
-        sessionStorage.setItem(
-          "auth_setup_credentials",
-          JSON.stringify({
-            email: password.email,
-            password: password.password,
-            confirmPassword: password.confirmPassword,
-          }),
-        );
-      } catch {
-        // Ignore storage failures (private mode, quota, etc.)
-      }
-
+      updateAuthSetupPayload({ credentials: password });
       router.push("/auth/setup?step=3");
     }
   };
+
+  useEffect(() => {
+    const payload = readAuthSetupPayload();
+    if (payload.credentials) {
+      setPassword(payload.credentials);
+    }
+  }, []);
 
   return (
     <>

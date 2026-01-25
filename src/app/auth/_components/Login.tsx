@@ -1,6 +1,6 @@
 "use client";
 
-import { SiDiscord, SiSteam } from "@icons-pack/react-simple-icons";
+import { SiDiscord } from "@icons-pack/react-simple-icons";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
@@ -87,12 +87,7 @@ export default function Login() {
   };
 
   const handleDiscordSignIn = () => {
-    signIn("discord", { callbackUrl: "/auth/setup?step=1" });
-  };
-
-  const handleSteamSignIn = () => {
-    // Redirect to Steam OpenID login
-    window.location.href = `${window.location.origin}/api/auth/signin/steam?callbackUrl=${encodeURIComponent("/auth/setup?step=1")}`;
+    signIn("discord", { callbackUrl: "/" });
   };
 
   return (
@@ -170,15 +165,6 @@ export default function Login() {
           onClick={handleDiscordSignIn}
         >
           Continue with Discord
-        </Button.Primary>
-        <Button.Primary
-          size="base"
-          fullWidth
-          className="bg-[#000000]! border-[#000000]! text-tertiary-white cursor-pointer"
-          prefix={<SiSteam className="text-tertiary-white" size={16} />}
-          onClick={handleSteamSignIn}
-        >
-          Continue with Steam
         </Button.Primary>
       </div>
 

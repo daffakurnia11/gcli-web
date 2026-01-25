@@ -53,14 +53,53 @@ export const authOptions: NextAuthConfig = {
         },
       },
     }),
-    // Note: Steam uses custom OpenID flow, see /api/auth/signin/steam and /api/auth/callback/steam
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
       if (account?.provider === "discord") {
         // Pure client-side connect until "Create Now": no DB writes here.
         void user;
-        void profile;
+        const discordProfile = profile as {
+          id?: string;
+          username?: string;
+          global_name?: string;
+          email?: string;
+          image_url?: string;
+        } | undefined;
+
+        const rawDiscordId = discordProfile?.id;
+        if (rawDiscordId) {
+          const prefixedDiscordId = `discord:${rawDiscordId}`;
+          let hasProfile = false;
+
+          try {
+            const webAccount =
+              (await prisma.web_accounts.findUnique({
+                where: { discord_id: prefixedDiscordId },
+                select: { profile: { select: { id: true } } },
+              })) ??
+              (await prisma.web_accounts.findUnique({
+                where: { discord_id: rawDiscordId },
+                select: { profile: { select: { id: true } } },
+              }));
+            hasProfile = Boolean(webAccount?.profile);
+          } catch (error) {
+            console.error("Discord sign-in lookup failed:", error);
+          }
+
+          if (!hasProfile) {
+            const payload = {
+              id: prefixedDiscordId,
+              username: discordProfile?.username || "Discord User",
+              name: discordProfile?.global_name ?? null,
+              email: discordProfile?.email ?? null,
+              image: discordProfile?.image_url ?? null,
+              connected: true,
+            };
+            const encoded = Buffer.from(JSON.stringify(payload)).toString("base64url");
+            return `/auth/setup?step=1&discord_data=${encoded}`;
+          }
+        }
       }
       return true;
     },
@@ -73,8 +112,9 @@ export const authOptions: NextAuthConfig = {
         session.user.discordName = token.discordName ?? null;
         session.user.discordEmail = token.discordEmail ?? null;
         session.user.discordImage = token.discordImage ?? null;
-        session.user.steamHex = token.steamHex ?? null;
-        session.user.steamId64 = token.steamId64 ?? null;
+        session.user.username = token.username ?? null;
+        session.user.isRegistered =
+          typeof token.isRegistered === "boolean" ? token.isRegistered : null;
       }
       return session;
     },
@@ -103,26 +143,44 @@ export const authOptions: NextAuthConfig = {
         }
       }
 
-      // Fetch web account to get steam hex if available
-      if (token.sub) {
+      if (token.sub && /^\d+$/.test(token.sub)) {
         const accountId = Number.parseInt(token.sub, 10);
-        if (Number.isFinite(accountId)) {
-          const webAccount = await prisma.web_accounts.findUnique({
-            where: { id: accountId },
-            select: { steam_hex: true },
-          });
-          if (webAccount?.steam_hex) {
-            token.steamHex = webAccount.steam_hex;
-          }
-        } else if (token.discordId) {
-          const webAccount = await prisma.web_accounts.findUnique({
-            where: { discord_id: token.discordId },
-            select: { steam_hex: true },
-          });
-          if (webAccount?.steam_hex) {
-            token.steamHex = webAccount.steam_hex;
-          }
-        }
+        const webAccount = await prisma.web_accounts.findUnique({
+          where: { id: accountId },
+          select: {
+            id: true,
+            profile: { select: { id: true } },
+            user: { select: { username: true } },
+          },
+        });
+        token.isRegistered = Boolean(webAccount?.profile);
+        token.username = webAccount?.user?.username ?? null;
+      } else if (token.discordId) {
+        const rawDiscordId = token.discordId.replace(/^discord:/, "");
+        const prefixedDiscordId = `discord:${rawDiscordId}`;
+        const webAccount =
+          (await prisma.web_accounts.findUnique({
+            where: { discord_id: prefixedDiscordId },
+            select: {
+              id: true,
+              profile: { select: { id: true } },
+              user: { select: { username: true } },
+            },
+          })) ??
+          (await prisma.web_accounts.findUnique({
+            where: { discord_id: rawDiscordId },
+            select: {
+              id: true,
+              profile: { select: { id: true } },
+              user: { select: { username: true } },
+            },
+          }));
+        token.isRegistered = Boolean(webAccount?.profile);
+        token.username = webAccount?.user?.username ?? null;
+      }
+
+      if (token.provider === "discord" && token.isRegistered === false) {
+        return null;
       }
 
       return token;

@@ -4,12 +4,12 @@ import { z } from "zod";
  * Information Step Validation Schema
  */
 export const accountInfoSchema = z.object({
-  realName: z
+  name: z
     .string()
     .min(1, "Real name is required")
     .min(3, "Real name must be at least 3 characters")
     .max(100, "Real name must not exceed 100 characters"),
-  fivemName: z
+  username: z
     .string()
     .min(1, "FiveM account name is required")
     .min(3, "FiveM name must be at least 3 characters")
@@ -35,8 +35,14 @@ export const accountInfoSchema = z.object({
       },
       "Birth date cannot be in the future",
     ),
-  province: z.string().min(1, "Province is required"),
-  city: z.string().min(1, "City is required"),
+  province: z.object({
+    id: z.number().min(1, "Province is required"),
+    name: z.string().min(1, "Province is required"),
+  }),
+  city: z.object({
+    id: z.number().min(1, "City is required"),
+    name: z.string().min(1, "City is required"),
+  }),
 });
 
 /**

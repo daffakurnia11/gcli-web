@@ -2,26 +2,20 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
 
 import { Button } from "@/components/button";
 import { Form } from "@/components/form";
 import { Typography } from "@/components/typography";
 import { useCities, useProvinces } from "@/hooks/useIndonesiaRegions";
+import { readAuthSetupPayload, updateAuthSetupPayload } from "@/lib/authSetupPayload";
 import { formatZodError } from "@/lib/formValidation";
 import {
   type AccountInfoFormData,
   accountInfoSchema,
+  type FormErrors,
 } from "@/schemas/authSetup";
-import {
-  setAccountInfoErrors,
-  setCityName,
-  setProvinceName,
-  updateAccountInfoField,
-  useAppDispatch,
-  useAppSelector,
-} from "@/store";
 import type { City, Province } from "@/types/api/Indonesia";
 import type { SelectOption } from "@/types/Form";
 
@@ -32,12 +26,17 @@ type InformationProps = {
 };
 
 export default function Information({ showStepper = true }: InformationProps) {
-  const dispatch = useAppDispatch();
   const router = useRouter();
 
-  // Select state from Redux store
-  const accountInfo = useAppSelector((state) => state.authSetup.accountInfo);
-  const errors = useAppSelector((state) => state.authSetup.accountInfoErrors);
+  const [accountInfo, setAccountInfo] = useState<AccountInfoFormData>({
+    name: "",
+    username: "",
+    age: "",
+    birthDate: "",
+    province: { id: 0, name: "" },
+    city: { id: 0, name: "" },
+  });
+  const [errors, setErrors] = useState<FormErrors<AccountInfoFormData>>({});
   const ageValue = accountInfo.age === "" ? "" : Number(accountInfo.age);
 
   const {
@@ -45,11 +44,16 @@ export default function Information({ showStepper = true }: InformationProps) {
     error: provincesError,
     isLoading: isLoadingProvinces,
   } = useProvinces();
+  const provinceIdValue = accountInfo.province.id
+    ? accountInfo.province.id.toString()
+    : "";
+  const cityIdValue = accountInfo.city.id ? accountInfo.city.id.toString() : "";
+
   const {
     data: citiesData,
     error: citiesError,
     isLoading: isLoadingCities,
-  } = useCities(accountInfo.province);
+  } = useCities(provinceIdValue);
 
   const provinces = useMemo<SelectOption[]>(() => {
     const list = provincesData?.data ?? [];
@@ -73,25 +77,44 @@ export default function Information({ showStepper = true }: InformationProps) {
     citiesError instanceof Error ? citiesError.message : "";
 
   // Handle input change
-  const handleInputChange = (
-    field: keyof AccountInfoFormData,
-    value: string,
-  ) => {
-    dispatch(updateAccountInfoField({ field, value }));
-
-    // Set province/city name when selected
+  const handleInputChange = (field: keyof AccountInfoFormData, value: string) => {
     if (field === "province") {
-      const selectedProvince = provinces.find((p) => p.value === value);
-      if (selectedProvince) {
-        dispatch(setProvinceName(selectedProvince.label));
+      if (errors.province) {
+        setErrors((prev) => ({ ...prev, province: undefined }));
       }
+      if (errors.city) {
+        setErrors((prev) => ({ ...prev, city: undefined }));
+      }
+      const selectedProvince = provinces.find((p) => p.value === value);
+      setAccountInfo((prev) => ({
+        ...prev,
+        province: {
+          id: Number.parseInt(selectedProvince?.value ?? "0", 10),
+          name: selectedProvince?.label ?? "",
+        },
+        city: { id: 0, name: "" },
+      }));
+      return;
     }
 
     if (field === "city") {
-      const selectedCity = cities.find((c) => c.value === value);
-      if (selectedCity) {
-        dispatch(setCityName(selectedCity.label));
+      if (errors.city) {
+        setErrors((prev) => ({ ...prev, city: undefined }));
       }
+      const selectedCity = cities.find((c) => c.value === value);
+      setAccountInfo((prev) => ({
+        ...prev,
+        city: {
+          id: Number.parseInt(selectedCity?.value ?? "0", 10),
+          name: selectedCity?.label ?? "",
+        },
+      }));
+      return;
+    }
+
+    setAccountInfo((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
   };
 
@@ -99,13 +122,11 @@ export default function Information({ showStepper = true }: InformationProps) {
   const validateForm = (): boolean => {
     try {
       accountInfoSchema.parse(accountInfo);
-      dispatch(setAccountInfoErrors({}));
+      setErrors({});
       return true;
     } catch (error) {
       if (error instanceof z.ZodError) {
-        dispatch(
-          setAccountInfoErrors(formatZodError<AccountInfoFormData>(error)),
-        );
+        setErrors(formatZodError<AccountInfoFormData>(error));
       }
       return false;
     }
@@ -116,9 +137,61 @@ export default function Information({ showStepper = true }: InformationProps) {
     e.preventDefault();
 
     if (validateForm()) {
+      updateAuthSetupPayload({ accountInfo });
       router.push("/auth/setup?step=2");
     }
   };
+
+  useEffect(() => {
+    const payload = readAuthSetupPayload() as {
+      accountInfo?: AccountInfoFormData & {
+        realName?: string;
+        fivemName?: string;
+        province?: unknown;
+        city?: unknown;
+      };
+      provinceName?: string;
+      cityName?: string;
+    };
+    if (payload.accountInfo) {
+      const raw = payload.accountInfo;
+      const nextAccountInfo: AccountInfoFormData = {
+        name: "name" in raw ? raw.name : raw.realName ?? "",
+        username: "username" in raw ? raw.username : raw.fivemName ?? "",
+        age: raw.age ?? "",
+        birthDate: raw.birthDate ?? "",
+        province: {
+          id:
+            typeof raw.province === "object" &&
+            raw.province !== null &&
+            "id" in raw.province
+              ? Number(raw.province.id)
+              : Number.parseInt(
+                  typeof raw.province === "string" ? raw.province : "0",
+                  10,
+                ),
+          name:
+            typeof raw.province === "object" &&
+            raw.province !== null &&
+            "name" in raw.province
+              ? String(raw.province.name)
+              : payload.provinceName ?? "",
+        },
+        city: {
+          id:
+            typeof raw.city === "object" && raw.city !== null && "id" in raw.city
+              ? Number(raw.city.id)
+              : Number.parseInt(typeof raw.city === "string" ? raw.city : "0", 10),
+          name:
+            typeof raw.city === "object" && raw.city !== null && "name" in raw.city
+              ? String(raw.city.name)
+              : payload.cityName ?? "",
+        },
+      };
+      setAccountInfo(nextAccountInfo);
+      updateAuthSetupPayload({ accountInfo: nextAccountInfo });
+    }
+  }, []);
 
   return (
     <>
@@ -137,12 +210,12 @@ export default function Information({ showStepper = true }: InformationProps) {
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Real Name */}
             <Form.Text
-              name="realName"
+              name="name"
               label="Real Name"
               placeholder="Enter your full name"
-              value={accountInfo.realName}
-              onChange={(e) => handleInputChange("realName", e.target.value)}
-              error={errors.realName}
+              value={accountInfo.name}
+              onChange={(e) => handleInputChange("name", e.target.value)}
+              error={errors.name}
               helperText="Your legal full name"
               autoComplete="name"
               fullWidth
@@ -150,12 +223,12 @@ export default function Information({ showStepper = true }: InformationProps) {
 
             {/* FiveM Account Name */}
             <Form.Text
-              name="fivemName"
+              name="username"
               label="FiveM Account Name"
               placeholder="Enter your FiveM in-game name"
-              value={accountInfo.fivemName}
-              onChange={(e) => handleInputChange("fivemName", e.target.value)}
-              error={errors.fivemName}
+              value={accountInfo.username}
+              onChange={(e) => handleInputChange("username", e.target.value)}
+              error={errors.username}
               helperText="Your in-game name (alphanumeric + underscore)"
               autoComplete="username"
               fullWidth
@@ -198,7 +271,7 @@ export default function Information({ showStepper = true }: InformationProps) {
                   isLoadingProvinces ? "Loading..." : "Select province"
                 }
                 options={provinces}
-                value={accountInfo.province}
+                value={provinceIdValue}
                 onChange={(value) => handleInputChange("province", value)}
                 error={errors.province || provincesErrorMessage}
                 helperText="Select your province"
@@ -210,18 +283,18 @@ export default function Information({ showStepper = true }: InformationProps) {
                 name="city"
                 label="City"
                 placeholder={
-                  !accountInfo.province
+                  !accountInfo.province.id
                     ? "Select province first"
                     : isLoadingCities
                       ? "Loading..."
                       : "Select city"
                 }
                 options={cities}
-                value={accountInfo.city}
+                value={cityIdValue}
                 onChange={(value) => handleInputChange("city", value)}
                 error={errors.city || citiesErrorMessage}
                 helperText="Select your city"
-                disabled={!accountInfo.province || isLoadingCities}
+                disabled={!accountInfo.province.id || isLoadingCities}
                 fullWidth
               />
             </div>

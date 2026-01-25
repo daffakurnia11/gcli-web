@@ -436,40 +436,50 @@ model users {
   license2     String?        @db.VarChar(50)
   fivem        String?        @db.VarChar(20)
   discord      String?        @db.VarChar(30)
-  steam        String?        @db.VarChar(50)
   web_accounts web_accounts[]
 }
 
 model web_accounts {
-  id             Int          @id @default(autoincrement())
-  email          String       @unique @db.VarChar(255)
-  password       String?      @db.VarChar(255)
-  email_verified Boolean      @default(false)
-
-  // Link to FiveM users table
-  user_id        Int?         @db.UnsignedInt
-  discord_id     String?      @unique @db.VarChar(30)
-  steam_hex      String?      @unique @db.VarChar(50)
-  fivem_id       String?      @db.VarChar(20)
-
-  // Relations
-  profile        web_profile?
+  id             Int                     @id @default(autoincrement())
+  email          String                  @unique @db.VarChar(255)
+  password       String?                 @db.VarChar(255)
+  email_verified Boolean                 @default(false)
+  user_id        Int?                    @db.UnsignedInt
+  discord_id     String?                 @unique @db.VarChar(30)
+  fivem_id       String?                 @db.VarChar(20)
+  created_at     DateTime                @default(now()) @db.Timestamp(0)
+  updated_at     DateTime                @updatedAt @db.Timestamp(0)
+  user           users?                  @relation(fields: [user_id], references: [userId])
+  profile        web_profiles?
+  discord        web_discord_accounts?
   sessions       web_sessions[]
-  user           users?       @relation(fields: [user_id], references: [userId], onDelete: SetNull)
-
-  created_at     DateTime     @default(now()) @db.Timestamp(0)
-  updated_at     DateTime     @updatedAt @db.Timestamp(0)
 
   @@index([user_id])
   @@index([discord_id])
-  @@index([steam_hex])
   @@index([fivem_id])
 }
 
-model web_profile {
+model web_discord_accounts {
+  id           Int          @id @default(autoincrement())
+  account_id   Int          @unique
+  discord_id   String       @unique @db.VarChar(30)
+  username     String       @db.VarChar(255)
+  global_name  String?      @db.VarChar(255)
+  email        String?      @db.VarChar(255)
+  image        String?      @db.VarChar(255)
+
+  account      web_accounts @relation(fields: [account_id], references: [id], onDelete: Cascade)
+
+  created_at   DateTime     @default(now()) @db.Timestamp(0)
+  updated_at   DateTime     @updatedAt @db.Timestamp(0)
+
+  @@index([account_id])
+  @@index([discord_id])
+}
+
+model web_profiles {
   id             Int          @id @default(autoincrement())
   account_id     Int          @unique
-
   real_name      String?      @db.VarChar(255)
   fivem_name     String?      @db.VarChar(255)
   age            Int?         @db.UnsignedTinyInt
@@ -478,11 +488,9 @@ model web_profile {
   province_name  String?      @db.VarChar(100)
   city_id        String?      @db.VarChar(50)
   city_name      String?      @db.VarChar(100)
-
-  account        web_accounts @relation(fields: [account_id], references: [id], onDelete: Cascade)
-
   created_at     DateTime     @default(now()) @db.Timestamp(0)
   updated_at     DateTime     @updatedAt @db.Timestamp(0)
+  account        web_accounts @relation(fields: [account_id], references: [id], onDelete: Cascade)
 }
 
 model web_sessions {
@@ -490,7 +498,6 @@ model web_sessions {
   session_token String       @unique @db.VarChar(255)
   user_id       Int
   expires       DateTime     @db.Timestamp(0)
-
   account       web_accounts @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@index([user_id])

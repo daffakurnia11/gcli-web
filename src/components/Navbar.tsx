@@ -3,6 +3,7 @@
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut, useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/button";
@@ -19,7 +20,13 @@ const navItems = [
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const { data: session, status } = useSession();
   const pathname = usePathname();
+  const rawUsername = session?.user?.username || "User";
+  const username = rawUsername.split("@")[0];
+  const isAuthenticated =
+    status === "authenticated" && Boolean(session?.user?.isRegistered);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -30,6 +37,26 @@ export default function Navbar() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    if (!isUserMenuOpen) {
+      return;
+    }
+
+    const handleClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target?.closest("[data-user-menu]")) {
+        setIsUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("click", handleClick);
+    return () => document.removeEventListener("click", handleClick);
+  }, [isUserMenuOpen]);
+
+  useEffect(() => {
+    setIsUserMenuOpen(false);
+  }, [isMobileMenuOpen]);
 
   return (
     <nav
@@ -75,14 +102,45 @@ export default function Navbar() {
             </Link>
           ))}
           <div className="hidden md:flex items-center gap-2">
-            <Link href={"/auth"}>
-              <Button.Slant
-                variant="primary"
-                className="flex items-center gap-2 cursor-pointer"
-              >
-                Join Now
-              </Button.Slant>
-            </Link>
+            {isAuthenticated ? (
+              <div className="relative" data-user-menu>
+                <Button.Slant
+                  variant="primary"
+                  className="flex items-center gap-2 cursor-pointer"
+                  onClick={() => setIsUserMenuOpen((prev) => !prev)}
+                >
+                  Hi, {username}
+                </Button.Slant>
+                {isUserMenuOpen && (
+                  <div className="absolute right-0 mt-3 w-48 rounded border border-primary-700 bg-primary-900/95 backdrop-blur-lg shadow-lg">
+                    <Link
+                      href="/dashboard"
+                      className="block px-4 py-3 text-sm text-primary-100 hover:bg-primary-800"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      Dashboard
+                    </Link>
+                    <div className="h-px bg-primary-700" />
+                    <button
+                      type="button"
+                      className="block w-full text-left px-4 py-3 text-sm text-primary-100 hover:bg-primary-800"
+                      onClick={() => signOut({ callbackUrl: "/" })}
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link href={"/auth"}>
+                <Button.Slant
+                  variant="primary"
+                  className="flex items-center gap-2 cursor-pointer"
+                >
+                  Join Now
+                </Button.Slant>
+              </Link>
+            )}
           </div>
         </div>
 
@@ -136,11 +194,42 @@ export default function Navbar() {
             }`}
             style={{ transitionDelay: `${80 + navItems.length * 60}ms` }}
           >
-            <Link href={"/auth"}>
-              <Button.Primary variant="solid" fullWidth>
-                Join Now
-              </Button.Primary>
-            </Link>
+            {isAuthenticated ? (
+              <>
+                <Button.Primary
+                  variant="solid"
+                  fullWidth
+                  onClick={() => setIsUserMenuOpen((prev) => !prev)}
+                >
+                  Hi, {username}
+                </Button.Primary>
+                {isUserMenuOpen && (
+                  <div className="rounded border border-primary-700 bg-primary-900/95 backdrop-blur-lg">
+                    <Link
+                      href="/dashboard"
+                      className="block px-4 py-3 text-sm text-primary-100 hover:bg-primary-800"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      Dashboard
+                    </Link>
+                    <div className="h-px bg-primary-700" />
+                    <button
+                      type="button"
+                      className="block w-full text-left px-4 py-3 text-sm text-primary-100 hover:bg-primary-800"
+                      onClick={() => signOut({ callbackUrl: "/" })}
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <Link href={"/auth"}>
+                <Button.Primary variant="solid" fullWidth>
+                  Join Now
+                </Button.Primary>
+              </Link>
+            )}
           </div>
         </div>
       </div>

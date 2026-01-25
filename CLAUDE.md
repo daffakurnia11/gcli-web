@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-GCLI Design System is a component library for GCLI (GTA Competitive League Indonesia), a FiveM competitive gaming server. Built as a Next.js 16 application with React 19, TypeScript 5.9.3, and Tailwind CSS v4.
+GCLI Design System is a full-stack web application for GCLI (GTA Competitive League Indonesia), a FiveM competitive gaming server. Built as a Next.js 16 application with React 19, TypeScript 5.9.3, Tailwind CSS v4, NextAuth v5 for authentication, and Prisma ORM with MySQL database.
 
 ## Development Commands
 
@@ -16,6 +16,12 @@ pnpm lint         # Run ESLint
 pnpm lint:fix     # Auto-fix ESLint issues
 pnpm typecheck    # Run TypeScript check
 pnpm check        # Run ESLint + TypeScript (must pass before committing)
+
+# Database (Prisma)
+pnpm exec prisma generate   # Generate Prisma client (auto-runs on postinstall)
+pnpm exec prisma db push    # Push schema changes to database (dev)
+pnpm exec prisma studio     # Open Prisma Studio for database inspection
+pnpm exec prisma migrate reset  # Reset database (WARNING: deletes all data)
 ```
 
 ## Configuration
@@ -24,20 +30,60 @@ pnpm check        # Run ESLint + TypeScript (must pass before committing)
 - `tsconfig.json` — ES2017 target, incremental builds, `@/*` → `./src/*` path aliases
 - `eslint.config.mjs` — Extends `nextVitals` and `nextTs`, enforces import sorting
 - `postcss.config.mjs` — Tailwind v4 via `@tailwindcss/postcss` plugin
-- `next.config.ts` — Minimal (currently empty)
-- `pnpm-workspace.yaml` — Workspace with `ignoredBuiltDependencies: [sharp, unrs-resolver]`
+- `next.config.ts` — Image remote patterns (Discord CDN, Unsplash, ui-avatars, etc.)
+- `middleware.ts` — Route protection and authentication redirects
+- `prisma/schema.prisma` — Database schema (MySQL)
+- `src/lib/auth.ts` — NextAuth configuration
+- `pnpm-workspace.yaml` — Workspace with `onlyBuiltDependencies: [@prisma/*, bcrypt]`
 - `.env.example` — Environment variable templates (copy to `.env` for local dev)
 
-**Routes:**
+**Image Remote Patterns** (`next.config.ts`):
+- `cdn.discordapp.com` — Discord avatars and images
+- `images.unsplash.com` — Unsplash stock photos
+- `ui-avatars.com` — User avatar generation
+- `i.pinimg.com` — Pinterest images
+- `iili.io` — Image hosting service
+
+**Public Routes:**
 - `/` — Landing page with hero, core pillars, game loop, server info, team carousel, standings, and CTA
 - `/about` — About page with title, description, vision, core pillars, player to-do, and pros/cons
 - `/demo` — Design system showcase (uses `_components` private route group)
 
+**Protected Routes:**
+- `/auth` — Authentication page (login with email/password or Discord OAuth)
+- `/auth/setup` — Account setup flow for new Discord users (multi-step form)
+- `/dashboard` — User dashboard with profile management
+- `/dashboard/profile` — Profile editing section
+- `/dashboard/settings` — User settings (email, password, sessions, account linkage)
+
 **API Routes:**
+
+*Authentication:*
+- `/api/auth/[...nextauth]` — NextAuth handler (sign-in, sign-out, callbacks)
+- `/api/auth/connect/discord` — Discord OAuth connection initiation
+- `/api/auth/connect/discord/callback` — Discord OAuth callback handler
+- `/api/register` — User registration endpoint
+- `/api/account/unique-check` — Email/username uniqueness validation
+
+*User Management:*
+- `/api/user/profile` — Get/update user profile
+- `/api/user/password` — Password update
+- `/api/user/email` — Email management
+- `/api/user/sessions` — List user sessions
+- `/api/user/sessions/[id]` — Revoke specific session
+- `/api/user/sessions/revoke-all` — Revoke all sessions
+- `/api/user/discord/connect` — Link Discord account
+- `/api/user/discord/disconnect` — Unlink Discord account
+
+*External Proxies:*
 - `/api/info/discord` — Discord server info proxy (GET)
 - `/api/info/fivem` — FiveM server info proxy (GET)
 - `/api/proxy/discord` — Generic Discord API proxy
 - `/api/proxy/fivem` — Generic FiveM API proxy
+
+*Regional Data:*
+- `/api/indonesia/provinces` — Get Indonesian provinces
+- `/api/indonesia/cities/[provinceId]` — Get cities by province
 
 ## Architecture
 
@@ -57,6 +103,17 @@ components/
 │   ├── Paragraph.tsx
 │   ├── Small.tsx
 │   └── index.tsx
+├── form/
+│   ├── Text.tsx          # Text input field
+│   ├── Number.tsx        # Number input field
+│   ├── Textarea.tsx      # Textarea field
+│   ├── Select.tsx        # Select dropdown
+│   ├── Checkbox.tsx      # Checkbox input
+│   ├── Radio.tsx         # Radio button group
+│   ├── Date.tsx          # Date picker
+│   ├── Dropzone.tsx      # File upload dropzone
+│   ├── FieldWrapper.tsx  # Field wrapper with labels/validation
+│   └── index.tsx         # Namespace exports
 ├── DiscordInfoCard.tsx   # Discord server info card (Client)
 ├── FiveMInfoCard.tsx     # FiveM server info card (Client)
 ├── Footer.tsx
@@ -65,8 +122,19 @@ components/
 └── index.tsx             # Barrel exports
 ```
 
-**Page Components (src/app/_components/):**
-- Private route group for page-specific components
+**Dashboard Components (src/app/_components/dashboard/):**
+- `DashboardCard.tsx` — Card container for dashboard sections
+- `UserStatsCard.tsx` — User statistics display
+- `ProfileSection.tsx` — Profile editing section
+- `EmailSettings.tsx` — Email settings form
+- `PasswordSettings.tsx` — Password update form
+- `AccountLinkage.tsx` — Discord/Steam account linking
+- `DangerZone.tsx` — Account deletion options
+- `SettingsGroup.tsx` — Settings grouping
+- `DashboardSection.tsx` — Section wrapper
+- `Alert.tsx` — Alert/notification component
+
+**Other Page Components (src/app/_components/):**
 - `ServerInfo.tsx` — Server component that fetches Discord/FiveM data
 - `Standings.tsx` — League standings table
 - `AnimatedCard.tsx` — Framer Motion wrapper for animations
@@ -74,13 +142,62 @@ components/
 **Namespace Patterns:**
 - Button: Type assertion — `const Button = BaseButton as ButtonComponentExtended`
 - Typography: Empty object — `const Typography = {} as TypographyComponent`
+- Form: Empty object — `const Form = {} as FormComponent`
 
 **Barrel Exports:** All `index.tsx` files export default namespace, named exports, and types.
 
 **Type Definitions:** Located in `src/types/`:
-- `Button.d.ts`, `Typography.d.ts`, `Logo.d.ts` — Component types
+- `Button.d.ts`, `Typography.d.ts`, `Logo.d.ts`, `Form.d.ts` — Component types
 - `api/Discord.d.ts` — Discord API types
 - `api/FiveM.d.ts` — FiveM API types
+
+### Authentication & Middleware
+
+**NextAuth Configuration** (`src/lib/auth.ts`):
+- JWT strategy for session management
+- Credentials provider (email/password)
+- Discord OAuth provider with custom redirect for unregistered users
+- Custom callbacks for sign-in, session, JWT, and redirect
+
+**Middleware** (`middleware.ts`):
+- Protects dashboard routes (requires authentication)
+- Redirects authenticated users away from auth pages
+- Handles registration flow for new Discord users
+- Checks `isRegistered` flag in JWT token
+
+**Auth Flow:**
+1. User signs in via Credentials or Discord OAuth
+2. Middleware checks authentication and registration status
+3. Unregistered Discord users → `/auth/setup` multi-step form
+4. Registered users → `/dashboard`
+5. Unauthenticated users accessing protected routes → `/auth`
+
+### Database (Prisma + MySQL)
+
+**Schema Models** (`prisma/schema.prisma`):
+
+*Game-Related (FiveM server data):*
+- `users` — FiveM user accounts (license, discord, fivem username)
+- `players` — Player characters with inventory, jobs, vehicles
+- `bans` — Ban records
+- `player_vehicles` — Player-owned vehicles
+- Various FiveM-specific tables (npwd_*, ox_*, player_*)
+
+*Web Application:*
+- `web_accounts` — Web authentication accounts (email, password, OAuth links)
+- `web_profiles` — User profile data (name, age, location)
+- `web_discord_accounts` — Linked Discord accounts
+- `web_sessions` — Active user sessions
+
+**Usage Pattern:**
+```tsx
+import { prisma } from "@/lib/prisma";
+
+const account = await prisma.web_accounts.findUnique({
+  where: { email },
+  include: { profile: true, user: true },
+});
+```
 
 ### Server + Client Component Pattern
 
@@ -108,17 +225,40 @@ async function Page() {
 
 ## Environment Variables
 
+**Application:**
+- `NEXT_PUBLIC_APP_URL` — App URL for API calls (default: http://localhost:3000)
+- `NODE_ENV` — Environment (development/production)
+
 **Discord API:**
 - `DISCORD_API_BASE_URL` — Discord API base URL (default: https://discord.com/api/v10)
 - `DISCORD_API_INVITE_CODE` — Discord server invite code
+- `NEXT_PUBLIC_DISCORD_INVITE` — Public Discord invite (for client-side links)
+
+**Discord OAuth:**
+- `DISCORD_CLIENT_ID` — Discord OAuth application client ID
+- `DISCORD_CLIENT_SECRET` — Discord OAuth application client secret
 
 **FiveM API:**
 - `FIVEM_API_BASE_URL` — FiveM server API base URL (e.g., http://server:port)
 - `FIVEM_CONNECT_ADDRESS` — FiveM connection URL for clients (e.g., server:port)
 
-**Application:**
-- `NEXT_PUBLIC_APP_URL` — App URL for API calls (default: http://localhost:3000)
-- `NODE_ENV` — Environment (development/production)
+**NextAuth:**
+- `AUTH_SECRET` — NextAuth secret (priority over NEXTAUTH_SECRET)
+- `NEXTAUTH_SECRET` — NextAuth secret (fallback)
+- `NEXTAUTH_URL` — NextAuth URL (defaults to NEXT_PUBLIC_APP_URL)
+
+**Database:**
+- `DATABASE_URL` — MySQL connection string (mysql://user:pass@host:port/db)
+
+**Regional Data:**
+- `INDONESIA_REGIONAL_API_BASE_URL` — Indonesia regions API (default: https://api-regional-indonesia.vercel.app)
+
+**Steam (future):**
+- `STEAM_API_KEY` — Steam API key for integration
+
+**Feature Flags:**
+- `ALLOW_FIVEM_CHANGE` — Allow FiveM username changes (default: false)
+- `ALLOW_DISCORD_CHANGE` — Allow Discord account re-linking (default: false)
 
 ## SEO & Metadata
 
@@ -246,6 +386,86 @@ import { DiscordInfoCard, FiveMInfoCard } from "@/components";
 />
 ```
 
+**Form Components:**
+```tsx
+import { Form } from "@/components/form";
+
+// Text Input
+<Form.Text
+  label="Email"
+  name="email"
+  type="email"
+  placeholder="your@email.com"
+  error={errors.email}
+  required
+/>
+
+// Number Input
+<Form.Number
+  label="Age"
+  name="age"
+  min={1}
+  max={100}
+  error={errors.age}
+/>
+
+// Textarea
+<Form.Textarea
+  label="Bio"
+  name="bio"
+  rows={4}
+  placeholder="Tell us about yourself"
+/>
+
+// Select Dropdown
+<Form.Select
+  label="Province"
+  name="province"
+  options={[
+    { value: "11", label: "Aceh" },
+    { value: "12", label: "Sumatera Utara" },
+  ]}
+  placeholder="Select province"
+/>
+
+// Checkbox
+<Form.Checkbox
+  label="I agree to terms"
+  name="terms"
+  error={errors.terms}
+/>
+
+// Radio Group
+<Form.Radio
+  label="Gender"
+  name="gender"
+  options={[
+    { value: "male", label: "Male" },
+    { value: "female", label: "Female" },
+  ]}
+/>
+
+// Date Picker
+<Form.Date
+  label="Birth Date"
+  name="birthDate"
+  max={new Date()}
+/>
+
+// File Dropzone
+<Form.Dropzone
+  label="Avatar"
+  name="avatar"
+  accept={{ "image/*": [".jpg", ".jpeg", ".png"] }}
+  maxSize={5 * 1024 * 1024} // 5MB
+/>
+
+// Field Wrapper (for custom inputs)
+<Form.FieldWrapper label="Custom Field" name="custom" error={errors.custom}>
+  <YourCustomInput />
+</Form.FieldWrapper>
+```
+
 **Polymorphic `as` Prop:** Renders component as different HTML element (e.g., `<Heading as="h2" level={1} />`)
 
 ## Code Quality
@@ -264,6 +484,9 @@ import { DiscordInfoCard, FiveMInfoCard } from "@/components";
 - Co-locate types with components when possible
 - Root layout uses `antialiased` class
 - Server Actions/API Routes for server-side logic
+- All form validation uses Zod schemas
+- Protected routes use middleware for authentication checks
+- Database operations use Prisma client via `src/lib/prisma.ts`
 
 ## Libraries & Utilities
 
@@ -273,8 +496,23 @@ import { DiscordInfoCard, FiveMInfoCard } from "@/components";
 - **framer-motion** — Animation library
 - **@icons-pack/react-simple-icons** — Brand icons (Discord, FiveM, etc.)
 - **lucide-react** — UI icons
+- **date-fns** — Date formatting and manipulation
+- **swr** — Data fetching and caching (useSWR hook)
+
+**Authentication:**
+- **next-auth** (v5 beta) — Authentication system with JWT strategy
+- **bcrypt** — Password hashing
+- **jose** — JWT handling for NextAuth
+
+**Database:**
+- **@prisma/client** — Prisma ORM client
+- **prisma** — Prisma CLI (included in dependencies for postinstall)
+
+**Validation:**
+- **zod** — Schema validation for forms and API inputs
 
 **API Usage:**
 - All external API calls go through Next.js API routes (server-side proxy)
 - Never call external APIs directly from Client Components
 - Server Components fetch data, pass to Client Components as props
+- SWR used for client-side data fetching with revalidation

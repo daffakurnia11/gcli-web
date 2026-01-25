@@ -9,7 +9,8 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "typecheck": "tsc --noEmit",
-    "check": "pnpm run lint && pnpm run typecheck"
+    "check": "pnpm run lint && pnpm run typecheck",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@icons-pack/react-simple-icons": "^13.8.0",
@@ -43,5 +44,8 @@
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["@prisma/client", "prisma", "bcrypt"]
   }
 }

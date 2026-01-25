@@ -6,7 +6,7 @@ import Discord from "next-auth/providers/discord";
 import { prisma } from "./prisma";
 
 export const authOptions: NextAuthConfig = {
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
   trustHost: true,
   providers: [
     Credentials({

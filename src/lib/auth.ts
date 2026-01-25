@@ -177,6 +177,9 @@ export const authOptions: NextAuthConfig = {
           }));
         token.isRegistered = Boolean(webAccount?.profile);
         token.username = webAccount?.user?.username ?? null;
+        if (webAccount?.id) {
+          token.sub = webAccount.id.toString();
+        }
       }
 
       if (token.provider === "discord" && token.isRegistered === false) {

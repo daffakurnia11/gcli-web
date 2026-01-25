@@ -1,11 +1,13 @@
 "use client";
 
 import { AlertTriangle, Loader2 } from "lucide-react";
+import { signOut } from "next-auth/react";
 import { useState } from "react";
 
 import { Button } from "@/components/button";
 import { Form } from "@/components/form";
 import { Typography } from "@/components/typography";
+import { clearAuthSetupPayload } from "@/lib/authSetupPayload";
 
 import { Alert, DashboardCard, SettingsGroup } from "./index";
 
@@ -38,10 +40,10 @@ export function DangerZone() {
         throw new Error(error.message || "Failed to delete account");
       }
 
-      setMessage({ type: "success", text: "Account deletion initiated. Redirecting..." });
-      setTimeout(() => {
-        window.location.href = "/";
-      }, 2000);
+      setMessage({ type: "success", text: "Account deleted. Signing out..." });
+      clearAuthSetupPayload();
+      await signOut({ redirect: false });
+      window.location.href = "/";
     } catch (err) {
       setMessage({
         type: "error",

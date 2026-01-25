@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { readAuthSetupPayload, updateAuthSetupPayload } from "@/lib/authSetupPayload";
 
@@ -16,8 +16,23 @@ export default function AuthSetupPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
+  const [isCompleting] = useState(() => {
+    if (typeof window === "undefined") {
+      return false;
+    }
+    return sessionStorage.getItem("auth_setup_completed") === "true";
+  });
   const stepParam = searchParams.get("step") || "1";
   const currentStep = parseInt(stepParam, 10) as 1 | 2 | 3;
+
+  useEffect(() => {
+    if (!isCompleting) {
+      return;
+    }
+    sessionStorage.removeItem("auth_setup_completed");
+    router.replace("/dashboard");
+  }, [isCompleting, router]);
+
   useEffect(() => {
     const discordDataParam = searchParams.get("discord_data");
     if (!discordDataParam) {
@@ -61,6 +76,9 @@ export default function AuthSetupPage() {
   }, [searchParams]);
 
   useEffect(() => {
+    if (isCompleting) {
+      return;
+    }
     if (status === "authenticated" && session?.user && session.provider === "discord") {
       const rawDiscordId = session.user.discordId || session.user.id;
       const discordId = rawDiscordId ? `discord:${rawDiscordId.replace(/^discord:/, "")}` : "";
@@ -81,7 +99,7 @@ export default function AuthSetupPage() {
 
     if (status === "authenticated" && session?.provider === "discord") {
       if (session.user?.isRegistered) {
-        router.replace("/");
+        router.replace("/dashboard");
         return;
       }
     }
@@ -138,7 +156,11 @@ export default function AuthSetupPage() {
     };
 
     validateStepAccess();
-  }, [currentStep, router, session, status]);
+  }, [currentStep, isCompleting, router, session, status]);
+
+  if (isCompleting) {
+    return null;
+  }
 
   // Render the appropriate step
   let content: React.ReactNode;

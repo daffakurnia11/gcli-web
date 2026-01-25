@@ -3,12 +3,12 @@
 import { SiDiscord } from "@icons-pack/react-simple-icons";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/button";
 import { Typography } from "@/components/typography";
 import {
-  clearAuthSetupPayload,
   readAuthSetupPayload,
   updateAuthSetupPayload,
 } from "@/lib/authSetupPayload";
@@ -28,7 +28,10 @@ type AccountLinkProps = {
   } | null;
 };
 
-export default function AccountLink({ showStepper = true, discordInfo }: AccountLinkProps) {
+export default function AccountLink({
+  showStepper = true,
+  discordInfo,
+}: AccountLinkProps) {
   const router = useRouter();
   const [submissionError, setSubmissionError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -100,11 +103,11 @@ export default function AccountLink({ showStepper = true, discordInfo }: Account
     }
     return Boolean(
       accountInfo.name &&
-        accountInfo.username &&
-        accountInfo.age &&
-        accountInfo.birthDate &&
-        accountInfo.province.id &&
-        accountInfo.city.id,
+      accountInfo.username &&
+      accountInfo.age &&
+      accountInfo.birthDate &&
+      accountInfo.province.id &&
+      accountInfo.city.id,
     );
   }, [accountInfo]);
 
@@ -216,10 +219,21 @@ export default function AccountLink({ showStepper = true, discordInfo }: Account
       }
 
       if (data.success) {
-        clearAuthSetupPayload();
-        // Redirect to auth page
-        window.location.href = "/auth/";
-        return;
+        const signInResult = await signIn("credentials", {
+          email: credentials.email,
+          password: credentials.password,
+          redirect: false,
+        });
+
+        if (!signInResult?.ok) {
+          setSubmissionError(
+            signInResult?.error || "Registration completed, but sign-in failed",
+          );
+          return;
+        }
+
+        sessionStorage.setItem("auth_setup_completed", "true");
+        window.location.href = "/dashboard";
       }
     } catch {
       setSubmissionError("Network error. Please try again.");
@@ -276,9 +290,10 @@ export default function AccountLink({ showStepper = true, discordInfo }: Account
             onClick={handleDiscordConnect}
             disabled={isConnectedToDiscord}
           >
-            {isConnectedToDiscord ? "Connected to Discord" : "Continue with Discord"}
+            {isConnectedToDiscord
+              ? "Connected to Discord"
+              : "Continue with Discord"}
           </Button.Primary>
-
         </div>
 
         {/* Action Buttons */}
@@ -306,8 +321,8 @@ export default function AccountLink({ showStepper = true, discordInfo }: Account
         {/* Helper Text */}
         <div className="mt-10 flex flex-col space-y-2">
           <Typography.Small className="text-primary-300 text-center">
-            Connecting your accounts allows us to verify your identity and link your
-            in-game progress.
+            Connecting your accounts allows us to verify your identity and link
+            your in-game progress.
           </Typography.Small>
         </div>
       </motion.div>

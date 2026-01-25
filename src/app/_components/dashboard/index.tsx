@@ -12,6 +12,7 @@ export { EmailSettings } from "./EmailSettings";
 export { PasswordSettings } from "./PasswordSettings";
 export type { ProfileSectionProps } from "./ProfileSection";
 export { ProfileSection } from "./ProfileSection";
+export { RegistrationCleanup } from "./RegistrationCleanup";
 export type { SettingsGroupProps } from "./SettingsGroup";
 export { SettingsGroup } from "./SettingsGroup";
 export type { UserStatsCardProps } from "./UserStatsCard";

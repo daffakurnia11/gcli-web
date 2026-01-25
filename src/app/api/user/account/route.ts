@@ -16,8 +16,14 @@ export async function DELETE() {
       return NextResponse.json({ error: "Invalid account ID" }, { status: 400 });
     }
 
+    const account = await prisma.web_accounts.findUnique({
+      where: { id: accountId },
+      select: { user_id: true },
+    });
+
+    const userId = account?.user_id ?? null;
     // Delete related records first (due to foreign key constraints)
-    await prisma.$transaction([
+    const deletes = [
       // Delete Discord account linkage
       prisma.web_discord_accounts.deleteMany({
         where: { account_id: accountId },
@@ -34,7 +40,16 @@ export async function DELETE() {
       prisma.web_accounts.delete({
         where: { id: accountId },
       }),
-    ]);
+      ...(userId
+        ? [
+            prisma.users.delete({
+              where: { userId },
+            }),
+          ]
+        : []),
+    ];
+
+    await prisma.$transaction(deletes);
 
     return NextResponse.json({ message: "Account deleted successfully" }, { status: 200 });
   } catch (error) {

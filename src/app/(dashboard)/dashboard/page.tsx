@@ -1,4 +1,6 @@
-import { UserStatsCard } from "@/app/_components/dashboard";
+import { redirect } from "next/navigation";
+
+import { RegistrationCleanup, UserStatsCard } from "@/app/_components/dashboard";
 import { DiscordInfoCard, FiveMInfoCard } from "@/components";
 import { Typography } from "@/components/typography";
 import { auth } from "@/lib/auth";
@@ -38,6 +40,9 @@ async function getServerInfo() {
 
 export default async function DashboardPage() {
   const session = await auth();
+  if (!session?.user?.id) {
+    redirect("/auth");
+  }
   const { discordData, fivemData } = await getServerInfo();
   const accountId = session?.user?.id ? Number.parseInt(session.user.id, 10) : null;
   const account =
@@ -75,6 +80,7 @@ export default async function DashboardPage() {
   const discordId = account?.discord_id;
   return (
     <div className="space-y-6">
+      <RegistrationCleanup />
       <div>
         <Typography.Heading
           level={6}

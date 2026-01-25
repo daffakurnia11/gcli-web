@@ -188,6 +188,26 @@ export const authOptions: NextAuthConfig = {
 
       return token;
     },
+    async redirect({ url, baseUrl }) {
+      if (url.startsWith("/")) {
+        return `${baseUrl}${url}`;
+      }
+      if (url.startsWith(baseUrl)) {
+        if (url.startsWith(`${baseUrl}/auth/setup`)) {
+          return url;
+        }
+        if (
+          url === baseUrl ||
+          url === `${baseUrl}/` ||
+          url === `${baseUrl}/auth` ||
+          url.startsWith(`${baseUrl}/auth`)
+        ) {
+          return `${baseUrl}/dashboard`;
+        }
+        return url;
+      }
+      return baseUrl;
+    },
   },
   pages: {
     signIn: "/auth",

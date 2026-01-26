@@ -1,6 +1,6 @@
 "use client";
 
-import { SiDiscord } from "@icons-pack/react-simple-icons";
+import { SiDiscord, SiFivem } from "@icons-pack/react-simple-icons";
 import { Check, Link2, Loader2, X } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -174,8 +174,8 @@ export function AccountLinkage({
           {/* Discord Linkage */}
           <div className="flex items-center justify-between p-4 rounded-lg border border-primary-700 bg-primary-800/50">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-lg bg-[#5865F2]/20 flex items-center justify-center">
-                <SiDiscord className="text-[#5865F2]" size={24} />
+              <div className="w-12 h-12 rounded-lg bg-[#5865F2] flex items-center justify-center">
+                <SiDiscord className="text-white" size={24} />
               </div>
               <div>
                 <Typography.Heading level={6} type="display" as="p">
@@ -229,10 +229,8 @@ export function AccountLinkage({
           {/* FiveM Linkage Info */}
           <div className="flex items-center justify-between p-4 rounded-lg border border-primary-700 bg-primary-800/50">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-lg bg-[#F40552]/20 flex items-center justify-center">
-                <span className="text-[#F40552] font-display font-bold text-sm">
-                  FiveM
-                </span>
+              <div className="w-12 h-12 rounded-lg bg-[#F40552] flex items-center justify-center">
+                <SiFivem className="text-white" size={24} />
               </div>
               <div>
                 <Typography.Heading level={6} type="display" as="p">

@@ -1,5 +1,5 @@
+import { type NextRequest,NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
-import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
   const nextUrl = request.nextUrl;
@@ -13,10 +13,18 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const token = await getToken({
-    req: request,
-    secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
-  });
+  const token =
+    (await getToken({
+      req: request,
+      secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
+      cookieName: "__Secure-authjs.session-token",
+    })) ??
+    (await getToken({
+      req: request,
+      secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
+      cookieName: "authjs.session-token",
+    }));
+
   const isAuthenticated = Boolean(token);
   const isRegistered = Boolean(token?.isRegistered);
   const isAuthPage = pathname === "/auth" || pathname === "/auth/";

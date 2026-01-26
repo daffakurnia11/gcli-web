@@ -57,9 +57,11 @@ export default function HomeCTA() {
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.4 }}
           >
-            <Button.Slant variant="primary" size="lg">
-              Register Now
-            </Button.Slant>
+            <Link href={"/auth"}>
+              <Button.Slant variant="primary" size="lg">
+                Register Now
+              </Button.Slant>
+            </Link>
           </motion.div>
           <motion.div
             initial={{ opacity: 0, y: -20 }}

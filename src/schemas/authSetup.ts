@@ -15,8 +15,8 @@ export const accountInfoSchema = z.object({
     .min(3, "FiveM name must be at least 3 characters")
     .max(50, "FiveM name must not exceed 50 characters")
     .regex(
-      /^[a-zA-Z0-9_]+$/,
-      "FiveM name can only contain letters, numbers, and underscores",
+      /^[a-zA-Z0-9_ -]+$/,
+      "FiveM name can only contain letters, numbers, underscores, dashes, and spaces",
     ),
   age: z
     .string()

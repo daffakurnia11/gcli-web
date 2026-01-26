@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Link from "next/dist/client/link";
 import Image from "next/image";
 
 import { Logo } from "@/components";
@@ -67,9 +68,11 @@ export default function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
           >
-            <Button.Slant variant="primary" size="lg">
-              Join Now
-            </Button.Slant>
+            <Link href={"/auth"}>
+              <Button.Slant variant="primary" size="lg">
+                Join Now
+              </Button.Slant>
+            </Link>
           </motion.div>
           <motion.div
             initial={{ opacity: 0, y: -20 }}

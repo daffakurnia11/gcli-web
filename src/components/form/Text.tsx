@@ -51,8 +51,7 @@ export function Text({
   const wrapperSizeClass = wrapperSizeStyles[size];
   const isPasswordField = type === "password";
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-  const resolvedType =
-    isPasswordField && isPasswordVisible ? "text" : type;
+  const resolvedType = isPasswordField && isPasswordVisible ? "text" : type;
   const needsSuffix = Boolean(suffix);
   const rightPaddingClass = isPasswordField
     ? needsSuffix

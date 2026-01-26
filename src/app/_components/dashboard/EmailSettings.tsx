@@ -16,7 +16,10 @@ export interface EmailSettingsProps {
 export function EmailSettings({ currentEmail }: EmailSettingsProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -59,7 +62,11 @@ export function EmailSettings({ currentEmail }: EmailSettingsProps) {
     <DashboardCard>
       <form onSubmit={handleSubmit}>
         {message && (
-          <Alert variant={message.type} onDismiss={() => setMessage(null)} className="mb-4">
+          <Alert
+            variant={message.type}
+            onDismiss={() => setMessage(null)}
+            className="mb-4"
+          >
             {message.text}
           </Alert>
         )}
@@ -108,7 +115,12 @@ export function EmailSettings({ currentEmail }: EmailSettingsProps) {
           <div className="flex gap-3 mt-4">
             {isEditing ? (
               <>
-                <Button.Primary type="submit" variant="solid" size="sm" disabled={isLoading}>
+                <Button.Primary
+                  type="submit"
+                  variant="solid"
+                  size="sm"
+                  disabled={isLoading}
+                >
                   {isLoading ? "Updating..." : "Update Email"}
                 </Button.Primary>
                 <Button.Secondary

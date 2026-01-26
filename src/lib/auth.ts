@@ -60,13 +60,15 @@ export const authOptions: NextAuthConfig = {
       if (account?.provider === "discord") {
         // Pure client-side connect until "Create Now": no DB writes here.
         void user;
-        const discordProfile = profile as {
-          id?: string;
-          username?: string;
-          global_name?: string;
-          email?: string;
-          image_url?: string;
-        } | undefined;
+        const discordProfile = profile as
+          | {
+              id?: string;
+              username?: string;
+              global_name?: string;
+              email?: string;
+              image_url?: string;
+            }
+          | undefined;
 
         const rawDiscordId = discordProfile?.id;
         if (rawDiscordId) {
@@ -97,7 +99,9 @@ export const authOptions: NextAuthConfig = {
               image: discordProfile?.image_url ?? null,
               connected: true,
             };
-            const encoded = Buffer.from(JSON.stringify(payload)).toString("base64url");
+            const encoded = Buffer.from(JSON.stringify(payload)).toString(
+              "base64url",
+            );
             return `/auth/setup?step=1&discord_data=${encoded}`;
           }
         }
@@ -124,23 +128,31 @@ export const authOptions: NextAuthConfig = {
         token.provider = account.provider;
 
         if (account.provider === "discord") {
-          const discordProfile = profile as {
-            id?: string;
-            username?: string;
-            global_name?: string;
-            email?: string;
-            image_url?: string;
-          } | undefined;
+          const discordProfile = profile as
+            | {
+                id?: string;
+                username?: string;
+                global_name?: string;
+                email?: string;
+                image_url?: string;
+              }
+            | undefined;
 
           token.discordId = discordProfile?.id ?? token.discordId ?? null;
           token.discordUsername =
             discordProfile?.username ?? token.discordUsername ?? null;
           token.discordName =
-            discordProfile?.global_name ?? user?.name ?? token.discordName ?? null;
+            discordProfile?.global_name ??
+            user?.name ??
+            token.discordName ??
+            null;
           token.discordEmail =
             discordProfile?.email ?? user?.email ?? token.discordEmail ?? null;
           token.discordImage =
-            discordProfile?.image_url ?? user?.image ?? token.discordImage ?? null;
+            discordProfile?.image_url ??
+            user?.image ??
+            token.discordImage ??
+            null;
         }
       }
 

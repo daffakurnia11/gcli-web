@@ -41,7 +41,10 @@ export interface TextInputProps extends BaseInputProps {
 /**
  * Props for Number input component
  */
-export interface NumberInputProps extends Omit<BaseInputProps, "onChange" | "onBlur" | "onFocus"> {
+export interface NumberInputProps extends Omit<
+  BaseInputProps,
+  "onChange" | "onBlur" | "onFocus"
+> {
   value?: number | string;
   defaultValue?: number | string;
   min?: number;
@@ -78,7 +81,10 @@ export interface SelectProps extends Omit<BaseInputProps, "onChange"> {
 /**
  * Props for Date component
  */
-export interface DateInputProps extends Omit<BaseInputProps, "value" | "defaultValue"> {
+export interface DateInputProps extends Omit<
+  BaseInputProps,
+  "value" | "defaultValue"
+> {
   value?: string; // ISO date string or ISO datetime string
   defaultValue?: string; // ISO date string or ISO datetime string
   min?: string; // ISO date string or ISO datetime string
@@ -98,7 +104,10 @@ export type TextareaResize = "none" | "both" | "horizontal" | "vertical";
 /**
  * Props for Textarea component
  */
-export interface TextareaProps extends Omit<BaseInputProps, "onChange" | "onBlur" | "onFocus"> {
+export interface TextareaProps extends Omit<
+  BaseInputProps,
+  "onChange" | "onBlur" | "onFocus"
+> {
   rows?: number;
   resize?: TextareaResize;
   maxLength?: number;

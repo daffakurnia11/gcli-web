@@ -13,7 +13,10 @@ export async function DELETE() {
 
     const accountId = Number.parseInt(session.user.id, 10);
     if (Number.isNaN(accountId)) {
-      return NextResponse.json({ error: "Invalid account ID" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid account ID" },
+        { status: 400 },
+      );
     }
 
     const account = await prisma.web_accounts.findUnique({
@@ -51,9 +54,15 @@ export async function DELETE() {
 
     await prisma.$transaction(deletes);
 
-    return NextResponse.json({ message: "Account deleted successfully" }, { status: 200 });
+    return NextResponse.json(
+      { message: "Account deleted successfully" },
+      { status: 200 },
+    );
   } catch (error) {
     console.error("Account deletion error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

@@ -14,12 +14,16 @@ export async function GET() {
 
     const accountId = Number.parseInt(session.user.id, 10);
     if (Number.isNaN(accountId)) {
-      return NextResponse.json({ error: "Invalid account ID" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid account ID" },
+        { status: 400 },
+      );
     }
 
     // Get current session token
     const cookieStore = await cookies();
-    const currentSessionToken = cookieStore.get("next-auth.session-token")?.value ||
+    const currentSessionToken =
+      cookieStore.get("next-auth.session-token")?.value ||
       cookieStore.get("__Secure-next-auth.session-token")?.value;
 
     const sessions = await prisma.web_sessions.findMany({
@@ -43,6 +47,9 @@ export async function GET() {
     return NextResponse.json(sessionsWithCurrent, { status: 200 });
   } catch (error) {
     console.error("Sessions fetch error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

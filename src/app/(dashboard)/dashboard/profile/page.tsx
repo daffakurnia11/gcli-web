@@ -24,6 +24,12 @@ async function getProfileData(userId: string) {
         select: {
           real_name: true,
           fivem_name: true,
+          gender: true,
+          birth_date: true,
+          province_id: true,
+          province_name: true,
+          city_id: true,
+          city_name: true,
         },
       },
       discord: {
@@ -77,6 +83,12 @@ export default async function ProfilePage() {
           email={profileData?.email || session.user?.email}
           realName={profileData?.profile?.real_name}
           fivemName={profileData?.profile?.fivem_name}
+          gender={profileData?.profile?.gender ?? null}
+          birthDate={profileData?.profile?.birth_date ?? null}
+          provinceId={profileData?.profile?.province_id ?? null}
+          provinceName={profileData?.profile?.province_name ?? null}
+          cityId={profileData?.profile?.city_id ?? null}
+          cityName={profileData?.profile?.city_name ?? null}
           avatarUrl={profileData?.discord?.image || session.user?.discordImage}
           allowFivemChange={allowFivemChange}
         />

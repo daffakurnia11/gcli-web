@@ -24,7 +24,11 @@ const parseState = (state: string | null) => {
   }
 };
 
-const redirectWithError = (callbackUrl: string, error: string, requestUrl: string) => {
+const redirectWithError = (
+  callbackUrl: string,
+  error: string,
+  requestUrl: string,
+) => {
   const url = new URL(callbackUrl, requestUrl);
   url.searchParams.set("error", error);
   return NextResponse.redirect(url.toString());

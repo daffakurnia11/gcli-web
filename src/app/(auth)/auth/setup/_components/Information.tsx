@@ -10,9 +10,13 @@ import { Form } from "@/components/form";
 import { Typography } from "@/components/typography";
 import { useCities, useProvinces } from "@/hooks/useIndonesiaRegions";
 import { useUniqueCheck } from "@/hooks/useUniqueCheck";
-import { readAuthSetupPayload, updateAuthSetupPayload } from "@/lib/authSetupPayload";
+import {
+  readAuthSetupPayload,
+  updateAuthSetupPayload,
+} from "@/lib/authSetupPayload";
 import { formatZodError } from "@/lib/formValidation";
 import {
+  type AccountInfoDraft,
   type AccountInfoFormData,
   accountInfoSchema,
   type FormErrors,
@@ -29,7 +33,7 @@ type InformationProps = {
 export default function Information({ showStepper = true }: InformationProps) {
   const router = useRouter();
 
-  const [accountInfo, setAccountInfo] = useState<AccountInfoFormData>(() => {
+  const [accountInfo, setAccountInfo] = useState<AccountInfoDraft>(() => {
     const payload = readAuthSetupPayload() as {
       accountInfo?: AccountInfoFormData & {
         realName?: string;
@@ -48,10 +52,12 @@ export default function Information({ showStepper = true }: InformationProps) {
         province?: unknown;
         city?: unknown;
       };
+      const resolvedGender =
+        raw.gender === "male" || raw.gender === "female" ? raw.gender : "";
       return {
         name: raw.name || raw.realName || "",
         username: raw.username || raw.fivemName || "",
-        age: raw.age ?? "",
+        gender: resolvedGender,
         birthDate: raw.birthDate ?? "",
         province: {
           id:
@@ -68,17 +74,24 @@ export default function Information({ showStepper = true }: InformationProps) {
             raw.province !== null &&
             "name" in raw.province
               ? String(raw.province.name)
-              : payload.provinceName ?? "",
+              : (payload.provinceName ?? ""),
         },
         city: {
           id:
-            typeof raw.city === "object" && raw.city !== null && "id" in raw.city
+            typeof raw.city === "object" &&
+            raw.city !== null &&
+            "id" in raw.city
               ? Number(raw.city.id)
-              : Number.parseInt(typeof raw.city === "string" ? raw.city : "0", 10),
+              : Number.parseInt(
+                  typeof raw.city === "string" ? raw.city : "0",
+                  10,
+                ),
           name:
-            typeof raw.city === "object" && raw.city !== null && "name" in raw.city
+            typeof raw.city === "object" &&
+            raw.city !== null &&
+            "name" in raw.city
               ? String(raw.city.name)
-              : payload.cityName ?? "",
+              : (payload.cityName ?? ""),
         },
       };
     }
@@ -86,26 +99,20 @@ export default function Information({ showStepper = true }: InformationProps) {
     return {
       name: "",
       username: "",
-      age: "",
+      gender: "",
       birthDate: "",
       province: { id: 0, name: "" },
       city: { id: 0, name: "" },
     };
   });
   const [errors, setErrors] = useState<FormErrors<AccountInfoFormData>>({});
-  const ageValue = accountInfo.age === "" ? "" : Number(accountInfo.age);
-  const ageNumber = Number.isFinite(ageValue) ? ageValue : null;
   const today = new Date();
-  const maxBirthDate =
-    ageNumber && ageNumber > 0
-      ? new Date(
-          today.getFullYear() - ageNumber,
-          today.getMonth(),
-          today.getDate(),
-        )
-      : today;
-  const minBirthDate = new Date(today.getFullYear() - 120, today.getMonth(), today.getDate());
-  const maxBirthDateValue = maxBirthDate.toISOString().split("T")[0];
+  const minBirthDate = new Date(
+    today.getFullYear() - 120,
+    today.getMonth(),
+    today.getDate(),
+  );
+  const maxBirthDateValue = today.toISOString().split("T")[0];
   const minBirthDateValue = minBirthDate.toISOString().split("T")[0];
 
   const {
@@ -156,7 +163,7 @@ export default function Information({ showStepper = true }: InformationProps) {
   const usernameTaken = usernameValidation.isValid && usernameValidation.exists;
 
   // Handle input change
-  const handleInputChange = (field: keyof AccountInfoFormData, value: string) => {
+  const handleInputChange = (field: keyof AccountInfoDraft, value: string) => {
     if (field === "province") {
       if (errors.province) {
         setErrors((prev) => ({ ...prev, province: undefined }));
@@ -191,35 +198,19 @@ export default function Information({ showStepper = true }: InformationProps) {
       return;
     }
 
-    if (field === "age") {
-      const nextAge = Number.parseInt(value, 10);
-      if (Number.isFinite(nextAge) && nextAge > 0) {
-        const nextBirthDate = new Date(
-          today.getFullYear() - nextAge,
-          today.getMonth(),
-          today.getDate(),
-        )
-          .toISOString()
-          .split("T")[0];
-        setAccountInfo((prev) => ({
-          ...prev,
-          age: value,
-          birthDate: nextBirthDate,
-        }));
-      } else {
-        setAccountInfo((prev) => ({ ...prev, age: value }));
-      }
-      if (errors.age) {
-        setErrors((prev) => ({ ...prev, age: undefined }));
-      }
-      if (errors.birthDate) {
-        setErrors((prev) => ({ ...prev, birthDate: undefined }));
+    if (field === "gender") {
+      setAccountInfo((prev) => ({
+        ...prev,
+        gender: value as AccountInfoDraft["gender"],
+      }));
+      if (errors.gender) {
+        setErrors((prev) => ({ ...prev, gender: undefined }));
       }
       return;
     }
 
     setAccountInfo((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) {
+    if (field in errors) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
   };
@@ -227,7 +218,7 @@ export default function Information({ showStepper = true }: InformationProps) {
   // Validate form using Zod
   const validateForm = (): boolean => {
     try {
-      accountInfoSchema.parse(accountInfo);
+      accountInfoSchema.parse(accountInfo as AccountInfoFormData);
       setErrors({});
       return true;
     } catch (error) {
@@ -243,7 +234,9 @@ export default function Information({ showStepper = true }: InformationProps) {
     e.preventDefault();
 
     if (validateForm()) {
-      updateAuthSetupPayload({ accountInfo });
+      updateAuthSetupPayload({
+        accountInfo: accountInfo as AccountInfoFormData,
+      });
       router.push("/auth/setup?step=2");
     }
   };
@@ -283,7 +276,10 @@ export default function Information({ showStepper = true }: InformationProps) {
               placeholder="Enter your FiveM in-game name"
               value={accountInfo.username}
               onChange={(e) => handleInputChange("username", e.target.value)}
-              error={errors.username || (usernameTaken ? "FiveM name already exists" : "")}
+              error={
+                errors.username ||
+                (usernameTaken ? "FiveM name already exists" : "")
+              }
               helperText={
                 usernameValidation.isLoading
                   ? "Checking availability..."
@@ -293,18 +289,20 @@ export default function Information({ showStepper = true }: InformationProps) {
               fullWidth
             />
 
-            {/* Age and Birth Date - Two columns on larger screens */}
+            {/* Gender and Birth Date - Two columns on larger screens */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <Form.Number
-                name="age"
-                label="Age"
-                placeholder="Enter your age"
-                value={ageValue}
-                onChange={(e) => handleInputChange("age", e.target.value)}
-                error={errors.age}
-                helperText="Players must be 13+ years old"
-                min={13}
-                max={120}
+              <Form.Select
+                name="gender"
+                label="Gender"
+                placeholder="Select gender"
+                options={[
+                  { value: "male", label: "Male" },
+                  { value: "female", label: "Female" },
+                ]}
+                value={accountInfo.gender}
+                onChange={(value) => handleInputChange("gender", value)}
+                error={errors.gender}
+                helperText="Select your gender"
                 fullWidth
               />
 
@@ -315,7 +313,7 @@ export default function Information({ showStepper = true }: InformationProps) {
                 value={accountInfo.birthDate}
                 onChange={(value) => handleInputChange("birthDate", value)}
                 error={errors.birthDate}
-                helperText="For age verification"
+                helperText="For verification"
                 min={minBirthDateValue}
                 max={maxBirthDateValue}
                 fullWidth

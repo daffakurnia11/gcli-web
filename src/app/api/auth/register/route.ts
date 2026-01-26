@@ -9,7 +9,7 @@ const registerSchema = z.object({
   accountInfo: z.object({
     name: z.string().min(1),
     username: z.string().min(1),
-    age: z.string().min(1),
+    gender: z.enum(["male", "female"]),
     birthDate: z.string().min(1),
     province: z.object({
       id: z.number(),
@@ -86,23 +86,13 @@ export async function POST(req: Request) {
       10,
     );
 
-    // Calculate age from birth date
     const birthDate = new Date(validatedData.accountInfo.birthDate);
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (
-      monthDiff < 0 ||
-      (monthDiff === 0 && today.getDate() < birthDate.getDate())
-    ) {
-      age--;
-    }
 
     // Create web account with profile and link to FiveM users table if exists
     const profileData = {
       real_name: validatedData.accountInfo.name,
       fivem_name: validatedData.accountInfo.username,
-      age,
+      gender: validatedData.accountInfo.gender,
       birth_date: birthDate,
       province_id: String(validatedData.accountInfo.province.id),
       province_name: validatedData.accountInfo.province.name,
@@ -122,16 +112,24 @@ export async function POST(req: Request) {
                   upsert: {
                     create: {
                       discord_id: validatedData.socialConnections.discord.id,
-                      username: validatedData.socialConnections.discord.username,
-                      global_name: validatedData.socialConnections.discord.name ?? null,
-                      email: validatedData.socialConnections.discord.email ?? null,
-                      image: validatedData.socialConnections.discord.image ?? null,
+                      username:
+                        validatedData.socialConnections.discord.username,
+                      global_name:
+                        validatedData.socialConnections.discord.name ?? null,
+                      email:
+                        validatedData.socialConnections.discord.email ?? null,
+                      image:
+                        validatedData.socialConnections.discord.image ?? null,
                     },
                     update: {
-                      username: validatedData.socialConnections.discord.username,
-                      global_name: validatedData.socialConnections.discord.name ?? null,
-                      email: validatedData.socialConnections.discord.email ?? null,
-                      image: validatedData.socialConnections.discord.image ?? null,
+                      username:
+                        validatedData.socialConnections.discord.username,
+                      global_name:
+                        validatedData.socialConnections.discord.name ?? null,
+                      email:
+                        validatedData.socialConnections.discord.email ?? null,
+                      image:
+                        validatedData.socialConnections.discord.image ?? null,
                     },
                   },
                 }
@@ -161,9 +159,12 @@ export async function POST(req: Request) {
                   create: {
                     discord_id: validatedData.socialConnections.discord.id,
                     username: validatedData.socialConnections.discord.username,
-                    global_name: validatedData.socialConnections.discord.name ?? null,
-                    email: validatedData.socialConnections.discord.email ?? null,
-                    image: validatedData.socialConnections.discord.image ?? null,
+                    global_name:
+                      validatedData.socialConnections.discord.name ?? null,
+                    email:
+                      validatedData.socialConnections.discord.email ?? null,
+                    image:
+                      validatedData.socialConnections.discord.image ?? null,
                   },
                 }
               : undefined,
@@ -192,7 +193,6 @@ export async function POST(req: Request) {
             fivem_id: existingUser.fivem ?? undefined,
           },
         });
-
       } else {
         // Create new FiveM user entry
         const newUser = await prisma.users.create({

@@ -5,7 +5,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 
-import { readAuthSetupPayload, updateAuthSetupPayload } from "@/lib/authSetupPayload";
+import {
+  readAuthSetupPayload,
+  updateAuthSetupPayload,
+} from "@/lib/authSetupPayload";
 
 import AccountLinkWrapper from "./_components/AccountLinkWrapper";
 import Credentials from "./_components/Credentials";
@@ -44,7 +47,10 @@ export default function AuthSetupPage() {
         .replace(/ /g, "+")
         .replace(/-/g, "+")
         .replace(/_/g, "/");
-      const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+      const padded = normalized.padEnd(
+        Math.ceil(normalized.length / 4) * 4,
+        "=",
+      );
       const data = JSON.parse(atob(padded)) as {
         id?: string;
         username?: string;
@@ -79,9 +85,15 @@ export default function AuthSetupPage() {
     if (isCompleting) {
       return;
     }
-    if (status === "authenticated" && session?.user && session.provider === "discord") {
+    if (
+      status === "authenticated" &&
+      session?.user &&
+      session.provider === "discord"
+    ) {
       const rawDiscordId = session.user.discordId || session.user.id;
-      const discordId = rawDiscordId ? `discord:${rawDiscordId.replace(/^discord:/, "")}` : "";
+      const discordId = rawDiscordId
+        ? `discord:${rawDiscordId.replace(/^discord:/, "")}`
+        : "";
 
       if (discordId) {
         updateAuthSetupPayload({
@@ -120,7 +132,7 @@ export default function AuthSetupPage() {
           if (
             !accountInfo?.name ||
             !accountInfo?.username ||
-            !accountInfo?.age ||
+            !accountInfo?.gender ||
             !accountInfo?.birthDate ||
             !accountInfo?.province?.id ||
             !accountInfo?.city?.id
@@ -135,7 +147,7 @@ export default function AuthSetupPage() {
           if (
             !accountInfo?.name ||
             !accountInfo?.username ||
-            !accountInfo?.age ||
+            !accountInfo?.gender ||
             !accountInfo?.birthDate ||
             !accountInfo?.province?.id ||
             !accountInfo?.city?.id

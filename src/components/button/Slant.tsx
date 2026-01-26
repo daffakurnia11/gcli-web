@@ -56,7 +56,7 @@ export default function Slant({
         // Disabled state
         disabled && "opacity-50 cursor-not-allowed hover:scale-100",
 
-        className
+        className,
       )}
       {...props}
     >

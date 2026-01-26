@@ -18,7 +18,10 @@ export async function DELETE(
     const sessionId = Number.parseInt((await params).id, 10);
 
     if (Number.isNaN(accountId) || Number.isNaN(sessionId)) {
-      return NextResponse.json({ error: "Invalid account or session ID" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid account or session ID" },
+        { status: 400 },
+      );
     }
 
     // Verify the session belongs to the user
@@ -38,9 +41,15 @@ export async function DELETE(
       where: { id: sessionId },
     });
 
-    return NextResponse.json({ message: "Session revoked successfully" }, { status: 200 });
+    return NextResponse.json(
+      { message: "Session revoked successfully" },
+      { status: 200 },
+    );
   } catch (error) {
     console.error("Revoke session error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

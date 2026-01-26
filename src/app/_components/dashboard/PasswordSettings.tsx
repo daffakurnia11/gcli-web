@@ -12,7 +12,10 @@ import { Alert, DashboardCard, SettingsGroup } from "./index";
 export function PasswordSettings() {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -64,7 +67,11 @@ export function PasswordSettings() {
     <DashboardCard>
       <form onSubmit={handleSubmit}>
         {message && (
-          <Alert variant={message.type} onDismiss={() => setMessage(null)} className="mb-4">
+          <Alert
+            variant={message.type}
+            onDismiss={() => setMessage(null)}
+            className="mb-4"
+          >
             {message.text}
           </Alert>
         )}
@@ -108,7 +115,12 @@ export function PasswordSettings() {
               />
 
               <div className="flex gap-3">
-                <Button.Primary type="submit" variant="solid" size="sm" disabled={isLoading}>
+                <Button.Primary
+                  type="submit"
+                  variant="solid"
+                  size="sm"
+                  disabled={isLoading}
+                >
                   {isLoading ? "Updating..." : "Update Password"}
                 </Button.Primary>
                 <Button.Secondary
@@ -125,8 +137,8 @@ export function PasswordSettings() {
           ) : (
             <div>
               <Typography.Paragraph as="p" className="text-primary-300">
-                Use a strong password with at least 8 characters, including letters, numbers, and
-                symbols.
+                Use a strong password with at least 8 characters, including
+                letters, numbers, and symbols.
               </Typography.Paragraph>
               <div className="mt-4">
                 <Button.Secondary

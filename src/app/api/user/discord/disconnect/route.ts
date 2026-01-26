@@ -13,7 +13,10 @@ export async function POST() {
 
     const accountId = Number.parseInt(session.user.id, 10);
     if (Number.isNaN(accountId)) {
-      return NextResponse.json({ error: "Invalid account ID" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid account ID" },
+        { status: 400 },
+      );
     }
 
     // Delete the Discord account linkage

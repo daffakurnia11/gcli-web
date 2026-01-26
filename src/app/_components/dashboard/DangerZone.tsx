@@ -14,7 +14,10 @@ import { Alert, DashboardCard, SettingsGroup } from "./index";
 export function DangerZone() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   const handleDeleteAccount = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -56,7 +59,11 @@ export function DangerZone() {
   return (
     <DashboardCard className="border-tertiary-red">
       {message && (
-        <Alert variant={message.type} onDismiss={() => setMessage(null)} className="mb-4">
+        <Alert
+          variant={message.type}
+          onDismiss={() => setMessage(null)}
+          className="mb-4"
+        >
           {message.text}
         </Alert>
       )}
@@ -64,15 +71,21 @@ export function DangerZone() {
       <SettingsGroup>
         <div className="flex items-center gap-3 mb-4">
           <AlertTriangle className="text-tertiary-red" size={20} />
-          <Typography.Heading level={6} type="display" as="h3" className="text-tertiary-red">
+          <Typography.Heading
+            level={6}
+            type="display"
+            as="h3"
+            className="text-tertiary-red"
+          >
             Danger Zone
           </Typography.Heading>
         </div>
 
         <div className="space-y-4">
           <Typography.Paragraph as="p" className="text-primary-200">
-            Deleting your account is permanent. All your data will be permanently removed and
-            cannot be recovered. This action cannot be undone.
+            Deleting your account is permanent. All your data will be
+            permanently removed and cannot be recovered. This action cannot be
+            undone.
           </Typography.Paragraph>
 
           {!showConfirm ? (
@@ -87,8 +100,8 @@ export function DangerZone() {
           ) : (
             <form onSubmit={handleDeleteAccount} className="space-y-4">
               <Typography.Small className="text-primary-300 block">
-                To confirm deletion, type <span className="text-white font-bold">DELETE</span>{" "}
-                below:
+                To confirm deletion, type{" "}
+                <span className="text-white font-bold">DELETE</span> below:
               </Typography.Small>
 
               <Form.Text

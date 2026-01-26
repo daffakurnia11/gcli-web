@@ -1,13 +1,15 @@
 "use client";
 
-import { Hash,Mail, User } from "lucide-react";
+import { Hash, Mail, User } from "lucide-react";
 import { useState } from "react";
 
 import { Form } from "@/components/form";
 import type { SelectOption } from "@/types/Form";
 
 // Calculate min date for 13+ years old (outside component to avoid impure function call)
-const minThirteenYearsAgo = new Date(Date.now() - 13 * 365 * 24 * 60 * 60 * 1000)
+const minThirteenYearsAgo = new Date(
+  Date.now() - 13 * 365 * 24 * 60 * 60 * 1000,
+)
   .toISOString()
   .split("T")[0];
 const today = new Date().toISOString().split("T")[0];
@@ -32,7 +34,9 @@ export function FormDemo() {
     <div className="space-y-12">
       {/* Text Inputs */}
       <section>
-        <h2 className="text-2xl font-display font-bold text-primary-100 mb-6">Text Inputs</h2>
+        <h2 className="text-2xl font-display font-bold text-primary-100 mb-6">
+          Text Inputs
+        </h2>
         <div className="space-y-6">
           <Form.Text
             name="username"
@@ -117,7 +121,9 @@ export function FormDemo() {
 
       {/* Number Inputs */}
       <section>
-        <h2 className="text-2xl font-display font-bold text-primary-100 mb-6">Number Inputs</h2>
+        <h2 className="text-2xl font-display font-bold text-primary-100 mb-6">
+          Number Inputs
+        </h2>
         <div className="space-y-6">
           <Form.Number
             name="age"
@@ -159,17 +165,39 @@ export function FormDemo() {
 
           {/* Number Sizes */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Form.Number name="num-sm" label="Small" size="sm" placeholder="0" />
-            <Form.Number name="num-md" label="Medium" size="md" placeholder="0" />
-            <Form.Number name="num-lg" label="Large" size="lg" placeholder="0" />
-            <Form.Number name="num-xl" label="Extra Large" size="xl" placeholder="0" />
+            <Form.Number
+              name="num-sm"
+              label="Small"
+              size="sm"
+              placeholder="0"
+            />
+            <Form.Number
+              name="num-md"
+              label="Medium"
+              size="md"
+              placeholder="0"
+            />
+            <Form.Number
+              name="num-lg"
+              label="Large"
+              size="lg"
+              placeholder="0"
+            />
+            <Form.Number
+              name="num-xl"
+              label="Extra Large"
+              size="xl"
+              placeholder="0"
+            />
           </div>
         </div>
       </section>
 
       {/* Select Inputs */}
       <section>
-        <h2 className="text-2xl font-display font-bold text-primary-100 mb-6">Select Dropdowns</h2>
+        <h2 className="text-2xl font-display font-bold text-primary-100 mb-6">
+          Select Dropdowns
+        </h2>
         <div className="space-y-6">
           <Form.Select
             name="role"
@@ -216,17 +244,43 @@ export function FormDemo() {
 
           {/* Select Sizes */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Form.Select name="sel-sm" label="Small" size="sm" options={roleOptions} placeholder="Small" />
-            <Form.Select name="sel-md" label="Medium" size="md" options={roleOptions} placeholder="Medium" />
-            <Form.Select name="sel-lg" label="Large" size="lg" options={roleOptions} placeholder="Large" />
-            <Form.Select name="sel-xl" label="XL" size="xl" options={roleOptions} placeholder="XL" />
+            <Form.Select
+              name="sel-sm"
+              label="Small"
+              size="sm"
+              options={roleOptions}
+              placeholder="Small"
+            />
+            <Form.Select
+              name="sel-md"
+              label="Medium"
+              size="md"
+              options={roleOptions}
+              placeholder="Medium"
+            />
+            <Form.Select
+              name="sel-lg"
+              label="Large"
+              size="lg"
+              options={roleOptions}
+              placeholder="Large"
+            />
+            <Form.Select
+              name="sel-xl"
+              label="XL"
+              size="xl"
+              options={roleOptions}
+              placeholder="XL"
+            />
           </div>
         </div>
       </section>
 
       {/* Date Inputs */}
       <section>
-        <h2 className="text-2xl font-display font-bold text-primary-100 mb-6">Date Pickers</h2>
+        <h2 className="text-2xl font-display font-bold text-primary-100 mb-6">
+          Date Pickers
+        </h2>
         <div className="space-y-6">
           <Form.Date
             name="birthdate"
@@ -242,7 +296,11 @@ export function FormDemo() {
             min={today}
           />
 
-          <Form.Date name="join-date" label="Join Date" helperText="When did you join GCLI?" />
+          <Form.Date
+            name="join-date"
+            label="Join Date"
+            helperText="When did you join GCLI?"
+          />
 
           {/* Date Sizes */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -256,7 +314,9 @@ export function FormDemo() {
 
       {/* DateTime Inputs */}
       <section>
-        <h2 className="text-2xl font-display font-bold text-primary-100 mb-6">Date & Time Pickers</h2>
+        <h2 className="text-2xl font-display font-bold text-primary-100 mb-6">
+          Date & Time Pickers
+        </h2>
         <div className="space-y-6">
           <Form.Date
             name="match-start"
@@ -318,7 +378,9 @@ export function FormDemo() {
 
       {/* Textarea */}
       <section>
-        <h2 className="text-2xl font-display font-bold text-primary-100 mb-6">Textareas</h2>
+        <h2 className="text-2xl font-display font-bold text-primary-100 mb-6">
+          Textareas
+        </h2>
         <div className="space-y-6">
           <Form.Textarea
             name="bio"
@@ -356,17 +418,43 @@ export function FormDemo() {
 
           {/* Textarea Sizes */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Form.Textarea name="ta-sm" label="Small" size="sm" rows={3} placeholder="Small" />
-            <Form.Textarea name="ta-md" label="Medium" size="md" rows={3} placeholder="Medium" />
-            <Form.Textarea name="ta-lg" label="Large" size="lg" rows={3} placeholder="Large" />
-            <Form.Textarea name="ta-xl" label="XL" size="xl" rows={3} placeholder="XL" />
+            <Form.Textarea
+              name="ta-sm"
+              label="Small"
+              size="sm"
+              rows={3}
+              placeholder="Small"
+            />
+            <Form.Textarea
+              name="ta-md"
+              label="Medium"
+              size="md"
+              rows={3}
+              placeholder="Medium"
+            />
+            <Form.Textarea
+              name="ta-lg"
+              label="Large"
+              size="lg"
+              rows={3}
+              placeholder="Large"
+            />
+            <Form.Textarea
+              name="ta-xl"
+              label="XL"
+              size="xl"
+              rows={3}
+              placeholder="XL"
+            />
           </div>
         </div>
       </section>
 
       {/* Radio Inputs */}
       <section>
-        <h2 className="text-2xl font-display font-bold text-primary-100 mb-6">Radio Inputs</h2>
+        <h2 className="text-2xl font-display font-bold text-primary-100 mb-6">
+          Radio Inputs
+        </h2>
         <div className="space-y-6">
           <Form.Radio
             name="experience"
@@ -478,7 +566,9 @@ export function FormDemo() {
 
       {/* Checkboxes */}
       <section>
-        <h2 className="text-2xl font-display font-bold text-primary-100 mb-6">Checkboxes</h2>
+        <h2 className="text-2xl font-display font-bold text-primary-100 mb-6">
+          Checkboxes
+        </h2>
         <div className="space-y-6">
           <Form.Checkbox
             name="terms"
@@ -511,7 +601,11 @@ export function FormDemo() {
             helperText="Help us improve by sharing anonymous data"
           />
 
-          <Form.Checkbox name="disabled-checkbox" label="Disabled checkbox" disabled />
+          <Form.Checkbox
+            name="disabled-checkbox"
+            label="Disabled checkbox"
+            disabled
+          />
 
           <Form.Checkbox
             name="error-checkbox"
@@ -538,7 +632,9 @@ export function FormDemo() {
 
       {/* Dropzone */}
       <section>
-        <h2 className="text-2xl font-display font-bold text-primary-100 mb-6">File Upload (Dropzone)</h2>
+        <h2 className="text-2xl font-display font-bold text-primary-100 mb-6">
+          File Upload (Dropzone)
+        </h2>
         <div className="space-y-6">
           <Form.Dropzone
             name="screenshot"
@@ -563,7 +659,9 @@ export function FormDemo() {
               allowedTypes: ["application/json"],
               maxFiles: 1,
             }}
-            onFilesChange={(newFiles) => console.error("Replay files:", newFiles)}
+            onFilesChange={(newFiles) =>
+              console.error("Replay files:", newFiles)
+            }
             helperText="Upload the game replay file (JSON, max 10MB)"
           />
 

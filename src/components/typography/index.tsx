@@ -17,4 +17,9 @@ export { default as Paragraph } from "./Paragraph";
 export { default as Small } from "./Small";
 
 // Type exports
-export type { HeadingProps, ParagraphProps, SmallProps, TextProps } from "@/types/Typography";
+export type {
+  HeadingProps,
+  ParagraphProps,
+  SmallProps,
+  TextProps,
+} from "@/types/Typography";

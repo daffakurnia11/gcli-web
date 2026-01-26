@@ -23,7 +23,12 @@ const variantIcon = {
   info: <Info size={18} />,
 };
 
-export function Alert({ variant = "info", children, className = "", onDismiss }: AlertProps) {
+export function Alert({
+  variant = "info",
+  children,
+  className = "",
+  onDismiss,
+}: AlertProps) {
   const styleClass = variantStyles[variant];
   const icon = variantIcon[variant];
   const role = variant === "error" ? "alert" : "status";

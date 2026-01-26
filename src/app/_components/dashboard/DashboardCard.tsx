@@ -5,9 +5,14 @@ export interface DashboardCardProps {
   className?: string;
 }
 
-export function DashboardCard({ children, className = "" }: DashboardCardProps) {
+export function DashboardCard({
+  children,
+  className = "",
+}: DashboardCardProps) {
   return (
-    <div className={`bg-primary-900/70 border border-primary-700 rounded-lg p-6 ${className}`}>
+    <div
+      className={`bg-primary-900/70 border border-primary-700 rounded-lg p-6 ${className}`}
+    >
       {children}
     </div>
   );

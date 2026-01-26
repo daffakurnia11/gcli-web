@@ -512,7 +512,10 @@ export function DateInput({
         aria-expanded={isOpen}
         aria-labelledby={dateId}
       >
-        <span className={selectedDate && isMounted ? "" : "text-primary-300"} suppressHydrationWarning>
+        <span
+          className={selectedDate && isMounted ? "" : "text-primary-300"}
+          suppressHydrationWarning
+        >
           {selectedDate && isMounted
             ? enableTime
               ? formatDate(selectedDate, true).replace("T", " ")

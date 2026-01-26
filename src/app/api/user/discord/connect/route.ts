@@ -13,7 +13,10 @@ export async function POST(request: Request) {
 
     const accountId = Number.parseInt(session.user.id, 10);
     if (Number.isNaN(accountId)) {
-      return NextResponse.json({ error: "Invalid account ID" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid account ID" },
+        { status: 400 },
+      );
     }
 
     const body = (await request.json()) as {
@@ -25,10 +28,15 @@ export async function POST(request: Request) {
     };
 
     if (!body.id) {
-      return NextResponse.json({ error: "Missing Discord ID" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing Discord ID" },
+        { status: 400 },
+      );
     }
 
-    const discordId = body.id.startsWith("discord:") ? body.id : `discord:${body.id}`;
+    const discordId = body.id.startsWith("discord:")
+      ? body.id
+      : `discord:${body.id}`;
 
     await prisma.web_accounts.update({
       where: { id: accountId },

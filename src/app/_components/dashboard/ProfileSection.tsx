@@ -2,19 +2,41 @@
 
 import { User } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { Button } from "@/components/button";
 import { Form } from "@/components/form";
 import { Typography } from "@/components/typography";
+import { useCities, useProvinces } from "@/hooks/useIndonesiaRegions";
+import type { City, Province } from "@/types/api/Indonesia";
+import type { SelectOption } from "@/types/Form";
 
 import { Alert, DashboardCard, DashboardSection } from "./index";
+
+const toDateInputValue = (value?: Date | string | null) => {
+  if (!value) {
+    return "";
+  }
+
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return date.toISOString().split("T")[0];
+};
 
 export interface ProfileSectionProps {
   username?: string | null;
   email?: string | null;
   realName?: string | null;
   fivemName?: string | null;
+  gender?: "male" | "female" | null;
+  birthDate?: Date | string | null;
+  provinceId?: string | null;
+  provinceName?: string | null;
+  cityId?: string | null;
+  cityName?: string | null;
   avatarUrl?: string | null;
   allowFivemChange?: boolean;
 }
@@ -24,9 +46,25 @@ export function ProfileSection({
   email,
   realName,
   fivemName,
+  gender,
+  birthDate,
+  provinceId,
+  provinceName,
+  cityId,
+  cityName,
   avatarUrl,
   allowFivemChange = true,
 }: ProfileSectionProps) {
+  const initialFormValues = () => ({
+    realName: realName ?? "",
+    fivemName: fivemName ?? "",
+    gender: gender ?? "",
+    birthDate: toDateInputValue(birthDate),
+    provinceId: provinceId ?? "",
+    cityId: cityId ?? "",
+  });
+
+  const [formValues, setFormValues] = useState(initialFormValues);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{
@@ -34,17 +72,78 @@ export function ProfileSection({
     text: string;
   } | null>(null);
 
+  const {
+    data: provincesData,
+    error: provincesError,
+    isLoading: isLoadingProvinces,
+  } = useProvinces();
+  const provinceIdValue = formValues.provinceId || "";
+
+  const {
+    data: citiesData,
+    error: citiesError,
+    isLoading: isLoadingCities,
+  } = useCities(provinceIdValue);
+
+  const provinces = useMemo<SelectOption[]>(() => {
+    const list = provincesData?.data ?? [];
+    return list
+      .map((province: Province) => ({
+        value: province.id.toString(),
+        label: province.name,
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [provincesData]);
+
+  const cities = useMemo<SelectOption[]>(() => {
+    const list = citiesData?.data ?? [];
+    return list
+      .map((city: City) => ({
+        value: city.id.toString(),
+        label: city.name,
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [citiesData]);
+
+  const provincesErrorMessage =
+    provincesError instanceof Error ? provincesError.message : "";
+  const citiesErrorMessage =
+    citiesError instanceof Error ? citiesError.message : "";
+  const today = new Date();
+  const minBirthDate = new Date(
+    today.getFullYear() - 120,
+    today.getMonth(),
+    today.getDate(),
+  );
+  const maxBirthDateValue = today.toISOString().split("T")[0];
+  const minBirthDateValue = minBirthDate.toISOString().split("T")[0];
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     setMessage(null);
 
-    const formData = new FormData(e.currentTarget);
+    const selectedProvince = provinces.find(
+      (province) => province.value === formValues.provinceId,
+    );
+    const selectedCity = cities.find(
+      (city) => city.value === formValues.cityId,
+    );
+    const resolvedProvinceName = formValues.provinceId
+      ? (selectedProvince?.label ?? provinceName ?? null)
+      : null;
+    const resolvedCityName = formValues.cityId
+      ? (selectedCity?.label ?? cityName ?? null)
+      : null;
     const data = {
-      realName: formData.get("realName") as string,
-      ...(allowFivemChange
-        ? { fivemName: formData.get("fivemName") as string }
-        : {}),
+      realName: formValues.realName,
+      ...(allowFivemChange ? { fivemName: formValues.fivemName } : {}),
+      gender: formValues.gender || null,
+      birthDate: formValues.birthDate || null,
+      provinceId: formValues.provinceId || null,
+      provinceName: resolvedProvinceName,
+      cityId: formValues.cityId || null,
+      cityName: resolvedCityName,
     };
 
     try {
@@ -118,7 +217,10 @@ export function ProfileSection({
             <Form.Text
               name="realName"
               label="Real Name"
-              defaultValue={realName || ""}
+              value={formValues.realName}
+              onChange={(e) =>
+                setFormValues((prev) => ({ ...prev, realName: e.target.value }))
+              }
               placeholder="Enter your display name"
               disabled={!isEditing}
               helperText="This name will be visible to other users"
@@ -127,7 +229,13 @@ export function ProfileSection({
             <Form.Text
               name="fivemName"
               label="FiveM Character Name"
-              defaultValue={fivemName || ""}
+              value={formValues.fivemName}
+              onChange={(e) =>
+                setFormValues((prev) => ({
+                  ...prev,
+                  fivemName: e.target.value,
+                }))
+              }
               placeholder="Your in-game character name"
               disabled={!isEditing || !allowFivemChange}
               helperText={
@@ -135,6 +243,76 @@ export function ProfileSection({
                   ? undefined
                   : "FiveM character name changes are disabled"
               }
+            />
+
+            <Form.Select
+              name="gender"
+              label="Gender"
+              placeholder="Select gender"
+              options={[
+                { value: "male", label: "Male" },
+                { value: "female", label: "Female" },
+              ]}
+              value={formValues.gender}
+              onChange={(value) =>
+                setFormValues((prev) => ({ ...prev, gender: value }))
+              }
+              disabled={!isEditing}
+              helperText="Select your gender"
+            />
+
+            <Form.Date
+              name="birthDate"
+              label="Birth Date"
+              placeholder="Select your birth date"
+              value={formValues.birthDate}
+              onChange={(value) =>
+                setFormValues((prev) => ({ ...prev, birthDate: value }))
+              }
+              disabled={!isEditing}
+              helperText="For verification"
+              min={minBirthDateValue}
+              max={maxBirthDateValue}
+            />
+
+            <Form.Select
+              name="province"
+              label="Province"
+              placeholder={
+                isLoadingProvinces ? "Loading..." : "Select province"
+              }
+              options={provinces}
+              value={formValues.provinceId}
+              onChange={(value) =>
+                setFormValues((prev) => ({
+                  ...prev,
+                  provinceId: value,
+                  cityId: "",
+                }))
+              }
+              error={provincesErrorMessage}
+              helperText="Select your province"
+              disabled={!isEditing || isLoadingProvinces}
+            />
+
+            <Form.Select
+              name="city"
+              label="City"
+              placeholder={
+                !formValues.provinceId
+                  ? "Select province first"
+                  : isLoadingCities
+                    ? "Loading..."
+                    : "Select city"
+              }
+              options={cities}
+              value={formValues.cityId}
+              onChange={(value) =>
+                setFormValues((prev) => ({ ...prev, cityId: value }))
+              }
+              error={citiesErrorMessage}
+              helperText="Select your city"
+              disabled={!isEditing || !formValues.provinceId || isLoadingCities}
             />
           </div>
 
@@ -151,7 +329,10 @@ export function ProfileSection({
                 <Button.Secondary
                   type="button"
                   variant="outline"
-                  onClick={() => setIsEditing(false)}
+                  onClick={() => {
+                    setFormValues(initialFormValues());
+                    setIsEditing(false);
+                  }}
                   disabled={isLoading}
                 >
                   Cancel

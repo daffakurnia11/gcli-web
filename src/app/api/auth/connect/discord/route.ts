@@ -15,7 +15,9 @@ export async function GET(request: Request) {
   }
 
   const redirectUri = `${process.env.NEXTAUTH_URL}/api/auth/connect/discord/callback`;
-  const state = Buffer.from(JSON.stringify({ callbackUrl })).toString("base64url");
+  const state = Buffer.from(JSON.stringify({ callbackUrl })).toString(
+    "base64url",
+  );
 
   const url = new URL(DISCORD_AUTHORIZE_URL);
   url.searchParams.set("client_id", clientId);

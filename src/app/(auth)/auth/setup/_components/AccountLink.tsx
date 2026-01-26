@@ -12,7 +12,10 @@ import {
   readAuthSetupPayload,
   updateAuthSetupPayload,
 } from "@/lib/authSetupPayload";
-import type { AccountInfoFormData } from "@/schemas/authSetup";
+import type {
+  AccountInfoDraft,
+  AccountInfoFormData,
+} from "@/schemas/authSetup";
 
 import Stepper from "./Stepper";
 
@@ -33,16 +36,18 @@ export default function AccountLink({
   discordInfo,
 }: AccountLinkProps) {
   const router = useRouter();
+  const [isMounted, setIsMounted] = useState(false);
   const [submissionError, setSubmissionError] = useState("");
+  const [discordConflict, setDiscordConflict] = useState<boolean | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [accountInfo] = useState<AccountInfoFormData | null>(() => {
+  const [accountInfo] = useState<AccountInfoDraft | null>(() => {
     const payload = readAuthSetupPayload() as {
       accountInfo?: {
         name?: string;
         username?: string;
         realName?: string;
         fivemName?: string;
-        age?: string;
+        gender?: string;
         birthDate?: string;
         province?: { id?: number | string; name?: string } | string;
         city?: { id?: number | string; name?: string } | string;
@@ -56,10 +61,12 @@ export default function AccountLink({
     }
 
     const raw = payload.accountInfo;
+    const resolvedGender =
+      raw.gender === "male" || raw.gender === "female" ? raw.gender : "";
     return {
       name: raw.name ?? raw.realName ?? "",
       username: raw.username ?? raw.fivemName ?? "",
-      age: raw.age ?? "",
+      gender: resolvedGender,
       birthDate: raw.birthDate ?? "",
       province:
         typeof raw.province === "object" && raw.province !== null
@@ -101,10 +108,12 @@ export default function AccountLink({
     if (!accountInfo) {
       return false;
     }
+    const isGenderValid =
+      accountInfo.gender === "male" || accountInfo.gender === "female";
     return Boolean(
       accountInfo.name &&
       accountInfo.username &&
-      accountInfo.age &&
+      isGenderValid &&
       accountInfo.birthDate &&
       accountInfo.province.id &&
       accountInfo.city.id,
@@ -117,17 +126,20 @@ export default function AccountLink({
 
   const isConnectedToDiscord = Boolean(discordInfo?.connected);
 
-  const isJoinDisabled =
-    !isAccountInfoComplete ||
-    !isCredentialsComplete ||
-    !isConnectedToDiscord ||
-    isSubmitting;
+  const isJoinDisabled = isMounted
+    ? !isAccountInfoComplete ||
+      !isCredentialsComplete ||
+      !isConnectedToDiscord ||
+      Boolean(discordConflict) ||
+      isSubmitting
+    : true;
+  const discordButtonLabel =
+    isMounted && isConnectedToDiscord
+      ? "Connected to Discord"
+      : "Continue with Discord";
 
   // Handle Discord connection
   const handleDiscordConnect = async () => {
-    if (isConnectedToDiscord) {
-      return;
-    }
     // Clear error when attempting to connect
     setSubmissionError("");
     // Redirect to Discord OAuth (connect only)
@@ -168,11 +180,38 @@ export default function AccountLink({
       return;
     }
 
+    try {
+      const discordCheck = await fetch(
+        `/api/account/unique-check?type=discord&value=${encodeURIComponent(
+          discordInfo.id,
+        )}`,
+      );
+      if (!discordCheck.ok) {
+        throw new Error("Failed to verify Discord account");
+      }
+      const discordCheckData = (await discordCheck.json()) as {
+        exists?: boolean;
+      };
+      if (discordCheckData.exists) {
+        setDiscordConflict(true);
+        setSubmissionError("Discord account already linked to another user");
+        return;
+      }
+    } catch (error) {
+      setDiscordConflict(false);
+      setSubmissionError(
+        error instanceof Error
+          ? error.message
+          : "Failed to verify Discord account",
+      );
+      return;
+    }
+
     const payload = {
       accountInfo: {
         name: accountInfo.name,
         username: accountInfo.username,
-        age: accountInfo.age,
+        gender: accountInfo.gender as AccountInfoFormData["gender"],
         birthDate: accountInfo.birthDate,
         province: accountInfo.province,
         city: accountInfo.city,
@@ -243,10 +282,48 @@ export default function AccountLink({
   };
 
   useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
     if (!discordInfo) {
       return;
     }
     updateAuthSetupPayload({ discord: discordInfo });
+  }, [discordInfo]);
+
+  useEffect(() => {
+    const checkDiscord = async () => {
+      if (!discordInfo?.connected) {
+        setDiscordConflict(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `/api/account/unique-check?type=discord&value=${encodeURIComponent(
+            discordInfo.id,
+          )}`,
+        );
+        if (!response.ok) {
+          throw new Error("Failed to verify Discord account");
+        }
+        const data = (await response.json()) as { exists?: boolean };
+        setDiscordConflict(Boolean(data.exists));
+        if (data.exists) {
+          setSubmissionError("Discord account already linked to another user");
+        }
+      } catch (error) {
+        setDiscordConflict(false);
+        setSubmissionError(
+          error instanceof Error
+            ? error.message
+            : "Failed to verify Discord account",
+        );
+      }
+    };
+
+    void checkDiscord();
   }, [discordInfo]);
 
   return (
@@ -272,7 +349,7 @@ export default function AccountLink({
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="w-sm mb-4 p-3 bg-tertiary-red/20 border border-tertiary-red rounded"
+            className="w-sm mb-4 p-3 bg-tertiary-red/20 border border-tertiary-red rounded flex items-center"
           >
             <Typography.Small className="text-tertiary-red text-center">
               {submissionError}
@@ -288,11 +365,9 @@ export default function AccountLink({
             className="bg-[#5865F2]! border-[#5865F2]! cursor-pointer"
             prefix={<SiDiscord className="text-tertiary-white" />}
             onClick={handleDiscordConnect}
-            disabled={isConnectedToDiscord}
+            disabled={isMounted && isConnectedToDiscord}
           >
-            {isConnectedToDiscord
-              ? "Connected to Discord"
-              : "Continue with Discord"}
+            {discordButtonLabel}
           </Button.Primary>
         </div>
 

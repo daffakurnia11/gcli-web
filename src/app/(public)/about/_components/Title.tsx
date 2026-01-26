@@ -34,9 +34,10 @@ export default function Title() {
         viewport={{ once: true, amount: 0.8 }}
         transition={{ duration: 0.3, delay: 0.3 }}
       >
-      <Typography.Paragraph className="text-center text-primary-300">
-        GCLI is a team-based competitive league, not a traditional roleplay server and not a free-for-all PvP server.
-      </Typography.Paragraph>
+        <Typography.Paragraph className="text-center text-primary-300">
+          GCLI is a team-based competitive league, not a traditional roleplay
+          server and not a free-for-all PvP server.
+        </Typography.Paragraph>
       </motion.div>
     </section>
   );

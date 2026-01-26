@@ -34,7 +34,10 @@ export default function AccountLinkWrapper({
         .replace(/ /g, "+")
         .replace(/-/g, "+")
         .replace(/_/g, "/");
-      const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+      const padded = normalized.padEnd(
+        Math.ceil(normalized.length / 4) * 4,
+        "=",
+      );
       const data = JSON.parse(atob(padded)) as {
         id?: string;
         username?: string;
@@ -60,7 +63,8 @@ export default function AccountLinkWrapper({
       return null;
     }
   }, [discordDataParam]);
-  const discordInfo: AuthSetupPayload["discord"] | null = parsedDiscord ?? storedDiscord;
+  const discordInfo: AuthSetupPayload["discord"] | null =
+    parsedDiscord ?? storedDiscord;
 
   useEffect(() => {
     if (!parsedDiscord) {

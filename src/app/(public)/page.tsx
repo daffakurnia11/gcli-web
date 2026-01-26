@@ -13,7 +13,8 @@ export const metadata: Metadata = {
   title: {
     absolute: "Home | GCLI",
   },
-  description: "Join GCLI - Indonesia's premier competitive FiveM gaming server. Experience professional GTA V multiplayer leagues, team competitions, and an active gaming community. Check our server stats, team standings, and join the competition today.",
+  description:
+    "Join GCLI - Indonesia's premier competitive FiveM gaming server. Experience professional GTA V multiplayer leagues, team competitions, and an active gaming community. Check our server stats, team standings, and join the competition today.",
   keywords: [
     "GCLI home",
     "FiveM Indonesia",
@@ -28,7 +29,8 @@ export const metadata: Metadata = {
   ],
   openGraph: {
     title: "GCLI - Home",
-    description: "Join GCLI - Indonesia's premier competitive FiveM gaming server. Experience professional GTA V multiplayer leagues, team competitions, and an active gaming community.",
+    description:
+      "Join GCLI - Indonesia's premier competitive FiveM gaming server. Experience professional GTA V multiplayer leagues, team competitions, and an active gaming community.",
     url: "/",
     images: [
       {
@@ -41,7 +43,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     title: "GCLI - Home",
-    description: "Join GCLI - Indonesia's premier competitive FiveM gaming server. Experience professional GTA V multiplayer leagues and team competitions.",
+    description:
+      "Join GCLI - Indonesia's premier competitive FiveM gaming server. Experience professional GTA V multiplayer leagues and team competitions.",
   },
 };
 

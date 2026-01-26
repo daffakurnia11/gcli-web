@@ -18,23 +18,18 @@ export const accountInfoSchema = z.object({
       /^[a-zA-Z0-9_ -]+$/,
       "FiveM name can only contain letters, numbers, underscores, dashes, and spaces",
     ),
-  age: z
-    .string()
-    .min(1, "Age is required")
-    .refine((val) => !isNaN(Number(val)), "Age must be a number")
-    .refine((val) => Number(val) >= 13, "You must be at least 13 years old")
-    .refine((val) => Number(val) <= 120, "Please enter a valid age"),
+  gender: z
+    .enum(["male", "female"])
+    .or(z.literal(""))
+    .refine((val) => val !== "", "Gender is required"),
   birthDate: z
     .string()
     .min(1, "Birth date is required")
-    .refine(
-      (date) => {
-        const selectedDate = new Date(date);
-        const today = new Date();
-        return selectedDate <= today;
-      },
-      "Birth date cannot be in the future",
-    ),
+    .refine((date) => {
+      const selectedDate = new Date(date);
+      const today = new Date();
+      return selectedDate <= today;
+    }, "Birth date cannot be in the future"),
   province: z.object({
     id: z.number().min(1, "Province is required"),
     name: z.string().min(1, "Province is required"),
@@ -58,10 +53,7 @@ export const passwordSchema = z
       .string()
       .min(1, "Password is required")
       .min(8, "Password must be at least 8 characters")
-      .regex(
-        /[A-Z]/,
-        "Password must contain at least one uppercase letter",
-      )
+      .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
       .regex(/[a-z]/, "Password must contain at least one lowercase letter")
       .regex(/[0-9]/, "Password must contain at least one number"),
     confirmPassword: z.string().min(1, "Please confirm your password"),
@@ -75,6 +67,9 @@ export const passwordSchema = z
  * Infer types from schemas
  */
 export type AccountInfoFormData = z.infer<typeof accountInfoSchema>;
+export type AccountInfoDraft = Omit<AccountInfoFormData, "gender"> & {
+  gender: "" | "male" | "female";
+};
 export type PasswordFormData = z.infer<typeof passwordSchema>;
 
 /**

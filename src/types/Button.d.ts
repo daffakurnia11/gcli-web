@@ -18,8 +18,10 @@ interface BaseButtonProps {
   fullWidth?: boolean;
 }
 
-export interface BaseButtonPropsInternal
-  extends Omit<BaseButtonProps, "variant"> {
+export interface BaseButtonPropsInternal extends Omit<
+  BaseButtonProps,
+  "variant"
+> {
   variantStyles: Record<string, string>;
   slideColor?: string;
   hoverTextColorClass?: string;

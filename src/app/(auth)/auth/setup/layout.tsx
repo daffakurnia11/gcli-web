@@ -21,9 +21,7 @@ export default function AccountSetupLayout({
         <div className="absolute inset-0 bg-linear-to-t from-primary-900 via-transparent to-primary-900/60" />
         <div className="absolute inset-0 bg-linear-to-b from-primary-900/50 via-transparent to-primary-900" />
       </div>
-      <div className="w-full max-w-2xl">
-        {children}
-      </div>
+      <div className="w-full max-w-2xl">{children}</div>
     </main>
   );
 }

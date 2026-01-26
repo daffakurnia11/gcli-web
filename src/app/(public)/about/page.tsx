@@ -11,7 +11,8 @@ export const metadata: Metadata = {
   title: {
     absolute: "About | GCLI",
   },
-  description: "Learn about GCLI's vision, core pillars, and what makes us Indonesia's leading competitive FiveM server. Discover our community values, player expectations, and the pros and cons of joining our competitive GTA V gaming league.",
+  description:
+    "Learn about GCLI's vision, core pillars, and what makes us Indonesia's leading competitive FiveM server. Discover our community values, player expectations, and the pros and cons of joining our competitive GTA V gaming league.",
   keywords: [
     "GCLI about",
     "GCLI vision",
@@ -26,7 +27,8 @@ export const metadata: Metadata = {
   ],
   openGraph: {
     title: "About GCLI - Our Vision & Values",
-    description: "Learn about GCLI's vision, core pillars, and what makes us Indonesia's leading competitive FiveM server.",
+    description:
+      "Learn about GCLI's vision, core pillars, and what makes us Indonesia's leading competitive FiveM server.",
     url: "/about",
     images: [
       {
@@ -39,7 +41,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     title: "About GCLI - Our Vision & Values",
-    description: "Learn about GCLI's vision, core pillars, and what makes us Indonesia's leading competitive FiveM server.",
+    description:
+      "Learn about GCLI's vision, core pillars, and what makes us Indonesia's leading competitive FiveM server.",
   },
 };
 

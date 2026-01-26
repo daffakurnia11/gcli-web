@@ -1,6 +1,9 @@
 import { redirect } from "next/navigation";
 
-import { RegistrationCleanup, UserStatsCard } from "@/app/_components/dashboard";
+import {
+  RegistrationCleanup,
+  UserStatsCard,
+} from "@/app/_components/dashboard";
 import { DiscordInfoCard, FiveMInfoCard } from "@/components";
 import { Typography } from "@/components/typography";
 import { auth } from "@/lib/auth";
@@ -44,7 +47,9 @@ export default async function DashboardPage() {
     redirect("/auth");
   }
   const { discordData, fivemData } = await getServerInfo();
-  const accountId = session?.user?.id ? Number.parseInt(session.user.id, 10) : null;
+  const accountId = session?.user?.id
+    ? Number.parseInt(session.user.id, 10)
+    : null;
   const account =
     accountId && Number.isFinite(accountId)
       ? await prisma.web_accounts.findUnique({
@@ -57,6 +62,10 @@ export default async function DashboardPage() {
               select: {
                 real_name: true,
                 fivem_name: true,
+                gender: true,
+                birth_date: true,
+                city_name: true,
+                province_name: true,
               },
             },
             discord: {
@@ -78,6 +87,10 @@ export default async function DashboardPage() {
       : null;
 
   const discordId = account?.discord_id;
+  const address = [account?.profile?.city_name, account?.profile?.province_name]
+    .filter(Boolean)
+    .join(", ");
+
   return (
     <div className="space-y-6">
       <RegistrationCleanup />
@@ -96,42 +109,47 @@ export default async function DashboardPage() {
         </p>
       </div>
 
+      {/* User Stats Card */}
+      <UserStatsCard
+        username={account?.user?.username || session?.user?.username}
+        realName={account?.profile?.real_name}
+        fivemName={account?.profile?.fivem_name}
+        email={account?.email || session?.user?.email}
+        birthDate={account?.profile?.birth_date}
+        address={address || null}
+        gender={account?.profile?.gender ?? null}
+        connectUrl={fivemData?.data?.server?.connect_url ?? null}
+        registrationDate={account?.created_at ?? null}
+        discordId={discordId}
+        discordUsername={
+          account?.discord?.username || session?.user?.discordUsername
+        }
+        fivemId={account?.user?.fivem ?? null}
+        licenseId={account?.user?.license ?? null}
+        license2Id={account?.user?.license2 ?? null}
+        avatarUrl={account?.discord?.image ?? null}
+      />
+
+      {/* Server Status Cards */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* User Stats Card */}
-        <UserStatsCard
-          username={account?.user?.username || session?.user?.username}
-          realName={account?.profile?.real_name}
-          fivemName={account?.profile?.fivem_name}
-          email={account?.email || session?.user?.email}
-          registrationDate={account?.created_at ?? null}
-          discordId={discordId}
-          discordUsername={account?.discord?.username || session?.user?.discordUsername}
-          fivemId={account?.user?.fivem ?? null}
-          licenseId={account?.user?.license ?? null}
-          license2Id={account?.user?.license2 ?? null}
-          avatarUrl={account?.discord?.image ?? null}
-        />
-
-        {/* Server Status Cards */}
-        <div className="space-y-4">
-          {discordData?.data && (
-            <DiscordInfoCard
-              serverName={discordData.data.server.name}
-              inviteLink={discordData.data.server.invite_link}
-              onlineMembers={discordData.data.member.online}
-              totalMembers={discordData.data.member.total}
-            />
-          )}
-
-          {fivemData?.data && (
-            <FiveMInfoCard
-              serverName={fivemData.data.server.name}
-              connectUrl={fivemData.data.server.connect_url}
-              onlinePlayers={fivemData.data.member.online}
-              totalPlayers={fivemData.data.member.total}
-            />
-          )}
-        </div>
+        {fivemData?.data && (
+          <FiveMInfoCard
+            serverName={fivemData.data.server.name}
+            connectUrl={fivemData.data.server.connect_url}
+            onlinePlayers={fivemData.data.member.online}
+            totalPlayers={fivemData.data.member.total}
+            className="max-w-full!"
+          />
+        )}
+        {discordData?.data && (
+          <DiscordInfoCard
+            serverName={discordData.data.server.name}
+            inviteLink={discordData.data.server.invite_link}
+            onlineMembers={discordData.data.member.online}
+            totalMembers={discordData.data.member.total}
+            className="max-w-full!"
+          />
+        )}
       </div>
     </div>
   );

@@ -78,7 +78,9 @@ export function Select({
       return options;
     }
     const normalized = searchTerm.trim().toLowerCase();
-    return options.filter((option) => option.label.toLowerCase().includes(normalized));
+    return options.filter((option) =>
+      option.label.toLowerCase().includes(normalized),
+    );
   }, [options, searchTerm]);
 
   useEffect(() => {
@@ -163,7 +165,9 @@ export function Select({
       case "Home":
         e.preventDefault();
         if (isOpen) {
-          const firstEnabled = filteredOptions.findIndex((opt) => !opt.disabled);
+          const firstEnabled = filteredOptions.findIndex(
+            (opt) => !opt.disabled,
+          );
           if (firstEnabled >= 0) {
             setFocusedIndex(firstEnabled);
           }
@@ -230,7 +234,9 @@ export function Select({
         if (nextIndex >= 0) {
           setFocusedIndex(nextIndex);
         } else if (filteredOptions.length > 0) {
-          const firstEnabled = filteredOptions.findIndex((opt) => !opt.disabled);
+          const firstEnabled = filteredOptions.findIndex(
+            (opt) => !opt.disabled,
+          );
           if (firstEnabled >= 0) {
             setFocusedIndex(firstEnabled);
           }

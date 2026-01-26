@@ -4,10 +4,7 @@ import React from "react";
 import type { BaseButtonProps, BaseButtonPropsInternal } from "@/types/Button";
 
 // Size styles - following 8pt grid and touch target guidelines
-const sizeStyles: Record<
-  Required<BaseButtonProps>["size"],
-  string
-> = {
+const sizeStyles: Record<Required<BaseButtonProps>["size"], string> = {
   lg: "h-14 px-8 text-lg leading-tight", // 56px height, 18px font
   base: "h-11 px-6 text-base leading-tight", // 44px height, 16px font
   sm: "h-9 px-4 text-sm leading-tight", // 36px height, 14px font
@@ -56,7 +53,7 @@ function BaseButton({
         // Disabled state
         disabled && "opacity-50 cursor-not-allowed hover:translate-y-0",
 
-        className
+        className,
       )}
       {...props}
     >
@@ -73,7 +70,7 @@ function BaseButton({
         className={classNames(
           "relative z-10 transition-colors duration-300",
           "inline-flex items-center justify-center gap-2",
-          hoverTextColorClass
+          hoverTextColorClass,
         )}
       >
         {prefix && <span className="flex-shrink-0">{prefix}</span>}

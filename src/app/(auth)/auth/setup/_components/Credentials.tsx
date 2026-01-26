@@ -40,10 +40,8 @@ export default function Credentials({ showStepper = true }: CredentialsProps) {
     };
   });
   const [errors, setErrors] = useState<FormErrors<PasswordFormData>>({});
-  const emailValidation = useUniqueCheck(
-    "email",
-    password.email,
-    (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
+  const emailValidation = useUniqueCheck("email", password.email, (value) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
   );
   const emailTaken = emailValidation.isValid && emailValidation.exists;
 
@@ -98,76 +96,78 @@ export default function Credentials({ showStepper = true }: CredentialsProps) {
           </Typography.Heading>
           <div className="h-1 w-24 bg-secondary-700 mt-6 mb-10 mx-auto" />
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Email Address */}
-          <Form.Text
-            name="email"
-            label="Email Address"
-            type="email"
-            placeholder="Enter your email address"
-            value={password.email}
-            onChange={(e) => handleInputChange("email", e.target.value)}
-            error={errors.email || (emailTaken ? "Email already registered" : "")}
-            helperText={
-              emailValidation.isLoading
-                ? "Checking availability..."
-                : "We'll send account updates to this email"
-            }
-            autoComplete="email"
-            fullWidth
-          />
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Email Address */}
+            <Form.Text
+              name="email"
+              label="Email Address"
+              type="email"
+              placeholder="Enter your email address"
+              value={password.email}
+              onChange={(e) => handleInputChange("email", e.target.value)}
+              error={
+                errors.email || (emailTaken ? "Email already registered" : "")
+              }
+              helperText={
+                emailValidation.isLoading
+                  ? "Checking availability..."
+                  : "We'll send account updates to this email"
+              }
+              autoComplete="email"
+              fullWidth
+            />
 
-          {/* Password */}
-          <Form.Text
-            name="password"
-            label="Password"
-            type="password"
-            placeholder="Create a strong password"
-            value={password.password}
-            onChange={(e) => handleInputChange("password", e.target.value)}
-            error={errors.password}
-            helperText="Min 8 chars, 1 uppercase, 1 lowercase, 1 number"
-            autoComplete="new-password"
-            fullWidth
-          />
+            {/* Password */}
+            <Form.Text
+              name="password"
+              label="Password"
+              type="password"
+              placeholder="Create a strong password"
+              value={password.password}
+              onChange={(e) => handleInputChange("password", e.target.value)}
+              error={errors.password}
+              helperText="Min 8 chars, 1 uppercase, 1 lowercase, 1 number"
+              autoComplete="new-password"
+              fullWidth
+            />
 
-          {/* Confirm Password */}
-          <Form.Text
-            name="confirmPassword"
-            label="Confirm Password"
-            type="password"
-            placeholder="Re-enter your password"
-            value={password.confirmPassword}
-            onChange={(e) =>
-              handleInputChange("confirmPassword", e.target.value)
-            }
-            error={errors.confirmPassword}
-            helperText="Must match your password above"
-            autoComplete="new-password"
-            fullWidth
-          />
+            {/* Confirm Password */}
+            <Form.Text
+              name="confirmPassword"
+              label="Confirm Password"
+              type="password"
+              placeholder="Re-enter your password"
+              value={password.confirmPassword}
+              onChange={(e) =>
+                handleInputChange("confirmPassword", e.target.value)
+              }
+              error={errors.confirmPassword}
+              helperText="Must match your password above"
+              autoComplete="new-password"
+              fullWidth
+            />
 
-          {/* Navigation Buttons */}
-          <div className="flex justify-between pt-4">
-            <Button.Secondary
-              variant="outline"
-              type="button"
-              onClick={handleBack}
-              className="min-w-32"
-            >
-              Back
-            </Button.Secondary>
-            <Button.Primary
-              variant="solid"
-              type="submit"
-              className="min-w-32"
-            >
-              Continue
-            </Button.Primary>
-          </div>
-        </form>
+            {/* Navigation Buttons */}
+            <div className="flex justify-between pt-4">
+              <Button.Secondary
+                variant="outline"
+                type="button"
+                onClick={handleBack}
+                className="min-w-32"
+              >
+                Back
+              </Button.Secondary>
+              <Button.Primary
+                variant="solid"
+                type="submit"
+                className="min-w-32"
+              >
+                Continue
+              </Button.Primary>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
     </>
   );
 }

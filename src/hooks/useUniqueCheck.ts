@@ -14,7 +14,8 @@ const fetcher = async (url: string): Promise<UniqueCheckResponse> => {
   const data = await response.json();
 
   if (!response.ok) {
-    const message = typeof data?.error === "string" ? data.error : "Request failed";
+    const message =
+      typeof data?.error === "string" ? data.error : "Request failed";
     throw new Error(message);
   }
 

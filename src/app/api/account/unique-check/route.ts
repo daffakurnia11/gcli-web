@@ -8,10 +8,13 @@ export async function GET(request: Request) {
   const value = searchParams.get("value")?.trim() ?? "";
 
   if (!type || !value) {
-    return NextResponse.json({ error: "Missing query params" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Missing query params" },
+      { status: 400 },
+    );
   }
 
-  if (type !== "username" && type !== "email") {
+  if (type !== "username" && type !== "email" && type !== "discord") {
     return NextResponse.json({ error: "Invalid type" }, { status: 400 });
   }
 
@@ -21,6 +24,16 @@ export async function GET(request: Request) {
       select: { id: true },
     });
     return NextResponse.json({ exists: Boolean(existing) });
+  }
+
+  if (type === "discord") {
+    const discordId = value.startsWith("discord:") ? value : `discord:${value}`;
+    const existing = await prisma.web_accounts.findUnique({
+      where: { discord_id: discordId },
+      select: { id: true, password: true, profile: { select: { id: true } } },
+    });
+    const isTaken = Boolean(existing?.password || existing?.profile);
+    return NextResponse.json({ exists: isTaken });
   }
 
   const [userMatch, profileMatch] = await Promise.all([

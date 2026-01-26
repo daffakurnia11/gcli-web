@@ -2,7 +2,6 @@ import "./styles.css";
 
 import type { Metadata } from "next";
 
-import { Footer, Navbar } from "@/components";
 import { AppProviders } from "@/components/providers/AppProviders";
 import { auth } from "@/lib/auth";
 
@@ -11,19 +10,32 @@ export const metadata: Metadata = {
     default: "GCLI - GTA Competitive League Indonesia",
     template: "%s | GCLI",
   },
-  description: "GCLI is a competitive FiveM gaming server in Indonesia. Join our community, participate in leagues, and experience competitive GTA V multiplayer gaming.",
-  keywords: ["GCLI", "GTA Competitive League Indonesia", "FiveM", "GTA V", "competitive gaming", "Indonesia", "FiveM server", "GTA multiplayer"],
+  description:
+    "GCLI is a competitive FiveM gaming server in Indonesia. Join our community, participate in leagues, and experience competitive GTA V multiplayer gaming.",
+  keywords: [
+    "GCLI",
+    "GTA Competitive League Indonesia",
+    "FiveM",
+    "GTA V",
+    "competitive gaming",
+    "Indonesia",
+    "FiveM server",
+    "GTA multiplayer",
+  ],
   authors: [{ name: "GCLI" }],
   creator: "GCLI",
   publisher: "GCLI",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  ),
   openGraph: {
     type: "website",
     locale: "en_US",
     url: "/",
     siteName: "GCLI",
     title: "GCLI - GTA Competitive League Indonesia",
-    description: "GCLI is a competitive FiveM gaming server in Indonesia. Join our community, participate in leagues, and experience competitive GTA V multiplayer gaming.",
+    description:
+      "GCLI is a competitive FiveM gaming server in Indonesia. Join our community, participate in leagues, and experience competitive GTA V multiplayer gaming.",
     images: [
       {
         url: "/Logo/icon.png",
@@ -36,7 +48,8 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary",
     title: "GCLI - GTA Competitive League Indonesia",
-    description: "GCLI is a competitive FiveM gaming server in Indonesia. Join our community and experience competitive GTA V multiplayer gaming.",
+    description:
+      "GCLI is a competitive FiveM gaming server in Indonesia. Join our community and experience competitive GTA V multiplayer gaming.",
     images: ["/Logo/icon.png"],
   },
   icons: {
@@ -57,11 +70,7 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        <AppProviders session={session}>
-          <Navbar />
-          {children}
-          <Footer />
-        </AppProviders>
+        <AppProviders session={session}>{children}</AppProviders>
       </body>
     </html>
   );

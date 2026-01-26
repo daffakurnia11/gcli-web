@@ -58,7 +58,9 @@ export default async function SettingsPage() {
       <div className="space-y-6">
         <DashboardSection title="Account Security">
           <div className="space-y-4">
-            <EmailSettings currentEmail={settingsData?.email || session.user?.email} />
+            <EmailSettings
+              currentEmail={settingsData?.email || session.user?.email}
+            />
             <PasswordSettings />
           </div>
         </DashboardSection>

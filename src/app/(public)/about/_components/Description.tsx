@@ -43,11 +43,11 @@ export default function Description() {
         viewport={{ once: true, amount: 0.8 }}
         transition={{ duration: 0.3, delay: 0.5 }}
       >
-      <Typography.Paragraph className="text-gray-light">
-        We are not just a server; we are a league. Our goal is to foster an
-        esports ecosystem within the GTA V engine, tailored specifically for the
-        Indonesian gaming community.
-      </Typography.Paragraph>
+        <Typography.Paragraph className="text-gray-light">
+          We are not just a server; we are a league. Our goal is to foster an
+          esports ecosystem within the GTA V engine, tailored specifically for
+          the Indonesian gaming community.
+        </Typography.Paragraph>
       </motion.div>
     </section>
   );

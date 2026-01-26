@@ -1,6 +1,7 @@
 "use client";
 
 import { SiDiscord } from "@icons-pack/react-simple-icons";
+import classNames from "classnames";
 import { motion } from "framer-motion";
 import Link from "next/link";
 
@@ -13,6 +14,7 @@ export function DiscordInfoCard({
   inviteLink,
   onlineMembers,
   totalMembers,
+  className,
 }: DiscordInfoCardProps) {
   const progressPercentage =
     totalMembers > 0 ? Math.max((onlineMembers / totalMembers) * 100, 2) : 2;
@@ -23,7 +25,10 @@ export function DiscordInfoCard({
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.3, delay: 0.3 }}
-      className="border border-[#5865F2] py-4 px-6 w-full max-w-md bg-primary-900/50 backdrop-blur-lg"
+      className={classNames(
+        "border border-[#5865F2] py-4 px-6 w-full max-w-md bg-primary-900/50 backdrop-blur-lg",
+        className,
+      )}
     >
       <div className="flex items-center gap-3">
         <div className="w-12 h-12 rounded-xl flex items-center justify-center border border-primary-700 bg-primary-900">

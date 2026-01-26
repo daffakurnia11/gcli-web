@@ -22,7 +22,10 @@ type FormErrors = {
 
 export default function Login() {
   const router = useRouter();
-  const [formData, setFormData] = useState<FormData>({ email: "", password: "" });
+  const [formData, setFormData] = useState<FormData>({
+    email: "",
+    password: "",
+  });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
   const [submitError, setSubmitError] = useState("");
@@ -151,7 +154,9 @@ export default function Login() {
       {/* Divider */}
       <div className="flex items-center w-full my-4">
         <div className="flex-1 h-px w-full bg-secondary-500" />
-        <Typography.Small className="text-primary-400 px-4">OR</Typography.Small>
+        <Typography.Small className="text-primary-400 px-4">
+          OR
+        </Typography.Small>
         <div className="flex-1 h-px w-full bg-secondary-500" />
       </div>
 

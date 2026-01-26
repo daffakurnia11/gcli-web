@@ -14,7 +14,10 @@ export async function PUT(request: Request) {
 
     const accountId = Number.parseInt(session.user.id, 10);
     if (Number.isNaN(accountId)) {
-      return NextResponse.json({ error: "Invalid account ID" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid account ID" },
+        { status: 400 },
+      );
     }
 
     const body = await request.json();
@@ -44,13 +47,19 @@ export async function PUT(request: Request) {
     });
 
     if (!account?.password) {
-      return NextResponse.json({ error: "Password not set for account" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Password not set for account" },
+        { status: 400 },
+      );
     }
 
     // Verify current password
     const isValid = await bcrypt.compare(currentPassword, account.password);
     if (!isValid) {
-      return NextResponse.json({ error: "Incorrect password" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Incorrect password" },
+        { status: 401 },
+      );
     }
 
     // Hash new password
@@ -62,9 +71,15 @@ export async function PUT(request: Request) {
       data: { password: hashedPassword },
     });
 
-    return NextResponse.json({ message: "Password updated successfully" }, { status: 200 });
+    return NextResponse.json(
+      { message: "Password updated successfully" },
+      { status: 200 },
+    );
   } catch (error) {
     console.error("Password update error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

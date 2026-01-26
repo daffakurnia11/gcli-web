@@ -54,7 +54,6 @@ export default function Navbar() {
     return () => document.removeEventListener("click", handleClick);
   }, [isUserMenuOpen]);
 
-
   return (
     <nav
       className={`fixed w-full z-50 transition-all duration-300 ${

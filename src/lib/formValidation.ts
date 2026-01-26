@@ -23,7 +23,8 @@ export function formatZodError<T extends Record<string, unknown>>(
 ): Record<keyof T, string> {
   const formattedErrors: Record<string, string> = {};
 
-  const issues = (error as ZodErrorLike).issues ?? (error as ZodErrorLike).errors ?? [];
+  const issues =
+    (error as ZodErrorLike).issues ?? (error as ZodErrorLike).errors ?? [];
 
   issues.forEach((err: ZodIssueLike) => {
     if (err.path.length > 0) {
@@ -47,7 +48,8 @@ export function formatZodError<T extends Record<string, unknown>>(
  * ```
  */
 export function getFirstZodError(error: ZodError): string | undefined {
-  const issues = (error as ZodErrorLike).issues ?? (error as ZodErrorLike).errors ?? [];
+  const issues =
+    (error as ZodErrorLike).issues ?? (error as ZodErrorLike).errors ?? [];
   return issues[0]?.message;
 }
 

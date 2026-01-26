@@ -14,7 +14,10 @@ export async function PUT(request: Request) {
 
     const accountId = Number.parseInt(session.user.id, 10);
     if (Number.isNaN(accountId)) {
-      return NextResponse.json({ error: "Invalid account ID" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid account ID" },
+        { status: 400 },
+      );
     }
 
     const body = await request.json();
@@ -37,13 +40,19 @@ export async function PUT(request: Request) {
     });
 
     if (!account?.password) {
-      return NextResponse.json({ error: "Password not set for account" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Password not set for account" },
+        { status: 400 },
+      );
     }
 
     // Verify password
     const isValid = await bcrypt.compare(password, account.password);
     if (!isValid) {
-      return NextResponse.json({ error: "Incorrect password" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Incorrect password" },
+        { status: 401 },
+      );
     }
 
     // Check if new email is already taken
@@ -52,7 +61,10 @@ export async function PUT(request: Request) {
     });
 
     if (existingAccount && existingAccount.id !== accountId) {
-      return NextResponse.json({ error: "Email already in use" }, { status: 409 });
+      return NextResponse.json(
+        { error: "Email already in use" },
+        { status: 409 },
+      );
     }
 
     // Update email
@@ -61,9 +73,15 @@ export async function PUT(request: Request) {
       data: { email: newEmail, email_verified: false },
     });
 
-    return NextResponse.json({ message: "Email updated successfully" }, { status: 200 });
+    return NextResponse.json(
+      { message: "Email updated successfully" },
+      { status: 200 },
+    );
   } catch (error) {
     console.error("Email update error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

@@ -11,11 +11,12 @@ export default function Footer() {
         <div className="grid md:grid-cols-4 gap-12 mb-16">
           <div className="col-span-1 md:col-span-2">
             <div className="h-12 w-fit mb-6">
-
-            <Logo variant="name" color="white" />
+              <Logo variant="name" color="white" />
             </div>
             <Typography.Paragraph className="text-gray-dark max-w-sm mb-8 leading-relaxed">
-              A FiveM server built for teams who want organized PvP, meaningful preparation, and league-driven competition — not random deathmatch.
+              A FiveM server built for teams who want organized PvP, meaningful
+              preparation, and league-driven competition — not random
+              deathmatch.
             </Typography.Paragraph>
             <div className="flex gap-4">
               {[Twitter, Instagram, Youtube, MessageSquare].map((Icon) => (
@@ -52,7 +53,7 @@ export default function Footer() {
                       </Typography.Paragraph>
                     </Link>
                   </li>
-                )
+                ),
               )}
             </ul>
           </div>
@@ -78,7 +79,7 @@ export default function Footer() {
                       </Typography.Paragraph>
                     </Link>
                   </li>
-                )
+                ),
               )}
             </ul>
           </div>
@@ -89,7 +90,9 @@ export default function Footer() {
             © {new Date().getFullYear()} GTA Competitive League Indonesia. All
             rights reserved.
           </Typography.Small>
-          <Typography.Small>Not affiliated with Rockstar Games.</Typography.Small>
+          <Typography.Small>
+            Not affiliated with Rockstar Games.
+          </Typography.Small>
         </div>
       </div>
     </footer>

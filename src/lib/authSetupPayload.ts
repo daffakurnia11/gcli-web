@@ -1,4 +1,7 @@
-import type { AccountInfoFormData, PasswordFormData } from "@/schemas/authSetup";
+import type {
+  AccountInfoFormData,
+  PasswordFormData,
+} from "@/schemas/authSetup";
 
 const AUTH_SETUP_STORAGE_KEY = "auth_setup_payload";
 

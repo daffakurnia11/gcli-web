@@ -47,7 +47,7 @@ pnpm exec prisma migrate reset  # Reset database (WARNING: deletes all data)
 **Public Routes:**
 - `/` — Landing page with hero, core pillars, game loop, server info, team carousel, standings, and CTA
 - `/about` — About page with title, description, vision, core pillars, player to-do, and pros/cons
-- `/demo` — Design system showcase (uses `_components` private route group)
+- `/demo` — Design system showcase with interactive component demos (buttons, forms, typography, colors, logo)
 
 **Protected Routes:**
 - `/auth` — Authentication page (login with email/password or Discord OAuth)
@@ -67,6 +67,7 @@ pnpm exec prisma migrate reset  # Reset database (WARNING: deletes all data)
 
 *User Management:*
 - `/api/user/profile` — Get/update user profile
+- `/api/user/account` — Account management endpoint
 - `/api/user/password` — Password update
 - `/api/user/email` — Email management
 - `/api/user/sessions` — List user sessions
@@ -124,7 +125,7 @@ components/
 
 **Dashboard Components (src/app/_components/dashboard/):**
 - `DashboardCard.tsx` — Card container for dashboard sections
-- `UserStatsCard.tsx` — User statistics display
+- `UserStatsCard.tsx` — User statistics display with avatar, account info, and all connected IDs
 - `ProfileSection.tsx` — Profile editing section
 - `EmailSettings.tsx` — Email settings form
 - `PasswordSettings.tsx` — Password update form
@@ -133,6 +134,22 @@ components/
 - `SettingsGroup.tsx` — Settings grouping
 - `DashboardSection.tsx` — Section wrapper
 - `Alert.tsx` — Alert/notification component
+- `RegistrationCleanup.tsx` — Client component for cleaning up auth setup state
+
+**Demo Components (src/app/demo/_components/):**
+- `ButtonDemo.tsx` — Button component showcase
+- `ColorPaletteDemo.tsx` — Color palette display
+- `FormDemo.tsx` — Form components showcase
+- `LogoDemo.tsx` — Logo variations
+- `TypographyDemo.tsx` — Typography components
+- `PrimaryButtonDemo.tsx` — Primary button examples
+- `SecondaryButtonDemo.tsx` — Secondary button examples
+- `LeftSlantButtonDemo.tsx` — Left-slant CTA buttons
+- `RightSlantButtonDemo.tsx` — Right-slant CTA buttons
+
+**Molecules (src/molecules/):**
+- `CorePillarsMolecules.tsx` — Animated core pillars component with Framer Motion
+- `GameLoopMolecules.tsx` — Game loop visualization component
 
 **Other Page Components (src/app/_components/):**
 - `ServerInfo.tsx` — Server component that fetches Discord/FiveM data
@@ -148,8 +165,22 @@ components/
 
 **Type Definitions:** Located in `src/types/`:
 - `Button.d.ts`, `Typography.d.ts`, `Logo.d.ts`, `Form.d.ts` — Component types
+- `components/Stepper.d.ts` — Stepper component types
+- `components/Cards.d.ts` — Card component types
+- `providers/AppProviders.d.ts` — App providers types
+- `providers/SessionProvider.d.ts` — Session provider types
+- `next-auth.d.ts` — NextAuth type extensions
 - `api/Discord.d.ts` — Discord API types
 - `api/FiveM.d.ts` — FiveM API types
+
+**Validation Schemas** (`src/schemas/`):
+- `authSetup.ts` — Zod validation schemas for multi-step authentication setup
+  - `accountInfoSchema` — Validates user information (name, username, age, birth date, province, city)
+  - `passwordSchema` — Validates credentials with password complexity requirements
+
+**Hooks** (`src/hooks/`):
+- `useIndonesiaRegions.ts` — Hook for fetching Indonesian provincial and city data
+- `useUniqueCheck.ts` — Hook for checking email/username uniqueness via API
 
 ### Authentication & Middleware
 
@@ -168,9 +199,15 @@ components/
 **Auth Flow:**
 1. User signs in via Credentials or Discord OAuth
 2. Middleware checks authentication and registration status
-3. Unregistered Discord users → `/auth/setup` multi-step form
+3. Unregistered Discord users → `/auth/setup` multi-step form (3 steps: Information → Credentials → Account Link)
 4. Registered users → `/dashboard`
 5. Unauthenticated users accessing protected routes → `/auth`
+
+**Auth Setup State Management** (`src/lib/authSetupPayload.ts`):
+- `readAuthSetupPayload()` — Reads setup data from localStorage
+- `writeAuthSetupPayload()` — Writes setup data to localStorage
+- `updateAuthSetupPayload()` — Partially updates setup data
+- `clearAuthSetupPayload()` — Clears setup data after completion
 
 ### Database (Prisma + MySQL)
 
@@ -181,7 +218,26 @@ components/
 - `players` — Player characters with inventory, jobs, vehicles
 - `bans` — Ban records
 - `player_vehicles` — Player-owned vehicles
-- Various FiveM-specific tables (npwd_*, ox_*, player_*)
+- `bank_accounts_new` — Banking system for FiveM
+- `management_outfits` — Management outfit system
+- `ox_doorlock` — Door lock system
+
+*Phone System (npwd_*):*
+- `npwd_calls` — Phone call records
+- `npwd_darkchat_channels` & `npwd_darkchat_messages` — Encrypted chat
+- `npwd_marketplace_listings` — Player marketplace
+- `npwd_match_profiles` & `npwd_match_views` — Dating/match profiles
+- `npwd_messages` & `npwd_conversation_*` — Phone messages
+- `npwd_notes` — Player notes
+- `npwd_phone_contacts` & `npwd_phone_gallery` — Phone contacts and gallery
+- `npwd_twitter_*` — Twitter integration
+
+*Player Data (player_*):*
+- `player_*` models for FiveM player data (crafting, locations, etc.)
+- `tl_crafting_locations` — Crafting station locations
+- `tl_gangstash_locations` — Gang stash locations
+
+*Various FiveM-specific tables:* ox_*, other system tables
 
 *Web Application:*
 - `web_accounts` — Web authentication accounts (email, password, OAuth links)
@@ -468,6 +524,48 @@ import { Form } from "@/components/form";
 
 **Polymorphic `as` Prop:** Renders component as different HTML element (e.g., `<Heading as="h2" level={1} />`)
 
+**UserStatsCard:**
+```tsx
+import { UserStatsCard } from "@/app/_components/dashboard";
+
+<UserStatsCard
+  avatar="/path/to/avatar.jpg"           // User avatar (optional)
+  name="John Doe"                        // Display name
+  email="john@example.com"               // Email address
+  createdAt={new Date("2024-01-01")}     // Account creation date
+  discordId="123456789"                  // Discord ID (optional)
+  fivemId="license:abc123"               // FiveM license (optional)
+  license="license:xyz789"               // Primary license (optional)
+  license2="license:def456"              // Secondary license (optional)
+/>
+```
+
+**Stepper Component:**
+```tsx
+import { Stepper } from "@/types/components/Stepper";
+
+<Stepper
+  steps={["Information", "Credentials", "Account Link"]}
+  currentStep={1}  // 0-indexed
+/>
+```
+
+**Custom Hooks:**
+```tsx
+// Indonesian Regions Hook
+import { useIndonesiaRegions } from "@/hooks/useIndonesiaRegions";
+
+const { provinces, cities, loading, error, fetchCities } = useIndonesiaRegions();
+fetchCities("11"); // Fetch cities for province ID
+
+// Unique Check Hook
+import { useUniqueCheck } from "@/hooks/useUniqueCheck";
+
+const { checkEmail, checkUsername, isChecking } = useUniqueCheck();
+checkEmail("test@example.com"); // Returns Promise<boolean>
+checkUsername("testuser");       // Returns Promise<boolean>
+```
+
 ## Code Quality
 
 **ESLint Rules:**
@@ -516,3 +614,11 @@ import { Form } from "@/components/form";
 - Never call external APIs directly from Client Components
 - Server Components fetch data, pass to Client Components as props
 - SWR used for client-side data fetching with revalidation
+
+**Utilities** (`src/lib/`):
+- `formValidation.ts` — Zod error handling utilities:
+  - `formatZodError<T>()` — Converts Zod errors to key-value pairs
+  - `getFirstZodError()` — Extracts first error message
+  - `hasFieldError<T>()` — Checks if field has specific error
+- `authSetupPayload.ts` — Auth setup localStorage management (see Auth Flow section)
+- `prisma.ts` — Prisma client singleton for database operations

@@ -79,7 +79,7 @@ export default function Login() {
       if (result?.error) {
         setSubmitError("Invalid email or password");
       } else if (result?.ok) {
-        router.push("/");
+        router.push("/dashboard");
         router.refresh();
       }
     } catch {

@@ -507,3 +507,17 @@ model web_sessions {
 
   @@index([user_id])
 }
+
+model tl_kill_logs {
+  id               Int      @id @default(autoincrement())
+  killer_citizenid String?  @db.VarChar(50)
+  killer_name      String?  @db.VarChar(255)
+  victim_citizenid String?  @db.VarChar(50)
+  victim_name      String?  @db.VarChar(255)
+  weapon           String?  @db.VarChar(100)
+  created_at       DateTime @default(now()) @db.Timestamp(0)
+
+  @@index([killer_citizenid], map: "killer_citizenid_idx")
+  @@index([victim_citizenid], map: "victim_citizenid_idx")
+  @@index([created_at], map: "created_at_idx")
+}

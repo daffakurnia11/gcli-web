@@ -44,16 +44,16 @@ const sidebarItems: SidebarEntry[] = [
   { type: "item", href: "/dashboard", label: "Overview", sidebar: true },
   {
     type: "item",
-    href: "/dashboard/kill-log",
+    href: "/kill-log",
     label: "Kill Log",
     sidebar: true,
     children: [
-      { href: "/dashboard/kill-log/kill", label: "Kill" },
-      { href: "/dashboard/kill-log/dead", label: "Dead" },
+      { href: "/kill-log/kill", label: "Kill Records" },
+      { href: "/kill-log/dead", label: "Death Records" },
     ],
   },
-  { type: "item", href: "/dashboard/profile", label: "Profile" },
-  { type: "item", href: "/dashboard/settings", label: "Settings" },
+  { type: "item", href: "/profile", label: "Profile" },
+  { type: "item", href: "/settings", label: "Settings" },
 ];
 
 const routeLabels = sidebarItems.reduce<Record<string, string>>((acc, entry) => {

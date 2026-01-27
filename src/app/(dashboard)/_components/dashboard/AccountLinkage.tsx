@@ -4,10 +4,10 @@ import { SiDiscord, SiFivem } from "@icons-pack/react-simple-icons";
 import { Check, Link2, Loader2, X } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import useSWR from "swr";
 
 import { Button } from "@/components/button";
 import { Typography } from "@/components/typography";
+import { useApiSWR } from "@/lib/swr";
 
 import { Alert, DashboardCard, DashboardSection } from "./index";
 
@@ -63,7 +63,10 @@ export function AccountLinkage({
     }
   }, [searchParams]);
 
-  const { isLoading: isLinking } = useSWR(
+  const { isLoading: isLinking } = useApiSWR<
+    { message?: string },
+    [string, string]
+  >(
     discordPayload ? ["discord-link", discordPayload.id] : null,
     async () => {
       const response = await fetch("/api/user/discord/connect", {
@@ -78,7 +81,6 @@ export function AccountLinkage({
       return data as { message?: string };
     },
     {
-      revalidateOnFocus: false,
       shouldRetryOnError: false,
       onSuccess: (data) => {
         setLinkAlert({

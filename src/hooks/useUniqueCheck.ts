@@ -1,25 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import useSWR from "swr";
+
+import { useApiSWR } from "@/lib/swr";
 
 type UniqueCheckType = "username" | "email";
 
 type UniqueCheckResponse = {
   exists: boolean;
-};
-
-const fetcher = async (url: string): Promise<UniqueCheckResponse> => {
-  const response = await fetch(url);
-  const data = await response.json();
-
-  if (!response.ok) {
-    const message =
-      typeof data?.error === "string" ? data.error : "Request failed";
-    throw new Error(message);
-  }
-
-  return data as UniqueCheckResponse;
 };
 
 const useDebouncedValue = (value: string, delayMs: number) => {
@@ -46,8 +34,7 @@ export function useUniqueCheck(
       ? `/api/account/unique-check?type=${type}&value=${encodeURIComponent(debounced)}`
       : null;
 
-  const { data, error, isLoading } = useSWR<UniqueCheckResponse>(key, fetcher, {
-    revalidateOnFocus: false,
+  const { data, error, isLoading } = useApiSWR<UniqueCheckResponse>(key, {
     dedupingInterval: 500,
   });
 

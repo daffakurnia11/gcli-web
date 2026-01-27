@@ -5,7 +5,7 @@ import {
   DashboardSection,
   EmailSettings,
   PasswordSettings,
-} from "@/app/_components/dashboard";
+} from "@/app/(dashboard)/_components/dashboard";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 

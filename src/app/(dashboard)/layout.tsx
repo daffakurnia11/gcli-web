@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import DashboardShell from "@/app/_components/dashboard/DashboardShell";
+import DashboardShell from "@/app/(dashboard)/_components/dashboard/DashboardShell";
 import { auth } from "@/lib/auth";
 
 export default async function DashboardLayout({

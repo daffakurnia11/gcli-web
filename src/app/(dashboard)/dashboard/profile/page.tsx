@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
-import { AccountLinkage } from "@/app/_components/dashboard/AccountLinkage";
-import { ProfileSection } from "@/app/_components/dashboard/ProfileSection";
+import { AccountLinkage } from "@/app/(dashboard)/_components/dashboard/AccountLinkage";
+import { ProfileSection } from "@/app/(dashboard)/_components/dashboard/ProfileSection";
 import { Typography } from "@/components/typography";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";

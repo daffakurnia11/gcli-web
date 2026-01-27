@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import {
   RegistrationCleanup,
   UserStatsCard,
-} from "@/app/_components/dashboard";
+} from "@/app/(dashboard)/_components/dashboard";
 import { DiscordInfoCard, FiveMInfoCard } from "@/components";
 import { Typography } from "@/components/typography";
 import { auth } from "@/lib/auth";

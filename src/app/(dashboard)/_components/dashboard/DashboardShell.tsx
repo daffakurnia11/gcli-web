@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu } from "lucide-react";
+import { ChevronDown, Menu } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -19,11 +19,52 @@ type DashboardShellProps = {
   avatarUrl?: string | null;
 };
 
-const routeLabels: Record<string, string> = {
-  "/dashboard": "Overview",
-  "/dashboard/profile": "Profile",
-  "/dashboard/settings": "Settings",
+type SidebarGroup = {
+  type: "group";
+  title: string;
 };
+
+type SidebarChildItem = {
+  href: string;
+  label: string;
+};
+
+type SidebarLinkItem = {
+  type: "item";
+  href: string;
+  label: string;
+  sidebar?: boolean;
+  children?: SidebarChildItem[];
+};
+
+type SidebarEntry = SidebarGroup | SidebarLinkItem;
+
+const sidebarItems: SidebarEntry[] = [
+  { type: "group", title: "Dashboard" },
+  { type: "item", href: "/dashboard", label: "Overview", sidebar: true },
+  {
+    type: "item",
+    href: "/dashboard/kill-log",
+    label: "Kill Log",
+    sidebar: true,
+    children: [
+      { href: "/dashboard/kill-log/kill", label: "Kill" },
+      { href: "/dashboard/kill-log/dead", label: "Dead" },
+    ],
+  },
+  { type: "item", href: "/dashboard/profile", label: "Profile" },
+  { type: "item", href: "/dashboard/settings", label: "Settings" },
+];
+
+const routeLabels = sidebarItems.reduce<Record<string, string>>((acc, entry) => {
+  if (entry.type === "item") {
+    acc[entry.href] = entry.label;
+    entry.children?.forEach((child) => {
+      acc[child.href] = child.label;
+    });
+  }
+  return acc;
+}, {});
 
 export default function DashboardShell({
   children,
@@ -35,6 +76,23 @@ export default function DashboardShell({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const matchesPath = (href: string) =>
+    pathname === href || pathname?.startsWith(`${href}/`);
+  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {};
+    sidebarItems.forEach((entry) => {
+      if (entry.type !== "item" || !entry.children?.length) {
+        return;
+      }
+      const hasActiveChild = entry.children.some((child) =>
+        matchesPath(child.href),
+      );
+      if (hasActiveChild) {
+        initial[entry.href] = true;
+      }
+    });
+    return initial;
+  });
   const label = useMemo(
     () => routeLabels[pathname ?? ""] || "Dashboard",
     [pathname],
@@ -68,6 +126,20 @@ export default function DashboardShell({
     document.addEventListener("click", handleClick);
     return () => document.removeEventListener("click", handleClick);
   }, [isUserMenuOpen]);
+
+  useEffect(() => {
+    sidebarItems.forEach((entry) => {
+      if (entry.type !== "item" || !entry.children?.length) {
+        return;
+      }
+      const hasActiveChild = entry.children.some((child) =>
+        matchesPath(child.href),
+      );
+      if (hasActiveChild) {
+        setOpenMenus((prev) => ({ ...prev, [entry.href]: true }));
+      }
+    });
+  }, [pathname]);
 
   return (
     <div className="min-h-screen bg-primary-900 text-primary-100">
@@ -155,23 +227,96 @@ export default function DashboardShell({
         <Link href={"/"} className="block">
           <Logo variant="name" color="white" className="h-14! w-auto mb-6" />
         </Link>
-        <Typography.Heading
-          level={6}
-          type="display"
-          className="uppercase tracking-widest text-primary-200 mb-4"
-        >
-          Dashboard
-        </Typography.Heading>
         <nav className="flex flex-col gap-3 text-sm font-display tracking-wide">
-          <Link
-            className="text-primary-100 hover:text-secondary-700"
-            href="/dashboard"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <Typography.Paragraph className="text-primary-100 hover:text-secondary-700">
-              Overview
-            </Typography.Paragraph>
-          </Link>
+          {sidebarItems.map((entry, index) => {
+            if (entry.type === "group") {
+              return (
+                <Typography.Heading
+                  key={`group-${entry.title}-${index}`}
+                  level={6}
+                  type="display"
+                  className="uppercase tracking-widest text-primary-200 mt-2"
+                >
+                  {entry.title}
+                </Typography.Heading>
+              );
+            }
+
+            if (!entry.sidebar) {
+              return null;
+            }
+
+            const hasChildren = Boolean(entry.children?.length);
+            const isActiveParent =
+              matchesPath(entry.href) ||
+              entry.children?.some((child) => matchesPath(child.href));
+            const textClass = isActiveParent
+              ? "text-secondary-700"
+              : "text-primary-100 hover:text-secondary-700";
+
+            if (hasChildren) {
+              const isOpen = openMenus[entry.href] ?? false;
+              return (
+                <div key={entry.href} className="flex flex-col gap-1">
+                  <button
+                    type="button"
+                    className={`flex w-full items-center justify-between ${textClass}`}
+                    onClick={() =>
+                      setOpenMenus((prev) => ({
+                        ...prev,
+                        [entry.href]: !isOpen,
+                      }))
+                    }
+                    aria-expanded={isOpen}
+                  >
+                    <Typography.Paragraph className={textClass}>
+                      {entry.label}
+                    </Typography.Paragraph>
+                    <ChevronDown
+                      size={16}
+                      className={`transition-transform ${isOpen ? "rotate-180" : ""}`}
+                    />
+                  </button>
+
+                  {isOpen && (
+                    <div className="ml-3 flex flex-col gap-3 border-l border-primary-700 pl-3 py-2">
+                      {entry.children?.map((child) => {
+                        const isActiveChild = matchesPath(child.href);
+                        const childClass = isActiveChild
+                          ? "text-secondary-700"
+                          : "text-primary-200 hover:text-secondary-700";
+                        return (
+                          <Link
+                            key={child.href}
+                            href={child.href}
+                            className={childClass}
+                            onClick={() => setIsSidebarOpen(false)}
+                          >
+                            <Typography.Paragraph className={childClass}>
+                              {child.label}
+                            </Typography.Paragraph>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
+            return (
+              <Link
+                key={entry.href}
+                className={textClass}
+                href={entry.href}
+                onClick={() => setIsSidebarOpen(false)}
+              >
+                <Typography.Paragraph className={textClass}>
+                  {entry.label}
+                </Typography.Paragraph>
+              </Link>
+            );
+          })}
         </nav>
         <SidebarUserMenu
           displayName={displayName}

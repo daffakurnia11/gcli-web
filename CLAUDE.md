@@ -55,6 +55,14 @@ pnpm exec prisma migrate reset  # Reset database (WARNING: deletes all data)
 - `/dashboard` — User dashboard with profile management
 - `/dashboard/profile` — Profile editing section
 - `/dashboard/settings` — User settings (email, password, sessions, account linkage)
+- `/dashboard/kill-log/kill` — Kill records page showing user's kills
+- `/dashboard/kill-log/dead` — Death records page showing user's deaths
+
+**Dashboard Navigation:**
+- Collapsible sidebar menu with nested item support
+- Mobile-responsive hamburger menu with sticky header
+- Active state tracking with auto-expanding parent menus
+- User avatar display with fallback to initials
 
 **API Routes:**
 
@@ -75,6 +83,7 @@ pnpm exec prisma migrate reset  # Reset database (WARNING: deletes all data)
 - `/api/user/sessions/revoke-all` — Revoke all sessions
 - `/api/user/discord/connect` — Link Discord account
 - `/api/user/discord/disconnect` — Unlink Discord account
+- `/api/user/kill-logs` — Get kill/death logs (supports session + Bearer token auth)
 
 *External Proxies:*
 - `/api/info/discord` — Discord server info proxy (GET)
@@ -123,6 +132,15 @@ components/
 └── index.tsx             # Barrel exports
 ```
 
+**Table Components (src/components/table/):**
+- `DataTable.tsx` — Reusable table with custom column rendering, alignment options, skeleton loading
+- `DataTableSkeleton.tsx` — Loading skeleton for DataTable
+
+**Dashboard Layout Components (src/app/dashboard/_components/):**
+- `DashboardSidebar.tsx` — Collapsible sidebar with nested menu support (Client)
+- `DashboardHeader.tsx` — Mobile header with hamburger menu and breadcrumbs (Client)
+- `UserMenu.tsx` — User dropdown menu for mobile (Client)
+
 **Dashboard Components (src/app/_components/dashboard/):**
 - `DashboardCard.tsx` — Card container for dashboard sections
 - `UserStatsCard.tsx` — User statistics display with avatar, account info, and all connected IDs
@@ -135,6 +153,10 @@ components/
 - `DashboardSection.tsx` — Section wrapper
 - `Alert.tsx` — Alert/notification component
 - `RegistrationCleanup.tsx` — Client component for cleaning up auth setup state
+
+**Kill Log Components (src/app/dashboard/kill-log/_components/):**
+- `KillLogTable.tsx` — Table component for displaying kill/death records (Client)
+- `columns.tsx` — Column definitions for kill log data table
 
 **Demo Components (src/app/demo/_components/):**
 - `ButtonDemo.tsx` — Button component showcase
@@ -167,6 +189,7 @@ components/
 - `Button.d.ts`, `Typography.d.ts`, `Logo.d.ts`, `Form.d.ts` — Component types
 - `components/Stepper.d.ts` — Stepper component types
 - `components/Cards.d.ts` — Card component types
+- `components/table/DataTable.d.ts` — DataTable component types
 - `providers/AppProviders.d.ts` — App providers types
 - `providers/SessionProvider.d.ts` — Session provider types
 - `next-auth.d.ts` — NextAuth type extensions
@@ -181,6 +204,9 @@ components/
 **Hooks** (`src/hooks/`):
 - `useIndonesiaRegions.ts` — Hook for fetching Indonesian provincial and city data
 - `useUniqueCheck.ts` — Hook for checking email/username uniqueness via API
+
+**Custom SWR Hook** (`src/lib/swr.ts`):
+- `useApiSWR()` — Custom SWR hook with error handling and default configuration for API calls
 
 ### Authentication & Middleware
 
@@ -203,11 +229,24 @@ components/
 4. Registered users → `/dashboard`
 5. Unauthenticated users accessing protected routes → `/auth`
 
+**Mixed Authentication Access:**
+- API routes support both session-based and Bearer token authentication
+- Use `getAccountIdFromRequest()` to extract account ID from either source
+- Allows external API access via Authorization: Bearer <token> header
+
 **Auth Setup State Management** (`src/lib/authSetupPayload.ts`):
 - `readAuthSetupPayload()` — Reads setup data from localStorage
 - `writeAuthSetupPayload()` — Writes setup data to localStorage
 - `updateAuthSetupPayload()` — Partially updates setup data
 - `clearAuthSetupPayload()` — Clears setup data after completion
+
+**API Authentication** (`src/lib/apiAuth.ts`):
+- `getAccountIdFromRequest()` — Extracts account ID from session or Bearer token
+- Supports mixed authentication: NextAuth session + Authorization header
+
+**User-Citizen Resolution** (`src/lib/userCitizenId.ts`):
+- `resolveCitizenIdForAccount()` — Links web accounts to FiveM player records via license matching
+- Supports multiple licenses per account (license and license2 from users table)
 
 ### Database (Prisma + MySQL)
 
@@ -236,6 +275,7 @@ components/
 - `player_*` models for FiveM player data (crafting, locations, etc.)
 - `tl_crafting_locations` — Crafting station locations
 - `tl_gangstash_locations` — Gang stash locations
+- `tl_kill_logs` — Kill/death records with killer and victim info, weapon, timestamp
 
 *Various FiveM-specific tables:* ox_*, other system tables
 
@@ -566,6 +606,31 @@ checkEmail("test@example.com"); // Returns Promise<boolean>
 checkUsername("testuser");       // Returns Promise<boolean>
 ```
 
+**DataTable Component:**
+```tsx
+import { DataTable, type Column } from "@/components/table";
+
+const columns: Column<KillLog>[] = [
+  { key: "killer_name", label: "Killer", align: "left" },
+  { key: "victim_name", label: "Victim", align: "left" },
+  { key: "weapon", label: "Weapon", align: "center" },
+  { key: "created_at", label: "Date", align: "right", render: (value) => formatDate(value) },
+];
+
+<DataTable
+  columns={columns}
+  data={killLogs}
+  emptyMessage="No records found"
+/>
+```
+
+**useApiSWR Hook:**
+```tsx
+import { useApiSWR } from "@/lib/swr";
+
+const { data, error, isLoading } = useApiSWR<KillLog[]>("/api/user/kill-logs?type=kill");
+```
+
 ## Code Quality
 
 **ESLint Rules:**
@@ -622,3 +687,6 @@ checkUsername("testuser");       // Returns Promise<boolean>
   - `hasFieldError<T>()` — Checks if field has specific error
 - `authSetupPayload.ts` — Auth setup localStorage management (see Auth Flow section)
 - `prisma.ts` — Prisma client singleton for database operations
+- `apiAuth.ts` — API authentication helpers (see Mixed Authentication Access section)
+- `userCitizenId.ts` — User-to-citizen ID resolution for FiveM player linking
+- `swr.ts` — Custom SWR configuration and useApiSWR hook

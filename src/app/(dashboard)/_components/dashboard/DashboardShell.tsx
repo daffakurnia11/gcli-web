@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Logo } from "@/components";
 import { Typography } from "@/components/typography";
@@ -76,8 +76,10 @@ export default function DashboardShell({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
-  const matchesPath = (href: string) =>
-    pathname === href || pathname?.startsWith(`${href}/`);
+  const matchesPath = useCallback(
+    (href: string) => pathname === href || pathname?.startsWith(`${href}/`),
+    [pathname],
+  );
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     sidebarItems.forEach((entry) => {
@@ -139,7 +141,7 @@ export default function DashboardShell({
         setOpenMenus((prev) => ({ ...prev, [entry.href]: true }));
       }
     });
-  }, [pathname]);
+  }, [matchesPath]);
 
   return (
     <div className="min-h-screen bg-primary-900 text-primary-100">

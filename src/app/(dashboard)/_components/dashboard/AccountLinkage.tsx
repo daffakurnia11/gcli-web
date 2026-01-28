@@ -63,10 +63,7 @@ export function AccountLinkage({
     }
   }, [searchParams]);
 
-  const { isLoading: isLinking } = useApiSWR<
-    { message?: string },
-    [string, string]
-  >(
+  const { isLoading: isLinking } = useApiSWR<{ message?: string }>(
     discordPayload ? ["discord-link", discordPayload.id] : null,
     async () => {
       const response = await fetch("/api/user/discord/connect", {

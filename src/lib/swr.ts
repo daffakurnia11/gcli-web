@@ -2,8 +2,8 @@
 
 import useSWR, {
   type BareFetcher,
+  type Key,
   type SWRConfiguration,
-  type SWRKey,
   type SWRResponse,
 } from "swr";
 
@@ -37,7 +37,7 @@ const defaultConfig: SWRConfiguration = {
   revalidateOnFocus: false,
 };
 
-export function useApiSWR<T, K extends SWRKey = SWRKey>(
+export function useApiSWR<T, K extends Key = Key>(
   key: K,
   fetcher?: BareFetcher<T> | null,
   config?: SWRConfiguration<T, ApiError>,

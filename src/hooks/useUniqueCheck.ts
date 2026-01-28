@@ -34,9 +34,11 @@ export function useUniqueCheck(
       ? `/api/account/unique-check?type=${type}&value=${encodeURIComponent(debounced)}`
       : null;
 
-  const { data, error, isLoading } = useApiSWR<UniqueCheckResponse>(key, {
-    dedupingInterval: 500,
-  });
+  const { data, error, isLoading } = useApiSWR<UniqueCheckResponse>(
+    key,
+    undefined,
+    { dedupingInterval: 500 },
+  );
 
   return {
     exists: Boolean(data?.exists),

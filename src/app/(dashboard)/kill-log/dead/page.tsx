@@ -8,8 +8,8 @@ import {
 } from "@/app/(dashboard)/_components/dashboard";
 import {
   DataTable,
-  DataTableSkeleton,
   type DataTableColumn,
+  DataTableSkeleton,
 } from "@/components/table/DataTable";
 import { Typography } from "@/components/typography";
 import { useApiSWR } from "@/lib/swr";

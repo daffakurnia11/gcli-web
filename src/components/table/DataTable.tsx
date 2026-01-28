@@ -1,7 +1,7 @@
 "use client";
 
-import type { ReactNode } from "react";
 import classNames from "classnames";
+import type { ReactNode } from "react";
 
 import { Typography } from "@/components/typography";
 

@@ -102,7 +102,11 @@ export async function GET(request: Request) {
     };
 
     const encoded = Buffer.from(JSON.stringify(payload)).toString("base64url");
-    const redirectUrl = new URL(callbackUrl, request.url);
+    const baseUrl =
+      process.env.NEXT_PUBLIC_APP_URL ||
+      process.env.NEXTAUTH_URL ||
+      request.url;
+    const redirectUrl = new URL(callbackUrl, baseUrl);
     redirectUrl.searchParams.set("discord_data", encoded);
 
     return NextResponse.redirect(redirectUrl.toString());

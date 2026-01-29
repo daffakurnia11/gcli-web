@@ -68,6 +68,7 @@ export default function CharacterStatus({
                 <Heart size={20} fill="#f87171" className="text-[#f87171]" />
               }
               current={data?.metadata?.health || 0}
+              min={100}
               max={200}
               barColor="bg-[#f87171]"
             />
@@ -77,7 +78,7 @@ export default function CharacterStatus({
                 <Shield size={20} fill="#6366f1" className="text-[#6366f1]" />
               }
               current={data?.metadata?.armor || 0}
-              max={200}
+              max={100}
               barColor="bg-[#6366f1]"
             />
             <StatusBar

@@ -7,16 +7,18 @@ export default function StatusBar({
   icon,
   current,
   max,
+  min = 0,
   barColor,
 }: {
   title: string;
   icon: React.ReactNode;
   current: number;
   max: number;
+  min?: number;
   barColor: string;
 }) {
   const percentageCalculator = (current: number, max: number) => {
-    return (current / max) * 100;
+    return ((current - min) / (max - min)) * 100;
   };
   return (
     <div className="flex flex-col gap-2">
@@ -34,7 +36,7 @@ export default function StatusBar({
           />
         </div>
         <Typography.Small className="text-primary-300 shrink-0 w-full max-w-16 text-right">
-          {current.toFixed(0)} / {max}
+          {(current - min).toFixed(0)} / {max - min}
         </Typography.Small>
       </div>
     </div>

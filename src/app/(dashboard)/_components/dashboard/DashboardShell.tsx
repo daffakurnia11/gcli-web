@@ -42,6 +42,7 @@ type SidebarEntry = SidebarGroup | SidebarLinkItem;
 const sidebarItems: SidebarEntry[] = [
   { type: "group", title: "Dashboard" },
   { type: "item", href: "/dashboard", label: "Overview", sidebar: true },
+  { type: "item", href: "/character", label: "Character", sidebar: true },
   {
     type: "item",
     href: "/kill-log",

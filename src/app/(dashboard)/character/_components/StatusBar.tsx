@@ -34,7 +34,7 @@ export default function StatusBar({
           />
         </div>
         <Typography.Small className="text-primary-300 shrink-0 w-full max-w-16 text-right">
-          {current} / {max}
+          {current.toFixed(0)} / {max}
         </Typography.Small>
       </div>
     </div>

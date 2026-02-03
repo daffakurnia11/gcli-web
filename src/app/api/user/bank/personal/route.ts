@@ -56,14 +56,34 @@ export async function GET(request: Request) {
       );
     }
 
-    const transactions = await prisma.player_transactions.findUnique({
-      where: { id: resolved.citizenId },
-      select: {
-        id: true,
-        transactions: true,
-        isFrozen: true,
-      },
-    });
+    // Fetch both transactions and player money data
+    const [transactions, player] = await Promise.all([
+      prisma.player_transactions.findUnique({
+        where: { id: resolved.citizenId },
+        select: {
+          id: true,
+          transactions: true,
+          isFrozen: true,
+        },
+      }),
+      prisma.players.findUnique({
+        where: { citizenid: resolved.citizenId },
+        select: { money: true },
+      }),
+    ]);
+
+    // Parse money field
+    let cashBalance = 0;
+    let bankBalance = 0;
+    if (player?.money) {
+      const moneyData = JSON.parse(player.money as string) as {
+        cash: number;
+        bank: number;
+        crypto?: number;
+      };
+      cashBalance = moneyData.cash ?? 0;
+      bankBalance = moneyData.bank ?? 0;
+    }
 
     if (!transactions) {
       return NextResponse.json(
@@ -77,6 +97,8 @@ export async function GET(request: Request) {
             totalItems: 0,
             totalPages: 0,
           },
+          cashBalance,
+          bankBalance,
           isFrozen: 0,
         },
         { status: 200 },
@@ -110,6 +132,8 @@ export async function GET(request: Request) {
           totalItems,
           totalPages,
         },
+        cashBalance,
+        bankBalance,
         isFrozen: transactions.isFrozen ?? 0,
       },
       { status: 200 },

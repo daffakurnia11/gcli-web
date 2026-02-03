@@ -37,6 +37,8 @@ export type PersonalBankResponse = {
   playerName: string | null;
   transactions: BankTransaction[];
   pagination: PaginationMeta;
+  cashBalance: number;
+  bankBalance: number;
   isFrozen: number;
   message?: string;
 };

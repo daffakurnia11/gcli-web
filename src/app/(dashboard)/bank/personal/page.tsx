@@ -1,6 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
+import { DollarSign } from "lucide-react";
 import { useState } from "react";
 
 import {
@@ -35,6 +36,13 @@ const formatAmount = (amount: number, transType: "deposit" | "withdraw") => {
   }).format(amount);
 
   return transType === "deposit" ? `+$${formatted}` : `-$${formatted}`;
+};
+
+const formatBalance = (balance: number) => {
+  return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(balance);
 };
 
 const getAmountClassName = (transType: "deposit" | "withdraw") => {
@@ -135,6 +143,47 @@ export default function PersonalBankPage() {
         <Typography.Paragraph className="text-primary-300 text-sm mt-1">
           Your personal bank transaction history.
         </Typography.Paragraph>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <DashboardCard>
+          <div className="flex flex-col gap-2">
+            <Typography.Paragraph className="text-primary-300 shrink-0">
+              Cash Balance:
+            </Typography.Paragraph>
+            <Typography.Heading
+              type="display"
+              level={4}
+              className="text-primary-100 flex items-center gap-2"
+            >
+              <DollarSign className="text-primary-300" />
+              {data && !data.message ? (
+                formatBalance(data.cashBalance)
+              ) : (
+                <span className="block w-62.5 h-9.25 animate-pulse rounded bg-primary-700/60" />
+              )}
+            </Typography.Heading>
+          </div>
+        </DashboardCard>
+        <DashboardCard>
+          <div className="flex flex-col gap-2">
+            <Typography.Paragraph className="text-primary-300 shrink-0">
+              Bank Account Balance:
+            </Typography.Paragraph>
+            <Typography.Heading
+              type="display"
+              level={4}
+              className="text-primary-100 flex items-center gap-2"
+            >
+              <DollarSign className="text-primary-300" />
+              {data && !data.message ? (
+                formatBalance(data.bankBalance)
+              ) : (
+                <span className="block w-62.5 h-9.25 animate-pulse rounded bg-primary-700/60" />
+              )}
+            </Typography.Heading>
+          </div>
+        </DashboardCard>
       </div>
 
       <DashboardSection title="Transaction History">

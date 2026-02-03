@@ -42,7 +42,20 @@ type SidebarEntry = SidebarGroup | SidebarLinkItem;
 const sidebarItems: SidebarEntry[] = [
   { type: "group", title: "Dashboard" },
   { type: "item", href: "/dashboard", label: "Overview", sidebar: true },
+  { type: "group", title: "Game Info" },
   { type: "item", href: "/character", label: "Character", sidebar: true },
+  {
+    type: "item",
+    href: "/bank",
+    label: "Bank",
+    sidebar: true,
+    children: [
+      { href: "/bank/personal", label: "Personal Bank" },
+      { href: "/bank/team", label: "Team Bank" },
+      { href: "/bank/investment", label: "Investment" },
+    ],
+  },
+  { type: "group", title: "Log" },
   {
     type: "item",
     href: "/kill-log",
@@ -230,7 +243,7 @@ export default function DashboardShell({
         <Link href={"/"} className="block">
           <Logo variant="name" color="white" className="h-14! w-auto mb-6" />
         </Link>
-        <nav className="flex flex-col gap-3 text-sm font-display tracking-wide">
+        <nav className="flex flex-col gap-2 text-sm font-display tracking-wide">
           {sidebarItems.map((entry, index) => {
             if (entry.type === "group") {
               return (
@@ -238,7 +251,7 @@ export default function DashboardShell({
                   key={`group-${entry.title}-${index}`}
                   level={6}
                   type="display"
-                  className="uppercase tracking-widest text-primary-200 mt-2"
+                  className="uppercase tracking-widest text-primary-200 mt-5"
                 >
                   {entry.title}
                 </Typography.Heading>
@@ -282,7 +295,7 @@ export default function DashboardShell({
                   </button>
 
                   {isOpen && (
-                    <div className="ml-3 flex flex-col gap-3 border-l border-primary-700 pl-3 py-2">
+                    <div className="ml-3 flex flex-col gap-2 border-l border-primary-700 pl-3 py-1">
                       {entry.children?.map((child) => {
                         const isActiveChild = matchesPath(child.href);
                         const childClass = isActiveChild

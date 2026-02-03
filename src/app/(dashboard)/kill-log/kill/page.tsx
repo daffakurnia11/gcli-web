@@ -1,11 +1,13 @@
 "use client";
 
 import { format } from "date-fns";
+import { useState } from "react";
 
 import {
   DashboardCard,
   DashboardSection,
 } from "@/app/(dashboard)/_components/dashboard";
+import { Pagination } from "@/components/table";
 import {
   DataTable,
   type DataTableColumn,
@@ -13,6 +15,9 @@ import {
 } from "@/components/table/DataTable";
 import { Typography } from "@/components/typography";
 import { useApiSWR } from "@/lib/swr";
+
+const DEFAULT_PAGE = 1;
+const ITEMS_PER_PAGE = 10;
 
 type KillLogRecord = {
   id: number;
@@ -30,6 +35,12 @@ type KillLogResponse = {
   playerName: string | null;
   message?: string;
   records: KillLogRecord[];
+  pagination: {
+    currentPage: number;
+    itemsPerPage: number;
+    totalItems: number;
+    totalPages: number;
+  };
 };
 
 const formatDate = (value: string | Date) => {
@@ -88,12 +99,18 @@ const columns: Array<DataTableColumn<KillLogRecord>> = [
 ];
 
 export default function KillLogKillPage() {
+  const [currentPage, setCurrentPage] = useState(DEFAULT_PAGE);
+
   const { data, error, isLoading } = useApiSWR<KillLogResponse>(
-    "/api/user/kill-logs?type=kill",
+    `/api/user/kill-logs?type=kill&page=${currentPage}&limit=${ITEMS_PER_PAGE}`,
   );
 
   const hasNoRecords =
     !isLoading && !error && data && data.records.length === 0 && !data.message;
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
 
   return (
     <div className="space-y-6">
@@ -114,7 +131,7 @@ export default function KillLogKillPage() {
       <DashboardSection title="Kill Records">
         <DashboardCard>
           {isLoading && (
-            <DataTableSkeleton columns={columns} rows={6} className="w-full!" />
+            <DataTableSkeleton columns={columns} rows={ITEMS_PER_PAGE} className="w-full!" />
           )}
 
           {error && (
@@ -136,12 +153,24 @@ export default function KillLogKillPage() {
           )}
 
           {!isLoading && !error && data && data.records.length > 0 && (
-            <DataTable
-              columns={columns}
-              rows={data.records}
-              rowKey={(record) => record.id}
-              className="w-full!"
-            />
+            <>
+              <DataTable
+                key={currentPage}
+                columns={columns}
+                rows={data.records}
+                rowKey={(record) => record.id}
+                className="w-full!"
+              />
+              <div className="mt-6">
+                <Pagination
+                  currentPage={data.pagination.currentPage}
+                  totalPages={data.pagination.totalPages}
+                  totalItems={data.pagination.totalItems}
+                  itemsPerPage={data.pagination.itemsPerPage}
+                  onPageChange={handlePageChange}
+                />
+              </div>
+            </>
           )}
         </DashboardCard>
       </DashboardSection>

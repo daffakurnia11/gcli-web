@@ -6,6 +6,10 @@ import { resolveCitizenIdForAccount } from "@/lib/userCitizenId";
 
 type KillLogType = "kill" | "dead";
 
+const DEFAULT_PAGE = 1;
+const DEFAULT_LIMIT = 10;
+const MAX_LIMIT = 100;
+
 const parseType = (value: string | null): KillLogType => {
   return value === "dead" ? "dead" : "kill";
 };
@@ -19,6 +23,15 @@ export async function GET(request: Request) {
 
     const url = new URL(request.url);
     const type = parseType(url.searchParams.get("type"));
+    const pageParam = url.searchParams.get("page");
+    const limitParam = url.searchParams.get("limit");
+
+    const page = Math.max(DEFAULT_PAGE, Number.parseInt(pageParam ?? "", 10) || DEFAULT_PAGE);
+    const limit = Math.min(
+      MAX_LIMIT,
+      Math.max(1, Number.parseInt(limitParam ?? "", 10) || DEFAULT_LIMIT),
+    );
+
     const resolved = await resolveCitizenIdForAccount(accountId);
 
     if (!resolved?.citizenId) {
@@ -28,6 +41,12 @@ export async function GET(request: Request) {
           citizenId: null,
           playerName: null,
           records: [],
+          pagination: {
+            currentPage: page,
+            itemsPerPage: limit,
+            totalItems: 0,
+            totalPages: 0,
+          },
           message: "No linked player record found for this account.",
         },
         { status: 200 },
@@ -39,10 +58,18 @@ export async function GET(request: Request) {
         ? { killer_citizenid: resolved.citizenId }
         : { victim_citizenid: resolved.citizenId };
 
+    // Get total count for pagination
+    const totalItems = await prisma.tl_kill_logs.count({ where });
+
+    // Calculate pagination
+    const totalPages = Math.ceil(totalItems / limit);
+    const skip = (page - 1) * limit;
+
     const logs = await prisma.tl_kill_logs.findMany({
       where,
       orderBy: { created_at: "desc" },
-      take: 100,
+      skip,
+      take: limit,
       select: {
         id: true,
         killer_citizenid: true,
@@ -68,6 +95,12 @@ export async function GET(request: Request) {
           weapon: log.weapon,
           createdAt: log.created_at,
         })),
+        pagination: {
+          currentPage: page,
+          itemsPerPage: limit,
+          totalItems,
+          totalPages,
+        },
       },
       { status: 200 },
     );

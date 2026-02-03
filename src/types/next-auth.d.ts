@@ -1,6 +1,17 @@
 import type { DefaultSession } from "next-auth";
 import type { DefaultJWT } from "next-auth/jwt";
 
+export type PlayerGang = {
+  label: string;
+  name: string;
+  isboss: boolean;
+  bankAuth: boolean;
+  grade: {
+    level: number;
+    name: string;
+  };
+};
+
 declare module "next-auth" {
   interface Session {
     user: {
@@ -12,6 +23,7 @@ declare module "next-auth" {
       discordImage?: string | null;
       username?: string | null;
       isRegistered?: boolean | null;
+      gang?: PlayerGang | null;
     } & DefaultSession["user"];
     provider?: string;
   }
@@ -27,5 +39,6 @@ declare module "next-auth/jwt" {
     discordImage?: string | null;
     username?: string | null;
     isRegistered?: boolean | null;
+    gang?: PlayerGang | null;
   }
 }

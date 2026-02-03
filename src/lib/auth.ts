@@ -120,6 +120,7 @@ export const authOptions: NextAuthConfig = {
         session.user.username = token.username ?? null;
         session.user.isRegistered =
           typeof token.isRegistered === "boolean" ? token.isRegistered : null;
+        session.user.gang = token.gang ?? null;
       }
       return session;
     },
@@ -163,11 +164,41 @@ export const authOptions: NextAuthConfig = {
           select: {
             id: true,
             profile: { select: { id: true } },
-            user: { select: { username: true } },
+            user: { select: { username: true, license: true, license2: true } },
           },
         });
         token.isRegistered = Boolean(webAccount?.profile);
         token.username = webAccount?.user?.username ?? null;
+
+        // Fetch gang data from players table
+        if (webAccount?.user) {
+          const licenses = [
+            webAccount.user.license,
+            webAccount.user.license2,
+          ].filter((l): l is string => Boolean(l?.trim()));
+          if (licenses.length > 0) {
+            const player = await prisma.players.findFirst({
+              where: { license: { in: licenses } },
+              orderBy: { last_updated: "desc" },
+              select: { gang: true },
+            });
+            if (player?.gang) {
+              try {
+                token.gang = JSON.parse(player.gang as string) as {
+                  label: string;
+                  name: string;
+                  isboss: boolean;
+                  bankAuth: boolean;
+                  grade: { level: number; name: string };
+                };
+              } catch {
+                token.gang = null;
+              }
+            } else {
+              token.gang = null;
+            }
+          }
+        }
       } else if (token.discordId) {
         const rawDiscordId = token.discordId.replace(/^discord:/, "");
         const prefixedDiscordId = `discord:${rawDiscordId}`;
@@ -177,7 +208,7 @@ export const authOptions: NextAuthConfig = {
             select: {
               id: true,
               profile: { select: { id: true } },
-              user: { select: { username: true } },
+              user: { select: { username: true, license: true, license2: true } },
             },
           })) ??
           (await prisma.web_accounts.findUnique({
@@ -185,13 +216,43 @@ export const authOptions: NextAuthConfig = {
             select: {
               id: true,
               profile: { select: { id: true } },
-              user: { select: { username: true } },
+              user: { select: { username: true, license: true, license2: true } },
             },
           }));
         token.isRegistered = Boolean(webAccount?.profile);
         token.username = webAccount?.user?.username ?? null;
         if (webAccount?.id) {
           token.sub = webAccount.id.toString();
+        }
+
+        // Fetch gang data from players table
+        if (webAccount?.user) {
+          const licenses = [
+            webAccount.user.license,
+            webAccount.user.license2,
+          ].filter((l): l is string => Boolean(l?.trim()));
+          if (licenses.length > 0) {
+            const player = await prisma.players.findFirst({
+              where: { license: { in: licenses } },
+              orderBy: { last_updated: "desc" },
+              select: { gang: true },
+            });
+            if (player?.gang) {
+              try {
+                token.gang = JSON.parse(player.gang as string) as {
+                  label: string;
+                  name: string;
+                  isboss: boolean;
+                  bankAuth: boolean;
+                  grade: { level: number; name: string };
+                };
+              } catch {
+                token.gang = null;
+              }
+            } else {
+              token.gang = null;
+            }
+          }
         }
       }
 

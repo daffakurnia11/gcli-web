@@ -57,3 +57,35 @@ export type TeamBankResponse = {
   creator?: string | null;
   message?: string;
 };
+
+/**
+ * Investment account
+ */
+export type InvestmentAccount = {
+  id: string;
+  amount: number;
+  creator: string;
+};
+
+/**
+ * Investments API response
+ * API Route: /api/user/bank/investments
+ */
+export type InvestmentsResponse = {
+  gangName: string;
+  investments: InvestmentAccount[];
+  message?: string;
+};
+
+/**
+ * Investment Transactions API response
+ * API Route: /api/user/bank/investments/[id]/transactions
+ * Query params: page (default: 1), limit (default: 10, max: 100)
+ */
+export type InvestmentTransactionsResponse = {
+  accountId: string;
+  transactions: BankTransaction[];
+  pagination: PaginationMeta;
+  balance: number;
+  isFrozen: number;
+};

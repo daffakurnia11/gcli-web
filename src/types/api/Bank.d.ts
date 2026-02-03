@@ -40,3 +40,18 @@ export type PersonalBankResponse = {
   isFrozen: number;
   message?: string;
 };
+
+/**
+ * Team Bank API response
+ * API Route: /api/user/bank/team
+ * Query params: page (default: 1), limit (default: 10, max: 100)
+ */
+export type TeamBankResponse = {
+  gangName: string;
+  transactions: BankTransaction[];
+  pagination: PaginationMeta;
+  balance: number;
+  isFrozen: number;
+  creator?: string | null;
+  message?: string;
+};

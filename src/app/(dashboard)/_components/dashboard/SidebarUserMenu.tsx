@@ -56,13 +56,13 @@ export default function SidebarUserMenu({
       <div className="mt-4 flex flex-col gap-3 text-sm font-display tracking-wide">
         <Link
           className="text-primary-100 hover:text-secondary-700 transition-colors"
-          href="/dashboard/profile"
+          href="/profile"
         >
           Profile
         </Link>
         <Link
           className="text-primary-100 hover:text-secondary-700 transition-colors"
-          href="/dashboard/settings"
+          href="/settings"
         >
           Settings
         </Link>

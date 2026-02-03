@@ -186,14 +186,14 @@ export default function DashboardShell({
           {isUserMenuOpen && (
             <div className="absolute right-0 mt-3 w-44 rounded border border-primary-700 bg-primary-900/95 backdrop-blur-lg shadow-lg">
               <Link
-                href="/dashboard/profile"
+                href="/profile"
                 className="block px-4 py-3 text-sm text-primary-100 hover:bg-primary-800"
                 onClick={() => setIsUserMenuOpen(false)}
               >
                 Profile
               </Link>
               <Link
-                href="/dashboard/settings"
+                href="/settings"
                 className="block px-4 py-3 text-sm text-primary-100 hover:bg-primary-800"
                 onClick={() => setIsUserMenuOpen(false)}
               >

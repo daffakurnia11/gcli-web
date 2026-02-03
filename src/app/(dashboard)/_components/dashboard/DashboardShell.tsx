@@ -18,6 +18,7 @@ type DashboardShellProps = {
   email?: string;
   avatarUrl?: string | null;
   isGangBoss?: boolean;
+  hasCharinfo?: boolean;
 };
 
 type SidebarGroup = {
@@ -40,40 +41,54 @@ type SidebarLinkItem = {
 
 type SidebarEntry = SidebarGroup | SidebarLinkItem;
 
-const getSidebarItems = (isGangBoss: boolean): SidebarEntry[] => [
-  { type: "group", title: "Dashboard" },
-  { type: "item", href: "/dashboard", label: "Overview", sidebar: true },
-  { type: "group", title: "Game Info" },
-  { type: "item", href: "/character", label: "Character", sidebar: true },
-  {
-    type: "item",
-    href: "/bank",
-    label: "Bank",
-    sidebar: true,
-    children: [
-      { href: "/bank/personal", label: "Personal Bank" },
-      ...(isGangBoss
-        ? [
-            { href: "/bank/team", label: "Team Bank" },
-            { href: "/bank/investment", label: "Investment" },
-          ]
-        : []),
-    ],
-  },
-  { type: "group", title: "Log" },
-  {
-    type: "item",
-    href: "/kill-log",
-    label: "Kill Log",
-    sidebar: true,
-    children: [
-      { href: "/kill-log/kill", label: "Kill Records" },
-      { href: "/kill-log/dead", label: "Death Records" },
-    ],
-  },
-  { type: "item", href: "/profile", label: "Profile" },
-  { type: "item", href: "/settings", label: "Settings" },
-];
+const getSidebarItems = (
+  isGangBoss: boolean,
+  hasCharinfo: boolean,
+): SidebarEntry[] => {
+  const baseItems: SidebarEntry[] = [
+    { type: "group", title: "Dashboard" },
+    { type: "item", href: "/dashboard", label: "Overview", sidebar: true },
+    { type: "item", href: "/profile", label: "Profile" },
+    { type: "item", href: "/settings", label: "Settings" },
+  ];
+
+  if (!hasCharinfo) {
+    return baseItems;
+  }
+
+  return [
+    ...baseItems.slice(0, 2),
+    { type: "group", title: "Game Info" },
+    { type: "item", href: "/character", label: "Character", sidebar: true },
+    {
+      type: "item",
+      href: "/bank",
+      label: "Bank",
+      sidebar: true,
+      children: [
+        { href: "/bank/personal", label: "Personal Bank" },
+        ...(isGangBoss
+          ? [
+              { href: "/bank/team", label: "Team Bank" },
+              { href: "/bank/investment", label: "Investment" },
+            ]
+          : []),
+      ],
+    },
+    { type: "group", title: "Log" },
+    {
+      type: "item",
+      href: "/kill-log",
+      label: "Kill Log",
+      sidebar: true,
+      children: [
+        { href: "/kill-log/kill", label: "Kill Records" },
+        { href: "/kill-log/dead", label: "Death Records" },
+      ],
+    },
+    ...baseItems.slice(2),
+  ];
+};
 
 export default function DashboardShell({
   children,
@@ -81,19 +96,23 @@ export default function DashboardShell({
   email,
   avatarUrl,
   isGangBoss = false,
+  hasCharinfo = false,
 }: DashboardShellProps) {
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
-  const sidebarItems = useMemo(() => getSidebarItems(isGangBoss), [isGangBoss]);
+  const sidebarItems = useMemo(
+    () => getSidebarItems(isGangBoss, hasCharinfo),
+    [isGangBoss, hasCharinfo],
+  );
   const matchesPath = useCallback(
     (href: string) => pathname === href || pathname?.startsWith(`${href}/`),
     [pathname],
   );
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
-    getSidebarItems(false).forEach((entry) => {
+    getSidebarItems(false, false).forEach((entry) => {
       if (entry.type !== "item" || !entry.children?.length) {
         return;
       }

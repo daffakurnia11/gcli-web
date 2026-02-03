@@ -121,6 +121,10 @@ export const authOptions: NextAuthConfig = {
         session.user.isRegistered =
           typeof token.isRegistered === "boolean" ? token.isRegistered : null;
         session.user.gang = token.gang ?? null;
+        session.user.charinfo = token.charinfo ?? null;
+        session.user.fivem = token.fivem ?? null;
+        session.user.license = token.license ?? null;
+        session.user.license2 = token.license2 ?? null;
       }
       return session;
     },
@@ -163,14 +167,18 @@ export const authOptions: NextAuthConfig = {
           where: { id: accountId },
           select: {
             id: true,
+            fivem_id: true,
             profile: { select: { id: true } },
-            user: { select: { username: true, license: true, license2: true } },
+            user: { select: { username: true, license: true, license2: true, fivem: true } },
           },
         });
         token.isRegistered = Boolean(webAccount?.profile);
         token.username = webAccount?.user?.username ?? null;
+        token.fivem = webAccount?.fivem_id ?? null;
+        token.license = webAccount?.user?.license ?? null;
+        token.license2 = webAccount?.user?.license2 ?? null;
 
-        // Fetch gang data from players table
+        // Fetch gang and charinfo data from players table
         if (webAccount?.user) {
           const licenses = [
             webAccount.user.license,
@@ -180,7 +188,7 @@ export const authOptions: NextAuthConfig = {
             const player = await prisma.players.findFirst({
               where: { license: { in: licenses } },
               orderBy: { last_updated: "desc" },
-              select: { gang: true },
+              select: { gang: true, charinfo: true },
             });
             if (player?.gang) {
               try {
@@ -197,6 +205,23 @@ export const authOptions: NextAuthConfig = {
             } else {
               token.gang = null;
             }
+            if (player?.charinfo) {
+              try {
+                token.charinfo = JSON.parse(player.charinfo as string) as {
+                  firstname: string;
+                  lastname: string;
+                  birthdate: string;
+                  nationality: string;
+                  gender: string;
+                  phone: string;
+                  account: string;
+                };
+              } catch {
+                token.charinfo = null;
+              }
+            } else {
+              token.charinfo = null;
+            }
           }
         }
       } else if (token.discordId) {
@@ -207,25 +232,30 @@ export const authOptions: NextAuthConfig = {
             where: { discord_id: prefixedDiscordId },
             select: {
               id: true,
+              fivem_id: true,
               profile: { select: { id: true } },
-              user: { select: { username: true, license: true, license2: true } },
+              user: { select: { username: true, license: true, license2: true, fivem: true } },
             },
           })) ??
           (await prisma.web_accounts.findUnique({
             where: { discord_id: rawDiscordId },
             select: {
               id: true,
+              fivem_id: true,
               profile: { select: { id: true } },
-              user: { select: { username: true, license: true, license2: true } },
+              user: { select: { username: true, license: true, license2: true, fivem: true } },
             },
           }));
         token.isRegistered = Boolean(webAccount?.profile);
         token.username = webAccount?.user?.username ?? null;
+        token.fivem = webAccount?.fivem_id ?? null;
+        token.license = webAccount?.user?.license ?? null;
+        token.license2 = webAccount?.user?.license2 ?? null;
         if (webAccount?.id) {
           token.sub = webAccount.id.toString();
         }
 
-        // Fetch gang data from players table
+        // Fetch gang and charinfo data from players table
         if (webAccount?.user) {
           const licenses = [
             webAccount.user.license,
@@ -235,7 +265,7 @@ export const authOptions: NextAuthConfig = {
             const player = await prisma.players.findFirst({
               where: { license: { in: licenses } },
               orderBy: { last_updated: "desc" },
-              select: { gang: true },
+              select: { gang: true, charinfo: true },
             });
             if (player?.gang) {
               try {
@@ -251,6 +281,23 @@ export const authOptions: NextAuthConfig = {
               }
             } else {
               token.gang = null;
+            }
+            if (player?.charinfo) {
+              try {
+                token.charinfo = JSON.parse(player.charinfo as string) as {
+                  firstname: string;
+                  lastname: string;
+                  birthdate: string;
+                  nationality: string;
+                  gender: string;
+                  phone: string;
+                  account: string;
+                };
+              } catch {
+                token.charinfo = null;
+              }
+            } else {
+              token.charinfo = null;
             }
           }
         }

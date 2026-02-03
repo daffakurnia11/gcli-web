@@ -20,6 +20,7 @@ export default async function DashboardLayout({
   const email = session?.user?.email || session?.user?.discordEmail || "";
   const avatarUrl = session?.user?.discordImage || null;
   const isGangBoss = session?.user?.gang?.isboss ?? false;
+  const hasCharinfo = session?.user?.charinfo !== null;
 
   return (
     <DashboardShell
@@ -27,6 +28,7 @@ export default async function DashboardLayout({
       email={email}
       avatarUrl={avatarUrl}
       isGangBoss={isGangBoss}
+      hasCharinfo={hasCharinfo}
     >
       {children}
     </DashboardShell>

@@ -12,6 +12,16 @@ export type PlayerGang = {
   };
 };
 
+export type PlayerCharinfo = {
+  firstname: string;
+  lastname: string;
+  birthdate: string;
+  nationality: string;
+  gender: string;
+  phone: string;
+  account: string;
+};
+
 declare module "next-auth" {
   interface Session {
     user: {
@@ -24,6 +34,10 @@ declare module "next-auth" {
       username?: string | null;
       isRegistered?: boolean | null;
       gang?: PlayerGang | null;
+      charinfo?: PlayerCharinfo | null;
+      fivem?: string | null;
+      license?: string | null;
+      license2?: string | null;
     } & DefaultSession["user"];
     provider?: string;
   }
@@ -40,5 +54,9 @@ declare module "next-auth/jwt" {
     username?: string | null;
     isRegistered?: boolean | null;
     gang?: PlayerGang | null;
+    charinfo?: PlayerCharinfo | null;
+    fivem?: string | null;
+    license?: string | null;
+    license2?: string | null;
   }
 }

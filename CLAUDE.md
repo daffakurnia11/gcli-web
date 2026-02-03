@@ -62,8 +62,14 @@ The app uses Next.js App Router with route groups for organization:
 - `/dashboard/character` — Character information page (personal info, job, gang, money)
 - `/dashboard/profile` — Profile editing section
 - `/dashboard/settings` — User settings (email, password, sessions, account linkage)
+- `/dashboard/bank/personal` — Personal bank transactions with cash/bank balance
+- `/dashboard/bank/team` — Team/gang bank transactions (boss only)
+- `/dashboard/bank/investment` — Investment accounts list (boss only)
+- `/dashboard/bank/investment/[id]` — Investment account transaction details
 - `/dashboard/kill-log/kill` — Kill records page showing user's kills
 - `/dashboard/kill-log/dead` — Death records page showing user's deaths
+
+**Note:** Bank routes (Character, Bank, Kill Log) are hidden when user has no `charinfo` data. Team Bank and Investment are only visible for gang bosses (`isboss = true`).
 
 ## API Routes
 
@@ -88,7 +94,13 @@ The app uses Next.js App Router with route groups for organization:
 
 ### Player Data API
 - `/api/user/character/route.ts` — Get FiveM character info for authenticated user (personal info, job, gang, money, metadata, etc.)
-- `/api/user/kill-logs/route.ts` — Get kill/death logs (supports session + Bearer token auth)
+- `/api/user/kill-logs/route.ts` — Get kill/death logs with server-side pagination (supports session + Bearer token auth)
+
+### Bank API
+- `/api/user/bank/personal/route.ts` — Get personal bank transactions from `player_transactions` table with pagination
+- `/api/user/bank/team/route.ts` — Get team/gang bank transactions from `bank_accounts_new` table (uses gang.name from JWT session as account ID)
+- `/api/user/bank/investments/route.ts` — Get investment accounts list where `creator = gang.name`
+- `/api/user/bank/investments/[id]/transactions/route.ts` — Get transactions for specific investment account with ownership verification
 
 ### External Proxies
 - `/api/info/discord/route.ts` — Discord server info proxy (GET)
@@ -135,6 +147,8 @@ The app uses Next.js App Router with route groups for organization:
 
 **Table Components (`src/components/table/`):**
 - `DataTable.tsx` — Reusable table with custom column rendering, alignment options, skeleton loading
+- `Pagination.tsx` — Reusable pagination component with first/last/prev/next buttons, page numbers with ellipsis, mobile support, and "X to Y of Z" info label
+- `index.ts` — Barrel exports for table components
 
 **Provider Components (`src/components/providers/`):**
 - `AppProviders.tsx` — App-level providers wrapper
@@ -155,7 +169,10 @@ The app uses Next.js App Router with route groups for organization:
 **Navigation:**
 - `DashboardSidebar.tsx` — Collapsible sidebar with nested menu support ("use client")
 - `SidebarUserMenu.tsx` — User menu in sidebar
-- Sidebar menu items: Overview, Character, Kill Log (nested), Profile, Settings
+- Sidebar menu items (dynamic based on user data):
+  - **Always visible:** Dashboard → Overview, Profile, Settings
+  - **When `charinfo` exists:** Game Info → Character, Bank (Personal, Team + Investment for bosses), Log → Kill Log
+  - **Team Bank and Investment:** Only shown for gang bosses (`isboss = true`)
 
 **Dashboard Components (`src/app/(dashboard)/_components/dashboard/`):**
 - `DashboardCard.tsx` — Card container for dashboard sections
@@ -249,12 +266,16 @@ All `index.tsx` files export default namespace, named exports, and types.
 - `providers/SessionProvider.d.ts` — Session provider types
 
 **API Types:**
+- `api/Bank.d.ts` — Bank API types (PersonalBankResponse, TeamBankResponse, InvestmentsResponse, InvestmentTransactionsResponse, PaginationMeta)
 - `api/Discord.d.ts` — Discord API types
 - `api/FiveM.d.ts` — FiveM API types
 - `api/Indonesia.d.ts` — Indonesia API types
 
 **Auth Types:**
 - `next-auth.d.ts` — NextAuth type extensions
+  - `PlayerGang` — Gang data type (label, name, isboss, bankAuth, grade)
+  - `PlayerCharinfo` — Character info type (firstname, lastname, birthdate, nationality, gender, phone, account)
+  - Extended Session and JWT with: `gang`, `charinfo`, `fivem`, `license`, `license2`
 
 ### Validation Schemas (`src/schemas/`)
 
@@ -289,8 +310,8 @@ All `index.tsx` files export default namespace, named exports, and types.
   - Discord OAuth with custom redirect for unregistered users
 - **Callbacks:**
   - `signIn` — Handles Discord sign-in, checks registration status, redirects unregistered users
-  - `session` — Adds user data to session (id, discordId, username, isRegistered)
-  - `jwt` — Populates JWT with user data, checks registration
+  - `session` — Adds user data to session (id, discordId, username, isRegistered, gang, charinfo, fivem, license, license2)
+  - `jwt` — Populates JWT with user data, checks registration, fetches gang data from `players` table, fetches charinfo from `players` table
   - `redirect` — Custom redirect logic based on auth state
 - **Pages:** Custom signIn page at `/auth`
 - **Cookie Handling:** Supports both `__Secure-authjs.session-token` (HTTPS) and `authjs.session-token` (HTTP)
@@ -346,13 +367,45 @@ This allows external API access via Bearer token while maintaining web session c
 - Supports multiple licenses per account (license and license2 from users table)
 - Returns: `{ citizenId, playerName }` or `null`
 
+### JWT Session Data Flow
+
+The JWT token includes the following user data fetched during authentication:
+
+1. **From `web_accounts` table:** `id`, `email`, `fivem_id`
+2. **From `users` table (via `user_id` relation):** `username`, `license`, `license2`, `fivem`
+3. **From `players` table (matched via license):**
+   - `gang` — Parsed JSON with gang data (label, name, isboss, bankAuth, grade)
+   - `charinfo` — Parsed JSON with character info (firstname, lastname, birthdate, nationality, gender, phone, account)
+
+**Session Data Structure:**
+```typescript
+{
+  user: {
+    id: string,
+    email: string,
+    username: string | null,
+    gang: { label: string, name: string, isboss: boolean, bankAuth: boolean, grade: { level, name } } | null,
+    charinfo: { firstname, lastname, birthdate, nationality, gender, phone, account } | null,
+    fivem: string | null,  // from web_accounts.fivem_id
+    license: string | null,  // from users.license
+    license2: string | null,  // from users.license2
+    isRegistered: boolean,
+  }
+}
+```
+
 ## Database (Prisma + MySQL)
 
 ### Schema Models (`prisma/schema.prisma`)
 
 #### Game-Related (FiveM server data)
 - `users` — FiveM user accounts (userId, username, license, license2, fivem, discord)
-- `players` — Player characters with inventory, jobs, vehicles, money, metadata
+- `players` — Player characters with inventory, jobs, vehicles, money, metadata, **JSON columns:**
+  - `charinfo` — Character info (firstname, lastname, birthdate, nationality, gender, phone, account)
+  - `gang` — Gang data (label, name, isboss, bankAuth, grade)
+  - `job` — Job data (label, name, grade)
+  - `money` — Money data (cash, bank, crypto)
+  - `position` — Coordinates (x, y, z, heading)
 - `bans` — Ban records (name, license, discord, ip, reason, expire)
 - `player_vehicles` — Player-owned vehicles with mods and properties
 - `player_groups` — Player group memberships (job, gang)
@@ -360,8 +413,14 @@ This allows external API access via Bearer token while maintaining web session c
 - `player_mails` — In-game mail system
 - `player_outfits` & `player_outfit_codes` — Player outfit system
 - `playerskins` — Player skin customizations
-- `player_transactions` — Bank transactions
+- `player_transactions` — Bank transactions (citizenid, transactions JSON, isFrozen)
 - `bank_accounts_new` — Banking system for FiveM
+  - `id` — Account identifier (gang.name for team bank, any string for investment)
+  - `amount` — Account balance
+  - `transactions` — Transaction history JSON array
+  - `auth` — Authorized users JSON array (for gang bank)
+  - `creator` — Creator identifier (gang.name for investment accounts)
+  - `isFrozen` — Frozen status
 - `management_outfits` — Management outfit system
 - `ox_doorlock` — Door lock system
 
@@ -747,6 +806,20 @@ const columns: Column<KillLog>[] = [
 />
 ```
 
+### Pagination
+
+```tsx
+import { Pagination } from "@/components/table";
+
+<Pagination
+  currentPage={data.pagination.currentPage}
+  totalPages={data.pagination.totalPages}
+  totalItems={data.pagination.totalItems}
+  itemsPerPage={data.pagination.itemsPerPage}
+  onPageChange={handlePageChange}
+/>
+```
+
 ### useApiSWR Hook
 
 ```tsx
@@ -850,3 +923,39 @@ None configured.
 - Never call external APIs directly from Client Components
 - Server Components fetch data, pass to Client Components as props
 - SWR used for client-side data fetching with revalidation
+
+### Server-Side Pagination Pattern
+
+Used across bank and kill-log APIs for efficient data retrieval:
+
+```typescript
+const DEFAULT_PAGE = 1;
+const DEFAULT_LIMIT = 10;
+const MAX_LIMIT = 100;
+
+// Parse query params
+const page = Math.max(DEFAULT_PAGE, Number.parseInt(pageParam ?? "", 10) || DEFAULT_PAGE);
+const limit = Math.min(MAX_LIMIT, Math.max(1, Number.parseInt(limitParam ?? "", 10) || DEFAULT_LIMIT));
+
+// Get total count and data in parallel
+const [totalItems, data] = await Promise.all([
+  prisma.table.count({ where }),
+  prisma.table.findMany({
+    where,
+    orderBy: { created_at: "desc" },
+    skip: (page - 1) * limit,
+    take: limit,
+  }),
+]);
+
+// Return paginated response
+return {
+  records: data,
+  pagination: {
+    currentPage: page,
+    itemsPerPage: limit,
+    totalItems,
+    totalPages: Math.ceil(totalItems / limit),
+  },
+};
+```

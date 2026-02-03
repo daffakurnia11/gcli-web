@@ -19,12 +19,14 @@ export default async function DashboardLayout({
   const displayName = rawLabel.split("@")[0];
   const email = session?.user?.email || session?.user?.discordEmail || "";
   const avatarUrl = session?.user?.discordImage || null;
+  const isGangBoss = session?.user?.gang?.isboss ?? false;
 
   return (
     <DashboardShell
       displayName={displayName}
       email={email}
       avatarUrl={avatarUrl}
+      isGangBoss={isGangBoss}
     >
       {children}
     </DashboardShell>

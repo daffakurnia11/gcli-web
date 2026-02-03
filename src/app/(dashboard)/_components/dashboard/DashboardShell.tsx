@@ -17,6 +17,7 @@ type DashboardShellProps = {
   displayName: string;
   email?: string;
   avatarUrl?: string | null;
+  isGangBoss?: boolean;
 };
 
 type SidebarGroup = {
@@ -39,7 +40,7 @@ type SidebarLinkItem = {
 
 type SidebarEntry = SidebarGroup | SidebarLinkItem;
 
-const sidebarItems: SidebarEntry[] = [
+const getSidebarItems = (isGangBoss: boolean): SidebarEntry[] => [
   { type: "group", title: "Dashboard" },
   { type: "item", href: "/dashboard", label: "Overview", sidebar: true },
   { type: "group", title: "Game Info" },
@@ -51,8 +52,12 @@ const sidebarItems: SidebarEntry[] = [
     sidebar: true,
     children: [
       { href: "/bank/personal", label: "Personal Bank" },
-      { href: "/bank/team", label: "Team Bank" },
-      { href: "/bank/investment", label: "Investment" },
+      ...(isGangBoss
+        ? [
+            { href: "/bank/team", label: "Team Bank" },
+            { href: "/bank/investment", label: "Investment" },
+          ]
+        : []),
     ],
   },
   { type: "group", title: "Log" },
@@ -70,33 +75,25 @@ const sidebarItems: SidebarEntry[] = [
   { type: "item", href: "/settings", label: "Settings" },
 ];
 
-const routeLabels = sidebarItems.reduce<Record<string, string>>((acc, entry) => {
-  if (entry.type === "item") {
-    acc[entry.href] = entry.label;
-    entry.children?.forEach((child) => {
-      acc[child.href] = child.label;
-    });
-  }
-  return acc;
-}, {});
-
 export default function DashboardShell({
   children,
   displayName,
   email,
   avatarUrl,
+  isGangBoss = false,
 }: DashboardShellProps) {
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const sidebarItems = useMemo(() => getSidebarItems(isGangBoss), [isGangBoss]);
   const matchesPath = useCallback(
     (href: string) => pathname === href || pathname?.startsWith(`${href}/`),
     [pathname],
   );
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
-    sidebarItems.forEach((entry) => {
+    getSidebarItems(false).forEach((entry) => {
       if (entry.type !== "item" || !entry.children?.length) {
         return;
       }
@@ -109,10 +106,18 @@ export default function DashboardShell({
     });
     return initial;
   });
-  const label = useMemo(
-    () => routeLabels[pathname ?? ""] || "Dashboard",
-    [pathname],
-  );
+  const label = useMemo(() => {
+    const labels = sidebarItems.reduce<Record<string, string>>((acc, entry) => {
+      if (entry.type === "item") {
+        acc[entry.href] = entry.label;
+        entry.children?.forEach((child) => {
+          acc[child.href] = child.label;
+        });
+      }
+      return acc;
+    }, {});
+    return labels[pathname ?? ""] || "Dashboard";
+  }, [pathname, sidebarItems]);
   const safeName = displayName?.trim() || "User";
 
   useEffect(() => {
@@ -155,7 +160,7 @@ export default function DashboardShell({
         setOpenMenus((prev) => ({ ...prev, [entry.href]: true }));
       }
     });
-  }, [matchesPath]);
+  }, [matchesPath, sidebarItems]);
 
   return (
     <div className="min-h-screen bg-primary-900 text-primary-100">

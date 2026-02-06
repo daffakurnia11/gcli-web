@@ -21,6 +21,9 @@ export default async function DashboardLayout({
   const avatarUrl = session?.user?.discordImage || null;
   const isGangBoss = session?.user?.gang?.isboss ?? false;
   const hasCharinfo = session?.user?.charinfo !== null;
+  const hasGang = Boolean(
+    session?.user?.gang?.name && session.user.gang.name !== "none",
+  );
 
   return (
     <DashboardShell
@@ -29,6 +32,7 @@ export default async function DashboardLayout({
       avatarUrl={avatarUrl}
       isGangBoss={isGangBoss}
       hasCharinfo={hasCharinfo}
+      hasGang={hasGang}
     >
       {children}
     </DashboardShell>

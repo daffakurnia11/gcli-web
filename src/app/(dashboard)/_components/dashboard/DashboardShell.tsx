@@ -19,6 +19,7 @@ type DashboardShellProps = {
   avatarUrl?: string | null;
   isGangBoss?: boolean;
   hasCharinfo?: boolean;
+  hasGang?: boolean;
 };
 
 type SidebarGroup = {
@@ -44,6 +45,7 @@ type SidebarEntry = SidebarGroup | SidebarLinkItem;
 const getSidebarItems = (
   isGangBoss: boolean,
   hasCharinfo: boolean,
+  hasGang: boolean,
 ): SidebarEntry[] => {
   const baseItems: SidebarEntry[] = [
     { type: "group", title: "Dashboard" },
@@ -75,6 +77,13 @@ const getSidebarItems = (
           : []),
       ],
     },
+    ...(hasGang
+      ? ([
+          { type: "group", title: "Team" },
+          { type: "item", href: "/team/info", label: "Overview", sidebar: true },
+          { type: "item", href: "/team/members", label: "Members", sidebar: true },
+        ] as SidebarEntry[])
+      : []),
     { type: "group", title: "Log" },
     {
       type: "item",
@@ -97,14 +106,15 @@ export default function DashboardShell({
   avatarUrl,
   isGangBoss = false,
   hasCharinfo = false,
+  hasGang = false,
 }: DashboardShellProps) {
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const sidebarItems = useMemo(
-    () => getSidebarItems(isGangBoss, hasCharinfo),
-    [isGangBoss, hasCharinfo],
+    () => getSidebarItems(isGangBoss, hasCharinfo, hasGang),
+    [isGangBoss, hasCharinfo, hasGang],
   );
   const matchesPath = useCallback(
     (href: string) => pathname === href || pathname?.startsWith(`${href}/`),
@@ -112,7 +122,7 @@ export default function DashboardShell({
   );
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
-    getSidebarItems(false, false).forEach((entry) => {
+    getSidebarItems(false, false, false).forEach((entry) => {
       if (entry.type !== "item" || !entry.children?.length) {
         return;
       }

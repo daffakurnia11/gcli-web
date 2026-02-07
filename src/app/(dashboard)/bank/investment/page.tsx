@@ -20,7 +20,11 @@ export default function InvestmentPage() {
 
   const gangLabel = session?.user?.gang?.label ?? "Gang";
   const hasNoInvestments =
-    !isLoading && !error && data && data.investments.length === 0 && !data.message;
+    !isLoading &&
+    !error &&
+    data &&
+    data.investments.length === 0 &&
+    !data.message;
 
   const formatBalance = (balance: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -87,9 +91,22 @@ export default function InvestmentPage() {
               >
                 <DashboardCard className="h-full hover:border-secondary-700/50 transition-colors">
                   <div className="flex flex-col gap-2">
-                    <Typography.Paragraph className="text-primary-300 shrink-0">
-                      {investment.id}
-                    </Typography.Paragraph>
+                    <Typography.Heading
+                      type="heading"
+                      level={6}
+                      as="p"
+                      className="text-primary-100"
+                    >
+                      {investment.label}
+                    </Typography.Heading>
+                    <div className="flex flex-col">
+                      <Typography.Small className="text-primary-300 shrink-0">
+                        Category: {investment.category ?? "Uncategorized"}
+                      </Typography.Small>
+                      <Typography.Small className="text-primary-300 shrink-0">
+                        ID: {investment.id}
+                      </Typography.Small>
+                    </div>
                     <Typography.Heading
                       type="display"
                       level={4}

@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 import { getAccountIdFromRequest } from "@/lib/apiAuth";
@@ -6,6 +7,8 @@ import { prisma } from "@/lib/prisma";
 
 type InvestmentAccount = {
   id: string;
+  label: string;
+  category: string | null;
   amount: number;
   creator: string;
 };
@@ -30,16 +33,19 @@ export async function GET(request: Request) {
       );
     }
 
-    // Fetch all bank accounts created by this gang
-    const investments = await prisma.bank_accounts_new.findMany({
-      where: { creator: gangName },
-      select: {
-        id: true,
-        amount: true,
-        creator: true,
-      },
-      orderBy: { id: "asc" },
-    });
+    // Fetch all bank accounts created by this gang with business metadata.
+    const investments = await prisma.$queryRaw<InvestmentAccount[]>(Prisma.sql`
+      SELECT
+        ba.id AS id,
+        COALESCE(tb.label, ba.id) AS label,
+        tb.category AS category,
+        ba.amount AS amount,
+        ba.creator AS creator
+      FROM bank_accounts_new ba
+      LEFT JOIN tl_businesses tb ON tb.bank_account_id = ba.id
+      WHERE ba.creator = ${gangName}
+      ORDER BY COALESCE(tb.label, ba.id) ASC
+    `);
 
     return NextResponse.json(
       {

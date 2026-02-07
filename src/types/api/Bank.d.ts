@@ -63,6 +63,8 @@ export type TeamBankResponse = {
  */
 export type InvestmentAccount = {
   id: string;
+  label: string;
+  category: string | null;
   amount: number;
   creator: string;
 };

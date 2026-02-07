@@ -108,7 +108,7 @@ export function UserStatsCard({
             <div className="flex items-center gap-3 text-sm">
               <Mail size={18} className="text-primary-300 shrink-0" />
               <span className="text-primary-300 shrink-0">Email:</span>
-              <span className="text-primary-100">{email || "N/A"}</span>
+              <span className="text-primary-100 truncate block max-w-full">{email || "N/A"}</span>
             </div>
 
             <div className="flex items-center gap-3 text-sm">

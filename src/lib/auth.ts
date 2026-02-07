@@ -5,6 +5,35 @@ import Discord from "next-auth/providers/discord";
 
 import { prisma } from "./prisma";
 
+type PlayerGang = {
+  label: string;
+  name: string;
+  isboss: boolean;
+  bankAuth: boolean;
+  grade: { level: number; name: string };
+};
+
+type PlayerCharinfo = {
+  firstname: string;
+  lastname: string;
+  birthdate: string;
+  nationality: string;
+  gender: string;
+  phone: string;
+  account: string;
+};
+
+const parseJson = <T>(value?: string | null): T | null => {
+  if (!value) {
+    return null;
+  }
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return null;
+  }
+};
+
 export const authOptions: NextAuthConfig = {
   secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
   trustHost: true,
@@ -125,6 +154,8 @@ export const authOptions: NextAuthConfig = {
         session.user.fivem = token.fivem ?? null;
         session.user.license = token.license ?? null;
         session.user.license2 = token.license2 ?? null;
+        session.user.optin =
+          typeof token.optin === "boolean" ? token.optin : null;
       }
       return session;
     },
@@ -177,6 +208,9 @@ export const authOptions: NextAuthConfig = {
         token.fivem = webAccount?.fivem_id ?? null;
         token.license = webAccount?.user?.license ?? null;
         token.license2 = webAccount?.user?.license2 ?? null;
+        token.gang = null;
+        token.charinfo = null;
+        token.optin = null;
 
         // Fetch gang and charinfo data from players table
         if (webAccount?.user) {
@@ -188,40 +222,12 @@ export const authOptions: NextAuthConfig = {
             const player = await prisma.players.findFirst({
               where: { license: { in: licenses } },
               orderBy: { last_updated: "desc" },
-              select: { gang: true, charinfo: true },
+              select: { gang: true, charinfo: true, metadata: true },
             });
-            if (player?.gang) {
-              try {
-                token.gang = JSON.parse(player.gang as string) as {
-                  label: string;
-                  name: string;
-                  isboss: boolean;
-                  bankAuth: boolean;
-                  grade: { level: number; name: string };
-                };
-              } catch {
-                token.gang = null;
-              }
-            } else {
-              token.gang = null;
-            }
-            if (player?.charinfo) {
-              try {
-                token.charinfo = JSON.parse(player.charinfo as string) as {
-                  firstname: string;
-                  lastname: string;
-                  birthdate: string;
-                  nationality: string;
-                  gender: string;
-                  phone: string;
-                  account: string;
-                };
-              } catch {
-                token.charinfo = null;
-              }
-            } else {
-              token.charinfo = null;
-            }
+            token.gang = parseJson<PlayerGang>(player?.gang);
+            token.charinfo = parseJson<PlayerCharinfo>(player?.charinfo);
+            const metadata = parseJson<{ optin?: unknown }>(player?.metadata);
+            token.optin = metadata?.optin === true;
           }
         }
       } else if (token.discordId) {
@@ -251,6 +257,9 @@ export const authOptions: NextAuthConfig = {
         token.fivem = webAccount?.fivem_id ?? null;
         token.license = webAccount?.user?.license ?? null;
         token.license2 = webAccount?.user?.license2 ?? null;
+        token.gang = null;
+        token.charinfo = null;
+        token.optin = null;
         if (webAccount?.id) {
           token.sub = webAccount.id.toString();
         }
@@ -265,40 +274,12 @@ export const authOptions: NextAuthConfig = {
             const player = await prisma.players.findFirst({
               where: { license: { in: licenses } },
               orderBy: { last_updated: "desc" },
-              select: { gang: true, charinfo: true },
+              select: { gang: true, charinfo: true, metadata: true },
             });
-            if (player?.gang) {
-              try {
-                token.gang = JSON.parse(player.gang as string) as {
-                  label: string;
-                  name: string;
-                  isboss: boolean;
-                  bankAuth: boolean;
-                  grade: { level: number; name: string };
-                };
-              } catch {
-                token.gang = null;
-              }
-            } else {
-              token.gang = null;
-            }
-            if (player?.charinfo) {
-              try {
-                token.charinfo = JSON.parse(player.charinfo as string) as {
-                  firstname: string;
-                  lastname: string;
-                  birthdate: string;
-                  nationality: string;
-                  gender: string;
-                  phone: string;
-                  account: string;
-                };
-              } catch {
-                token.charinfo = null;
-              }
-            } else {
-              token.charinfo = null;
-            }
+            token.gang = parseJson<PlayerGang>(player?.gang);
+            token.charinfo = parseJson<PlayerCharinfo>(player?.charinfo);
+            const metadata = parseJson<{ optin?: unknown }>(player?.metadata);
+            token.optin = metadata?.optin === true;
           }
         }
       }

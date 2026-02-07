@@ -24,6 +24,7 @@ export default async function DashboardLayout({
   const hasGang = Boolean(
     session?.user?.gang?.name && session.user.gang.name !== "none",
   );
+  const canAccessAdmin = session?.user?.optin === true;
 
   return (
     <DashboardShell
@@ -33,6 +34,7 @@ export default async function DashboardLayout({
       isGangBoss={isGangBoss}
       hasCharinfo={hasCharinfo}
       hasGang={hasGang}
+      canAccessAdmin={canAccessAdmin}
     >
       {children}
     </DashboardShell>

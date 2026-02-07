@@ -31,10 +31,16 @@ export async function middleware(request: NextRequest) {
   const isSetupPage = pathname.startsWith("/auth/setup");
   const isDashboardPage =
     pathname === "/dashboard" || pathname.startsWith("/dashboard/");
+  const isAdminPage = pathname === "/admin" || pathname.startsWith("/admin/");
   const isApiRoute = pathname.startsWith("/api");
+  const hasAdminAccess = token?.optin === true;
 
-  if (isDashboardPage && !isAuthenticated) {
+  if ((isDashboardPage || isAdminPage) && !isAuthenticated) {
     return NextResponse.redirect(new URL("/auth", nextUrl));
+  }
+
+  if (isAdminPage && !hasAdminAccess) {
+    return NextResponse.redirect(new URL("/dashboard", nextUrl));
   }
 
   if (pathname.startsWith("/auth")) {

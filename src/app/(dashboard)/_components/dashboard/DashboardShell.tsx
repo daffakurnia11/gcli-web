@@ -20,6 +20,7 @@ type DashboardShellProps = {
   isGangBoss?: boolean;
   hasCharinfo?: boolean;
   hasGang?: boolean;
+  canAccessAdmin?: boolean;
 };
 
 type SidebarGroup = {
@@ -43,10 +44,20 @@ type SidebarLinkItem = {
 type SidebarEntry = SidebarGroup | SidebarLinkItem;
 
 const getSidebarItems = (
+  isAdminRoute: boolean,
   isGangBoss: boolean,
   hasCharinfo: boolean,
   hasGang: boolean,
 ): SidebarEntry[] => {
+  if (isAdminRoute) {
+    return [
+      { type: "item", href: "/admin/overview", label: "Overview", sidebar: true },
+      { type: "item", href: "/admin/investment", label: "Investment", sidebar: true },
+      { type: "item", href: "/profile", label: "Profile" },
+      { type: "item", href: "/settings", label: "Settings" },
+    ];
+  }
+
   const baseItems: SidebarEntry[] = [
     { type: "group", title: "Dashboard" },
     { type: "item", href: "/dashboard", label: "Overview", sidebar: true },
@@ -72,16 +83,23 @@ const getSidebarItems = (
         ...(isGangBoss
           ? [
               { href: "/bank/team", label: "Team Bank" },
-              { href: "/bank/investment", label: "Investment" },
+              { href: "/bank/investment", label: "Investment Bank" },
             ]
           : []),
       ],
     },
     ...(hasGang
       ? ([
-          { type: "group", title: "Team" },
-          { type: "item", href: "/team/info", label: "Overview", sidebar: true },
-          { type: "item", href: "/team/members", label: "Members", sidebar: true },
+          {
+            type: "item",
+            href: "/team",
+            label: "Team",
+            sidebar: true,
+            children: [
+              { href: "/team/info", label: "Overview" },
+              { href: "/team/members", label: "Members" },
+            ],
+          },
         ] as SidebarEntry[])
       : []),
     { type: "group", title: "Log" },
@@ -107,14 +125,16 @@ export default function DashboardShell({
   isGangBoss = false,
   hasCharinfo = false,
   hasGang = false,
+  canAccessAdmin = false,
 }: DashboardShellProps) {
   const pathname = usePathname();
+  const isAdminRoute = pathname === "/admin" || pathname?.startsWith("/admin/");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const sidebarItems = useMemo(
-    () => getSidebarItems(isGangBoss, hasCharinfo, hasGang),
-    [isGangBoss, hasCharinfo, hasGang],
+    () => getSidebarItems(Boolean(isAdminRoute), isGangBoss, hasCharinfo, hasGang),
+    [isAdminRoute, isGangBoss, hasCharinfo, hasGang],
   );
   const matchesPath = useCallback(
     (href: string) => pathname === href || pathname?.startsWith(`${href}/`),
@@ -122,7 +142,7 @@ export default function DashboardShell({
   );
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
-    getSidebarItems(false, false, false).forEach((entry) => {
+    getSidebarItems(false, false, false, false).forEach((entry) => {
       if (entry.type !== "item" || !entry.children?.length) {
         return;
       }
@@ -148,6 +168,7 @@ export default function DashboardShell({
     return labels[pathname ?? ""] || "Dashboard";
   }, [pathname, sidebarItems]);
   const safeName = displayName?.trim() || "User";
+  const mobileSectionLabel = isAdminRoute ? "Admin" : "Dashboard";
 
   useEffect(() => {
     if (!isSidebarOpen) {
@@ -203,7 +224,7 @@ export default function DashboardShell({
             <Menu size={18} />
           </span>
           <span className="flex items-center gap-2 text-sm font-display uppercase tracking-wider">
-            <span>Dashboard</span>
+            <span>{mobileSectionLabel}</span>
             <span className="text-primary-300">/</span>
             <span className="text-primary-100">{label}</span>
           </span>
@@ -246,6 +267,15 @@ export default function DashboardShell({
               >
                 Settings
               </Link>
+              {canAccessAdmin ? (
+                <Link
+                  href={isAdminRoute ? "/dashboard" : "/admin/overview"}
+                  className="block px-4 py-3 text-sm text-primary-100 hover:bg-primary-800"
+                  onClick={() => setIsUserMenuOpen(false)}
+                >
+                  {isAdminRoute ? "Player" : "Admin"}
+                </Link>
+              ) : null}
               <div className="h-px bg-primary-700" />
               <button
                 type="button"
@@ -270,14 +300,14 @@ export default function DashboardShell({
 
       <aside
         className={[
-          "fixed inset-y-0 left-0 z-40 w-64 border-r border-primary-700 bg-primary-900/95 px-6 py-6 flex flex-col transition-transform duration-300 md:translate-x-0 md:border-b-0 md:border-r",
+          "fixed inset-y-0 left-0 z-40 w-64 border-r border-primary-700 bg-primary-900/95 py-6 flex flex-col transition-transform duration-300 md:translate-x-0 md:border-b-0 md:border-r",
           isSidebarOpen ? "translate-x-0" : "-translate-x-full",
         ].join(" ")}
       >
         <Link href={"/"} className="block">
           <Logo variant="name" color="white" className="h-14! w-auto mb-6" />
         </Link>
-        <nav className="flex flex-col gap-2 text-sm font-display tracking-wide">
+        <nav className="min-h-0 flex-1 overflow-y-auto flex flex-col gap-2 pb-4 text-sm font-display tracking-wide px-6">
           {sidebarItems.map((entry, index) => {
             if (entry.type === "group") {
               return (
@@ -372,6 +402,8 @@ export default function DashboardShell({
           displayName={displayName}
           email={email}
           avatarUrl={avatarUrl}
+          canAccessAdmin={canAccessAdmin}
+          isAdminRoute={Boolean(isAdminRoute)}
           className="hidden md:block"
         />
       </aside>

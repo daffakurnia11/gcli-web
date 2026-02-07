@@ -38,6 +38,7 @@ declare module "next-auth" {
       fivem?: string | null;
       license?: string | null;
       license2?: string | null;
+      optin?: boolean | null;
     } & DefaultSession["user"];
     provider?: string;
   }
@@ -58,5 +59,6 @@ declare module "next-auth/jwt" {
     fivem?: string | null;
     license?: string | null;
     license2?: string | null;
+    optin?: boolean | null;
   }
 }

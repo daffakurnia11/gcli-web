@@ -89,3 +89,64 @@ export type InvestmentTransactionsResponse = {
   balance: number;
   isFrozen: number;
 };
+
+/**
+ * Admin investment category summary
+ * API Route: /api/admin/investment/categories
+ */
+export type AdminInvestmentCategory = {
+  key: string;
+  label: string;
+  count: number;
+};
+
+export type AdminInvestmentCategoriesResponse = {
+  categories: AdminInvestmentCategory[];
+  totalBusinesses: number;
+};
+
+export type AdminGangOwnershipItem = {
+  gangCode: string;
+  gangLabel: string;
+  ownershipCount: number;
+};
+
+export type AdminGangOwnershipResponse = {
+  gangs: AdminGangOwnershipItem[];
+};
+
+/**
+ * Admin investment detail
+ * API Route: /api/admin/investment/detail?category=
+ */
+export type AdminInvestmentDetailItem = {
+  businessId: number;
+  bankAccountId: string;
+  label: string;
+  category: string;
+  map: string | null;
+  owner: string | null;
+  isOwned: boolean;
+  updatedAt: string | Date;
+  balance: number;
+  creator: string | null;
+  isFrozen: number;
+};
+
+export type AdminInvestmentDetailResponse = {
+  category: string | null;
+  gang?: string | null;
+  query?: string;
+  totalItems: number;
+  pagination: PaginationMeta;
+  items: AdminInvestmentDetailItem[];
+};
+
+export type AdminGangOption = {
+  name: string;
+  label: string;
+};
+
+export type AdminGangsResponse = {
+  gangs: AdminGangOption[];
+};

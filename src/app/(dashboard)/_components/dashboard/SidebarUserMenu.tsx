@@ -10,6 +10,8 @@ type SidebarUserMenuProps = {
   displayName: string;
   email?: string;
   avatarUrl?: string | null;
+  canAccessAdmin?: boolean;
+  isAdminRoute?: boolean;
   className?: string;
 };
 
@@ -17,6 +19,8 @@ export default function SidebarUserMenu({
   displayName,
   email,
   avatarUrl,
+  canAccessAdmin = false,
+  isAdminRoute = false,
   className,
 }: SidebarUserMenuProps) {
   const safeName = displayName?.trim() || "User";
@@ -24,7 +28,7 @@ export default function SidebarUserMenu({
 
   return (
     <div
-      className={["mt-8 border-t border-primary-700 pt-5 md:mt-auto", className]
+      className={["mt-8 border-t border-primary-700 pt-5 md:mt-auto px-6", className]
         .filter(Boolean)
         .join(" ")}
     >
@@ -66,6 +70,14 @@ export default function SidebarUserMenu({
         >
           Settings
         </Link>
+        {canAccessAdmin ? (
+          <Link
+            className="text-primary-100 hover:text-secondary-700 transition-colors"
+            href={isAdminRoute ? "/dashboard" : "/admin/overview"}
+          >
+            {isAdminRoute ? "Player" : "Admin"}
+          </Link>
+        ) : null}
         <div className="my-1 h-px bg-primary-700" />
         <button
           type="button"

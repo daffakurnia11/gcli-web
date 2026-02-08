@@ -7,7 +7,8 @@ import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/button";
 import { Typography } from "@/components/typography";
-import { useApiSWR } from "@/lib/swr";
+import { useAccountApi } from "@/services/hooks/api/useAccountApi";
+import { useApiSWR } from "@/services/swr";
 
 import { Alert, DashboardCard, DashboardSection } from "./index";
 
@@ -35,6 +36,7 @@ export function AccountLinkage({
     text: string;
   } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { connectDiscord, disconnectDiscord } = useAccountApi();
 
   const discordPayload = useMemo(() => {
     const discordDataParam = searchParams.get("discord_data");
@@ -65,18 +67,7 @@ export function AccountLinkage({
 
   const { isLoading: isLinking } = useApiSWR<{ message?: string }>(
     discordPayload ? ["discord-link", discordPayload.id] : null,
-    async () => {
-      const response = await fetch("/api/user/discord/connect", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(discordPayload),
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to link Discord");
-      }
-      return data as { message?: string };
-    },
+    () => connectDiscord(discordPayload),
     {
       shouldRetryOnError: false,
       onSuccess: (data) => {
@@ -121,14 +112,7 @@ export function AccountLinkage({
     setLinkAlert(null);
 
     try {
-      const response = await fetch("/api/user/discord/disconnect", {
-        method: "POST",
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to disconnect Discord");
-      }
+      await disconnectDiscord();
 
       setMessage({
         type: "success",

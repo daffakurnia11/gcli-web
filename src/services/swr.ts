@@ -7,30 +7,13 @@ import useSWR, {
   type SWRResponse,
 } from "swr";
 
-export type ApiError = Error & {
-  status?: number;
-  payload?: unknown;
-};
+import { type ApiClientError,parseApiResponse } from "@/services/api-client";
+
+export type ApiError = ApiClientError;
 
 export const apiFetcher = async <T>(url: string): Promise<T> => {
   const response = await fetch(url);
-  const payload = await response.json().catch(() => null);
-
-  if (!response.ok) {
-    const message =
-      (payload &&
-        typeof payload === "object" &&
-        "error" in payload &&
-        typeof (payload as { error?: unknown }).error === "string" &&
-        (payload as { error: string }).error) ||
-      "Request failed";
-    const error = new Error(message) as ApiError;
-    error.status = response.status;
-    error.payload = payload;
-    throw error;
-  }
-
-  return payload as T;
+  return parseApiResponse<T>(response);
 };
 
 const defaultConfig: SWRConfiguration = {

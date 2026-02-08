@@ -11,6 +11,7 @@ import { Calendar, Home, IdCard, Mail, User } from "lucide-react";
 import Image from "next/image";
 
 import { Typography } from "@/components/typography";
+import { formatDateOnly } from "@/services/date";
 
 import { DashboardCard } from "./DashboardCard";
 
@@ -51,15 +52,6 @@ export function UserStatsCard({
   className = "",
   avatarUrl,
 }: UserStatsCardProps) {
-  const formatDate = (date: Date | string | null | undefined) => {
-    if (!date) return "N/A";
-    return new Date(date).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
-
   const hasDiscord = Boolean(discordId);
   const genderLabel = gender
     ? `${gender[0].toUpperCase()}${gender.slice(1)}`
@@ -114,15 +106,15 @@ export function UserStatsCard({
             <div className="flex items-center gap-3 text-sm">
               <Calendar size={18} className="text-primary-300 shrink-0" />
               <span className="text-primary-300 shrink-0">Joined:</span>
-              <span className="text-primary-100">
-                {formatDate(registrationDate)}
+                <span className="text-primary-100">
+                {formatDateOnly(registrationDate)}
               </span>
             </div>
 
             <div className="flex items-center gap-3 text-sm">
               <IdCard size={18} className="text-primary-300 shrink-0" />
               <span className="text-primary-300 shrink-0">Birth Date:</span>
-              <span className="text-primary-100">{formatDate(birthDate)}</span>
+              <span className="text-primary-100">{formatDateOnly(birthDate)}</span>
             </div>
 
             <div className="flex items-center gap-3 text-sm">

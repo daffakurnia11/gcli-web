@@ -1,8 +1,14 @@
 import bcrypt from "bcrypt";
-import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { prisma } from "@/lib/prisma";
+import {
+  apiFromLegacy,
+  apiMethodNotAllowed,
+  apiUnprocessable,
+} from "@/services/api-response";
+import { logger } from "@/services/logger";
+import { checkRateLimit } from "@/services/rate-limit";
 
 // Request body schema
 const registerSchema = z.object({
@@ -40,10 +46,22 @@ export type RegisterRequest = z.infer<typeof registerSchema>;
 
 export async function POST(req: Request) {
   try {
+    const rateLimited = await checkRateLimit(req, {
+      keyPrefix: "api:register",
+      limit: 20,
+      windowMs: 60_000,
+    });
+    if (rateLimited) {
+      return rateLimited;
+    }
+
     const body = await req.json();
 
-    // Validate request body
-    const validatedData = registerSchema.parse(body);
+    const parsedBody = registerSchema.safeParse(body);
+    if (!parsedBody.success) {
+      return apiUnprocessable("Invalid registration payload", parsedBody.error.flatten());
+    }
+    const validatedData = parsedBody.data;
 
     // Check if email already exists
     const existingAccount = await prisma.web_accounts.findUnique({
@@ -51,7 +69,7 @@ export async function POST(req: Request) {
     });
 
     if (existingAccount) {
-      return NextResponse.json(
+      return apiFromLegacy(
         { error: "Email already registered" },
         { status: 400 },
       );
@@ -73,7 +91,7 @@ export async function POST(req: Request) {
         existingDiscordAccount &&
         (existingDiscordAccount.password || existingDiscordAccount.profile)
       ) {
-        return NextResponse.json(
+        return apiFromLegacy(
           { error: "Discord account already linked to another user" },
           { status: 400 },
         );
@@ -210,7 +228,7 @@ export async function POST(req: Request) {
       }
     }
 
-    return NextResponse.json(
+    return apiFromLegacy(
       {
         success: true,
         message: "Account registered successfully",
@@ -219,18 +237,43 @@ export async function POST(req: Request) {
       { status: 201 },
     );
   } catch (error) {
-    console.error("Registration error:", error);
+    logger.error("Registration error:", error);
 
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
+      return apiFromLegacy(
         { error: "Invalid request data", details: error.issues },
         { status: 400 },
       );
     }
 
-    return NextResponse.json(
+    return apiFromLegacy(
       { error: "Internal server error" },
       { status: 500 },
     );
   }
+}
+
+// AUTO_METHOD_NOT_ALLOWED
+export function GET() {
+  return apiMethodNotAllowed();
+}
+
+export function PUT() {
+  return apiMethodNotAllowed();
+}
+
+export function PATCH() {
+  return apiMethodNotAllowed();
+}
+
+export function DELETE() {
+  return apiMethodNotAllowed();
+}
+
+export function OPTIONS() {
+  return apiMethodNotAllowed();
+}
+
+export function HEAD() {
+  return apiMethodNotAllowed();
 }

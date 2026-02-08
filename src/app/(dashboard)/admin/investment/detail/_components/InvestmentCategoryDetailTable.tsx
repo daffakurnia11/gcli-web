@@ -1,6 +1,5 @@
 "use client";
 
-import { format } from "date-fns";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -11,6 +10,7 @@ import {
   DashboardSection,
 } from "@/app/(dashboard)/_components/dashboard";
 import { GlobalModal } from "@/components";
+import { Button } from "@/components/button";
 import { Form } from "@/components/form";
 import { Pagination } from "@/components/table";
 import {
@@ -19,12 +19,9 @@ import {
   DataTableSkeleton,
 } from "@/components/table/DataTable";
 import { Typography } from "@/components/typography";
-import { useApiSWR } from "@/lib/swr";
-import type {
-  AdminGangsResponse,
-  AdminInvestmentDetailItem,
-  AdminInvestmentDetailResponse,
-} from "@/types/api/Bank";
+import { formatDateTime } from "@/services/date";
+import { useAdminInvestmentApi } from "@/services/hooks/api/useAdminInvestmentApi";
+import { useApiSWR } from "@/services/swr";
 
 const ITEMS_PER_PAGE = 10;
 const UNASSIGN_OPTION_VALUE = "__UNASSIGN__";
@@ -42,15 +39,8 @@ const formatAmount = (value: number) =>
     maximumFractionDigits: 0,
   }).format(value);
 
-const formatDate = (value: string | Date) => {
-  const date = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return "-";
-  }
-  return format(date, "PPpp");
-};
-
 export default function InvestmentCategoryDetailTable() {
+  const { assignInvestment } = useAdminInvestmentApi();
   const searchParams = useSearchParams();
   const category = searchParams.get("category")?.trim() || "";
   const gang = searchParams.get("gang")?.trim() || "";
@@ -118,27 +108,11 @@ export default function InvestmentCategoryDetailTable() {
     setActionError("");
 
     try {
-      const response = await fetch("/api/admin/investment/assign", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          bankAccountId: selectedItem.bankAccountId,
-          gangCode:
-            selectedGangCode === UNASSIGN_OPTION_VALUE
-              ? "none"
-              : selectedGangCode,
-        }),
+      await assignInvestment({
+        bankAccountId: selectedItem.bankAccountId,
+        gangCode:
+          selectedGangCode === UNASSIGN_OPTION_VALUE ? "none" : selectedGangCode,
       });
-
-      const payload = (await response.json().catch(() => null)) as
-        | { error?: string }
-        | null;
-
-      if (!response.ok) {
-        throw new Error(payload?.error || "Failed to assign business");
-      }
 
       await mutateDetail();
       closeAssignModal();
@@ -218,7 +192,7 @@ export default function InvestmentCategoryDetailTable() {
         header: "Updated",
         render: (row) => (
           <Typography.Paragraph className="text-primary-200">
-            {formatDate(row.updatedAt)}
+            {formatDateTime(row.updatedAt, { fallback: "-" })}
           </Typography.Paragraph>
         ),
       },
@@ -227,13 +201,15 @@ export default function InvestmentCategoryDetailTable() {
         header: "Action",
         align: "center",
         render: (row) => (
-          <button
+          <Button.Secondary
             type="button"
+            variant="outline"
+            size="sm"
             onClick={() => openAssignModal(row)}
-            className="rounded border border-primary-700 bg-primary-800 px-3 py-1.5 text-xs text-primary-100 hover:border-secondary-700 hover:text-secondary-700 transition-colors"
+            className="text-xs"
           >
             Assign Gang
-          </button>
+          </Button.Secondary>
         ),
       },
     ],
@@ -298,16 +274,17 @@ export default function InvestmentCategoryDetailTable() {
               placeholder="Search by business, account, owner, map..."
               className="w-full rounded-md border border-primary-700 bg-primary-800 px-3 py-2 text-primary-100 placeholder:text-primary-400 focus:border-secondary-700 focus:outline-none"
             />
-            <button
+            <Button.Secondary
               type="button"
               onClick={() => {
                 setCurrentPage(1);
                 setQuery(searchInput.trim());
               }}
-              className="rounded-md border border-primary-700 bg-primary-800 px-4 py-2 text-primary-100 hover:border-secondary-700 hover:text-secondary-700 transition-colors"
+              variant="outline"
+              className="px-4 py-2"
             >
               Search
-            </button>
+            </Button.Secondary>
           </div>
 
           {isLoading ? (
@@ -359,22 +336,24 @@ export default function InvestmentCategoryDetailTable() {
         onClose={closeAssignModal}
         footer={
           <div className="flex items-center justify-end gap-3">
-            <button
+            <Button.Secondary
               type="button"
               onClick={closeAssignModal}
               disabled={isAssigning}
-              className="rounded border border-primary-700 px-4 py-2 text-primary-200 hover:text-primary-100 disabled:opacity-60"
+              variant="outline"
+              className="px-4 py-2"
             >
               Cancel
-            </button>
-            <button
+            </Button.Secondary>
+            <Button.Primary
               type="button"
               onClick={handleAssign}
               disabled={isAssigning || !selectedGangCode}
-              className="rounded border border-secondary-700 bg-secondary-700/20 px-4 py-2 text-secondary-700 hover:bg-secondary-700/30 disabled:opacity-60"
+              variant="outline"
+              className="px-4 py-2"
             >
               {isAssigning ? "Assigning..." : "Assign"}
-            </button>
+            </Button.Primary>
           </div>
         }
       >

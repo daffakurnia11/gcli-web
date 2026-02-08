@@ -1,35 +1,44 @@
 import bcrypt from "bcrypt";
-import { NextResponse } from "next/server";
+import { z } from "zod";
 
-import { getAccountIdFromRequest } from "@/lib/apiAuth";
 import { prisma } from "@/lib/prisma";
+import { requireAccountId } from "@/services/api-guards";
+import {
+  apiFromLegacy,
+  apiMethodNotAllowed,
+  apiUnprocessable,
+} from "@/services/api-response";
+import { logger } from "@/services/logger";
+import { checkRateLimit } from "@/services/rate-limit";
+
+const updatePasswordSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: z.string().min(8),
+});
 
 export async function PUT(request: Request) {
   try {
-    const accountId = await getAccountIdFromRequest(request);
-    if (!accountId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const rateLimited = await checkRateLimit(request, {
+      keyPrefix: "api:user-password",
+      limit: 20,
+      windowMs: 60_000,
+    });
+    if (rateLimited) {
+      return rateLimited;
     }
+
+    const authz = await requireAccountId(request);
+    if (!authz.ok) {
+      return authz.response;
+    }
+    const accountId = authz.accountId;
 
     const body = await request.json();
-    const { currentPassword, newPassword } = body as {
-      currentPassword?: string;
-      newPassword?: string;
-    };
-
-    if (!currentPassword || !newPassword) {
-      return NextResponse.json(
-        { error: "Current password and new password are required" },
-        { status: 400 },
-      );
+    const parsed = updatePasswordSchema.safeParse(body);
+    if (!parsed.success) {
+      return apiUnprocessable("Invalid password payload", parsed.error.flatten());
     }
-
-    if (newPassword.length < 8) {
-      return NextResponse.json(
-        { error: "New password must be at least 8 characters long" },
-        { status: 400 },
-      );
-    }
+    const { currentPassword, newPassword } = parsed.data;
 
     // Get current account with password
     const account = await prisma.web_accounts.findUnique({
@@ -38,7 +47,7 @@ export async function PUT(request: Request) {
     });
 
     if (!account?.password) {
-      return NextResponse.json(
+      return apiFromLegacy(
         { error: "Password not set for account" },
         { status: 400 },
       );
@@ -47,7 +56,7 @@ export async function PUT(request: Request) {
     // Verify current password
     const isValid = await bcrypt.compare(currentPassword, account.password);
     if (!isValid) {
-      return NextResponse.json(
+      return apiFromLegacy(
         { error: "Incorrect password" },
         { status: 401 },
       );
@@ -62,15 +71,40 @@ export async function PUT(request: Request) {
       data: { password: hashedPassword },
     });
 
-    return NextResponse.json(
+    return apiFromLegacy(
       { message: "Password updated successfully" },
       { status: 200 },
     );
   } catch (error) {
-    console.error("Password update error:", error);
-    return NextResponse.json(
+    logger.error("Password update error:", error);
+    return apiFromLegacy(
       { error: "Internal server error" },
       { status: 500 },
     );
   }
+}
+
+// AUTO_METHOD_NOT_ALLOWED
+export function GET() {
+  return apiMethodNotAllowed();
+}
+
+export function POST() {
+  return apiMethodNotAllowed();
+}
+
+export function PATCH() {
+  return apiMethodNotAllowed();
+}
+
+export function DELETE() {
+  return apiMethodNotAllowed();
+}
+
+export function OPTIONS() {
+  return apiMethodNotAllowed();
+}
+
+export function HEAD() {
+  return apiMethodNotAllowed();
 }

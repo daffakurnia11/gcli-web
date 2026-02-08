@@ -1,39 +1,16 @@
-import { NextResponse } from "next/server";
-
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-
-type GangOwnershipRow = {
-  gangCode: string;
-  gangLabel: string;
-  ownershipCount: bigint | number;
-};
+import { requireAdminSession } from "@/services/api-guards";
+import { apiFromLegacy, apiMethodNotAllowed } from "@/services/api-response";
+import { logger } from "@/services/logger";
+import { adminInvestmentRepository } from "@/services/repositories/admin-investment.repository";
 
 export async function GET() {
   try {
-    const session = await auth();
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const admin = await requireAdminSession();
+    if (!admin.ok) {
+      return admin.response;
     }
 
-    if (session.user.optin !== true) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-
-    const rows = await prisma.$queryRaw<GangOwnershipRow[]>`
-      SELECT
-        g.name AS gangCode,
-        g.label AS gangLabel,
-        COUNT(tb.id) AS ownershipCount
-      FROM tl_gangs g
-      LEFT JOIN tl_businesses tb
-        ON tb.owner = g.name
-       AND tb.is_owned = 1
-      WHERE LOWER(g.name) <> 'none'
-      GROUP BY g.name, g.label
-      ORDER BY ownershipCount DESC, g.label ASC
-    `;
+    const rows = await adminInvestmentRepository.listGangOwnership();
 
     const gangs = rows.map((row) => ({
       gangCode: row.gangCode,
@@ -41,9 +18,34 @@ export async function GET() {
       ownershipCount: Number(row.ownershipCount),
     }));
 
-    return NextResponse.json({ gangs }, { status: 200 });
+    return apiFromLegacy({ gangs }, { status: 200 });
   } catch (error) {
-    console.error("Admin gang ownership fetch error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    logger.error("Admin gang ownership fetch error:", error);
+    return apiFromLegacy({ error: "Internal server error" }, { status: 500 });
   }
+}
+
+// AUTO_METHOD_NOT_ALLOWED
+export function POST() {
+  return apiMethodNotAllowed();
+}
+
+export function PUT() {
+  return apiMethodNotAllowed();
+}
+
+export function PATCH() {
+  return apiMethodNotAllowed();
+}
+
+export function DELETE() {
+  return apiMethodNotAllowed();
+}
+
+export function OPTIONS() {
+  return apiMethodNotAllowed();
+}
+
+export function HEAD() {
+  return apiMethodNotAllowed();
 }

@@ -1,52 +1,12 @@
+"use client";
+
 import Image from "next/image";
 
 import { DiscordInfoCard, FiveMInfoCard } from "@/components";
+import { useServerInfo } from "@/services/hooks/api/useServerInfo";
 
-async function getDiscordInfo(): Promise<DiscordProxyData | null> {
-  try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/info/discord`,
-      {
-        cache: "no-store",
-      },
-    );
-
-    if (!response.ok) {
-      return null;
-    }
-
-    const data: DiscordProxyResponse = await response.json();
-    return data.data as DiscordProxyData;
-  } catch {
-    return null;
-  }
-}
-
-async function getFiveMInfo(): Promise<FiveMProxyData | null> {
-  try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/info/fivem`,
-      {
-        cache: "no-store",
-      },
-    );
-
-    if (!response.ok) {
-      return null;
-    }
-
-    const data: FiveMProxyResponse = await response.json();
-    return data.data as FiveMProxyData;
-  } catch {
-    return null;
-  }
-}
-
-export default async function ServerInfo() {
-  const [discordData, fivemData] = await Promise.all([
-    getDiscordInfo(),
-    getFiveMInfo(),
-  ]);
+export default function ServerInfo() {
+  const { discord, fivem } = useServerInfo();
 
   return (
     <section className="py-24 relative overflow-hidden">
@@ -63,16 +23,16 @@ export default async function ServerInfo() {
       </div>
       <div className="container mx-auto px-6 flex justify-center flex-wrap gap-8 z-10 relative">
         <FiveMInfoCard
-          serverName={fivemData?.server.name ?? null}
-          connectUrl={fivemData?.server.connect_url ?? null}
-          onlinePlayers={fivemData?.member.online ?? 0}
-          totalPlayers={fivemData?.member.total ?? 0}
+          serverName={fivem.data?.data?.server.name ?? null}
+          connectUrl={fivem.data?.data?.server.connect_url ?? null}
+          onlinePlayers={fivem.data?.data?.member.online ?? 0}
+          totalPlayers={fivem.data?.data?.member.total ?? 0}
         />
         <DiscordInfoCard
-          serverName={discordData?.server.name ?? null}
-          inviteLink={discordData?.server.invite_link ?? null}
-          onlineMembers={discordData?.member.online ?? 0}
-          totalMembers={discordData?.member.total ?? 0}
+          serverName={discord.data?.data?.server.name ?? null}
+          inviteLink={discord.data?.data?.server.invite_link ?? null}
+          onlineMembers={discord.data?.data?.member.online ?? 0}
+          totalMembers={discord.data?.data?.member.total ?? 0}
         />
       </div>
     </section>

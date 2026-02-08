@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server";
-
-import { getAccountIdFromRequest } from "@/lib/apiAuth";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { requireAccountId } from "@/services/api-guards";
+import { apiFromLegacy, apiMethodNotAllowed } from "@/services/api-response";
+import { parseJson } from "@/services/json";
+import { logger } from "@/services/logger";
 
 type BankTransaction = {
   time: number;
@@ -24,16 +25,16 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const accountId = await getAccountIdFromRequest(request);
-    if (!accountId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const authz = await requireAccountId(request);
+    if (!authz.ok) {
+      return authz.response;
     }
 
     const session = await auth();
     const gangName = session?.user?.gang?.name;
 
     if (!gangName) {
-      return NextResponse.json(
+      return apiFromLegacy(
         { error: "No gang membership found for this account." },
         { status: 403 },
       );
@@ -54,7 +55,7 @@ export async function GET(
     });
 
     if (!bankAccount) {
-      return NextResponse.json(
+      return apiFromLegacy(
         { error: "Investment account not found." },
         { status: 404 },
       );
@@ -62,7 +63,7 @@ export async function GET(
 
     // Verify the account belongs to this gang
     if (bankAccount.creator !== gangName) {
-      return NextResponse.json(
+      return apiFromLegacy(
         { error: "You don't have access to this investment account." },
         { status: 403 },
       );
@@ -79,9 +80,10 @@ export async function GET(
     );
 
     // Parse JSON fields
-    const parsedTransactions = bankAccount.transactions
-      ? (JSON.parse(bankAccount.transactions) as BankTransaction[])
-      : [];
+    const parsedTransactions = parseJson<BankTransaction[]>(
+      bankAccount.transactions,
+      [],
+    );
 
     // Sort by time descending (newest first)
     const sortedTransactions = parsedTransactions.sort((a, b) => b.time - a.time);
@@ -94,7 +96,7 @@ export async function GET(
     // Get paginated data
     const paginatedTransactions = sortedTransactions.slice(offset, offset + limit);
 
-    return NextResponse.json(
+    return apiFromLegacy(
       {
         accountId: id,
         transactions: paginatedTransactions,
@@ -110,7 +112,32 @@ export async function GET(
       { status: 200 },
     );
   } catch (error) {
-    console.error("Investment transactions fetch error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    logger.error("Investment transactions fetch error:", error);
+    return apiFromLegacy({ error: "Internal server error" }, { status: 500 });
   }
+}
+
+// AUTO_METHOD_NOT_ALLOWED
+export function POST() {
+  return apiMethodNotAllowed();
+}
+
+export function PUT() {
+  return apiMethodNotAllowed();
+}
+
+export function PATCH() {
+  return apiMethodNotAllowed();
+}
+
+export function DELETE() {
+  return apiMethodNotAllowed();
+}
+
+export function OPTIONS() {
+  return apiMethodNotAllowed();
+}
+
+export function HEAD() {
+  return apiMethodNotAllowed();
 }

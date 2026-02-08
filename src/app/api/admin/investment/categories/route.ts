@@ -1,12 +1,7 @@
-import { NextResponse } from "next/server";
-
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-
-type CategoryRow = {
-  category: string;
-  total: bigint | number;
-};
+import { requireAdminSession } from "@/services/api-guards";
+import { apiFromLegacy, apiMethodNotAllowed } from "@/services/api-response";
+import { logger } from "@/services/logger";
+import { adminInvestmentRepository } from "@/services/repositories/admin-investment.repository";
 
 const formatCategoryLabel = (category: string) =>
   category
@@ -17,22 +12,12 @@ const formatCategoryLabel = (category: string) =>
 
 export async function GET() {
   try {
-    const session = await auth();
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const admin = await requireAdminSession();
+    if (!admin.ok) {
+      return admin.response;
     }
 
-    if (session.user.optin !== true) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-
-    const groupedCategories = await prisma.$queryRaw<CategoryRow[]>`
-      SELECT category, COUNT(*) AS total
-      FROM tl_businesses
-      GROUP BY category
-      ORDER BY category ASC
-    `;
+    const groupedCategories = await adminInvestmentRepository.listCategories();
 
     const categories = groupedCategories.map((entry) => ({
       key: entry.category,
@@ -40,7 +25,7 @@ export async function GET() {
       count: Number(entry.total),
     }));
 
-    return NextResponse.json(
+    return apiFromLegacy(
       {
         categories,
         totalBusinesses: categories.reduce((sum, category) => sum + category.count, 0),
@@ -48,10 +33,35 @@ export async function GET() {
       { status: 200 },
     );
   } catch (error) {
-    console.error("Admin investment categories fetch error:", error);
-    return NextResponse.json(
+    logger.error("Admin investment categories fetch error:", error);
+    return apiFromLegacy(
       { error: "Internal server error" },
       { status: 500 },
     );
   }
+}
+
+// AUTO_METHOD_NOT_ALLOWED
+export function POST() {
+  return apiMethodNotAllowed();
+}
+
+export function PUT() {
+  return apiMethodNotAllowed();
+}
+
+export function PATCH() {
+  return apiMethodNotAllowed();
+}
+
+export function DELETE() {
+  return apiMethodNotAllowed();
+}
+
+export function OPTIONS() {
+  return apiMethodNotAllowed();
+}
+
+export function HEAD() {
+  return apiMethodNotAllowed();
 }

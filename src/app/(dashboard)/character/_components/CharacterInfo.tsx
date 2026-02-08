@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 
 import { Typography } from "@/components/typography";
-import { Character } from "@/types/api/Character";
+import { formatDateOnly } from "@/services/date";
 
 import { DashboardCard, DashboardSection } from "../../_components/dashboard";
 
@@ -24,14 +24,6 @@ export default function CharacterInfo({
   const showLoading = isLoading;
   const cashBalance = data?.money?.cash ?? 0;
   const bankBalance = data?.money?.bank ?? 0;
-  const formatDate = (date: Date | string | null | undefined) => {
-    if (!date) return "N/A";
-    return new Date(date).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
 
   return (
     <div className="space-y-6">
@@ -86,7 +78,7 @@ export default function CharacterInfo({
                 <Calendar size={18} className="text-primary-300 shrink-0" />
                 <span className="text-primary-300 shrink-0">Birth Date:</span>
                 <span className="text-primary-100">
-                  {formatDate(data?.charinfo?.birthdate) || "N/A"}
+                  {formatDateOnly(data?.charinfo?.birthdate)}
                 </span>
               </div>
 

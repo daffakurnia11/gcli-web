@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server";
-
-import { getAccountIdFromRequest } from "@/lib/apiAuth";
 import { prisma } from "@/lib/prisma";
 import { resolveCitizenIdForAccount } from "@/lib/userCitizenId";
+import { requireAccountId } from "@/services/api-guards";
+import { apiFromLegacy, apiMethodNotAllowed } from "@/services/api-response";
+import { parseJson } from "@/services/json";
+import { logger } from "@/services/logger";
 
 type BankTransaction = {
   time: number;
@@ -21,10 +22,11 @@ const MAX_LIMIT = 100;
 
 export async function GET(request: Request) {
   try {
-    const accountId = await getAccountIdFromRequest(request);
-    if (!accountId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const authz = await requireAccountId(request);
+    if (!authz.ok) {
+      return authz.response;
     }
+    const accountId = authz.accountId;
 
     const { searchParams } = new URL(request.url);
     const pageParam = searchParams.get("page");
@@ -39,7 +41,7 @@ export async function GET(request: Request) {
     const resolved = await resolveCitizenIdForAccount(accountId);
 
     if (!resolved?.citizenId) {
-      return NextResponse.json(
+      return apiFromLegacy(
         {
           citizenId: null,
           playerName: null,
@@ -76,17 +78,16 @@ export async function GET(request: Request) {
     let cashBalance = 0;
     let bankBalance = 0;
     if (player?.money) {
-      const moneyData = JSON.parse(player.money as string) as {
-        cash: number;
-        bank: number;
-        crypto?: number;
-      };
+      const moneyData = parseJson<{ cash: number; bank: number; crypto?: number }>(
+        player.money,
+        { cash: 0, bank: 0 },
+      );
       cashBalance = moneyData.cash ?? 0;
       bankBalance = moneyData.bank ?? 0;
     }
 
     if (!transactions) {
-      return NextResponse.json(
+      return apiFromLegacy(
         {
           citizenId: resolved.citizenId,
           playerName: resolved.playerName,
@@ -106,9 +107,10 @@ export async function GET(request: Request) {
     }
 
     // Parse JSON fields
-    const parsedTransactions = transactions.transactions
-      ? (JSON.parse(transactions.transactions) as BankTransaction[])
-      : [];
+    const parsedTransactions = parseJson<BankTransaction[]>(
+      transactions.transactions,
+      [],
+    );
 
     // Sort by time descending (newest first)
     const sortedTransactions = parsedTransactions.sort((a, b) => b.time - a.time);
@@ -121,7 +123,7 @@ export async function GET(request: Request) {
     // Get paginated data
     const paginatedTransactions = sortedTransactions.slice(offset, offset + limit);
 
-    return NextResponse.json(
+    return apiFromLegacy(
       {
         citizenId: resolved.citizenId,
         playerName: resolved.playerName,
@@ -139,7 +141,32 @@ export async function GET(request: Request) {
       { status: 200 },
     );
   } catch (error) {
-    console.error("Personal bank transactions fetch error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    logger.error("Personal bank transactions fetch error:", error);
+    return apiFromLegacy({ error: "Internal server error" }, { status: 500 });
   }
+}
+
+// AUTO_METHOD_NOT_ALLOWED
+export function POST() {
+  return apiMethodNotAllowed();
+}
+
+export function PUT() {
+  return apiMethodNotAllowed();
+}
+
+export function PATCH() {
+  return apiMethodNotAllowed();
+}
+
+export function DELETE() {
+  return apiMethodNotAllowed();
+}
+
+export function OPTIONS() {
+  return apiMethodNotAllowed();
+}
+
+export function HEAD() {
+  return apiMethodNotAllowed();
 }

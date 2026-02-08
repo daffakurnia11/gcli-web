@@ -2,13 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { useApiSWR } from "@/lib/swr";
-
-type UniqueCheckType = "username" | "email";
-
-type UniqueCheckResponse = {
-  exists: boolean;
-};
+import { useApiSWR } from "@/services/swr";
 
 const useDebouncedValue = (value: string, delayMs: number) => {
   const [debounced, setDebounced] = useState(value);
@@ -22,7 +16,7 @@ const useDebouncedValue = (value: string, delayMs: number) => {
 };
 
 export function useUniqueCheck(
-  type: UniqueCheckType,
+  type: AccountUniqueCheckType,
   value: string,
   validate?: (nextValue: string) => boolean,
 ) {
@@ -34,7 +28,7 @@ export function useUniqueCheck(
       ? `/api/account/unique-check?type=${type}&value=${encodeURIComponent(debounced)}`
       : null;
 
-  const { data, error, isLoading } = useApiSWR<UniqueCheckResponse>(
+  const { data, error, isLoading } = useApiSWR<AccountUniqueCheckResponse>(
     key,
     undefined,
     { dedupingInterval: 500 },

@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+"use client";
 
 import {
   DangerZone,
@@ -6,61 +6,36 @@ import {
   EmailSettings,
   PasswordSettings,
 } from "@/app/(dashboard)/_components/dashboard";
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { Typography } from "@/components/typography";
+import { useApiSWR } from "@/services/swr";
 
-async function getSettingsData(userId: string) {
-  const accountId = Number.parseInt(userId, 10);
-  if (Number.isNaN(accountId)) {
-    return null;
-  }
+type UserAccountOverview = {
+  email: string | null;
+} | null;
 
-  const account = await prisma.web_accounts.findUnique({
-    where: { id: accountId },
-    select: {
-      id: true,
-      email: true,
-      created_at: true,
-      sessions: {
-        select: {
-          id: true,
-          session_token: true,
-          expires: true,
-        },
-        orderBy: { expires: "desc" },
-      },
-    },
-  });
-
-  return account;
-}
-
-export default async function SettingsPage() {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    redirect("/auth");
-  }
-
-  const settingsData = await getSettingsData(session.user.id);
+export default function SettingsPage() {
+  const { data: settingsData } = useApiSWR<UserAccountOverview>("/api/user/account");
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-display font-semibold uppercase tracking-wider text-primary-100">
+        <Typography.Heading
+          level={6}
+          as="h2"
+          type="display"
+          className="uppercase tracking-wider text-primary-100"
+        >
           Settings
-        </h2>
-        <p className="text-primary-300 text-sm mt-1">
+        </Typography.Heading>
+        <Typography.Paragraph className="text-primary-300 text-sm mt-1">
           Manage your account settings and preferences.
-        </p>
+        </Typography.Paragraph>
       </div>
 
       <div className="space-y-6">
         <DashboardSection title="Account Security">
           <div className="space-y-4">
-            <EmailSettings
-              currentEmail={settingsData?.email || session.user?.email}
-            />
+            <EmailSettings currentEmail={settingsData?.email} />
             <PasswordSettings />
           </div>
         </DashboardSection>

@@ -1,5 +1,7 @@
 import axios from "axios";
-import { NextResponse } from "next/server";
+
+import { apiFromLegacy, apiMethodNotAllowed } from "@/services/api-response";
+import { logger } from "@/services/logger";
 
 const FIVEM_API_BASE = process.env.FIVEM_API_BASE_URL;
 const FIVEM_CONNECT_ADDRESS = process.env.FIVEM_CONNECT_ADDRESS;
@@ -7,7 +9,7 @@ const FIVEM_CONNECT_ADDRESS = process.env.FIVEM_CONNECT_ADDRESS;
 export async function GET() {
   try {
     if (!FIVEM_API_BASE) {
-      return NextResponse.json(
+      return apiFromLegacy(
         { error: "FiveM API base URL not configured" },
         { status: 500 },
       );
@@ -46,7 +48,7 @@ export async function GET() {
       data: transformedResponse,
     };
 
-    return NextResponse.json(proxyResponse, { status: 200 });
+    return apiFromLegacy(proxyResponse, { status: 200 });
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
       const status = error.response?.status || 500;
@@ -54,13 +56,38 @@ export async function GET() {
         error: "FiveM API request failed",
       };
 
-      return NextResponse.json(data, { status });
+      return apiFromLegacy(data, { status });
     }
 
-    console.error("FiveM info proxy error:", error);
-    return NextResponse.json(
+    logger.error("FiveM info proxy error:", error);
+    return apiFromLegacy(
       { error: "Internal server error" },
       { status: 500 },
     );
   }
+}
+
+// AUTO_METHOD_NOT_ALLOWED
+export function POST() {
+  return apiMethodNotAllowed();
+}
+
+export function PUT() {
+  return apiMethodNotAllowed();
+}
+
+export function PATCH() {
+  return apiMethodNotAllowed();
+}
+
+export function DELETE() {
+  return apiMethodNotAllowed();
+}
+
+export function OPTIONS() {
+  return apiMethodNotAllowed();
+}
+
+export function HEAD() {
+  return apiMethodNotAllowed();
 }

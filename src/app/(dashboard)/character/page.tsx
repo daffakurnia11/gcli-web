@@ -1,8 +1,7 @@
 "use client";
 
 import { Typography } from "@/components/typography";
-import { useApiSWR } from "@/lib/swr";
-import type { Character } from "@/types/api/Character";
+import { useApiSWR } from "@/services/swr";
 
 import CharacterInfo from "./_components/CharacterInfo";
 import CharacterStatus from "./_components/CharacterStatus";

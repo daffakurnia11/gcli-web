@@ -6,10 +6,12 @@ import { useState } from "react";
 import { Button } from "@/components/button";
 import { Form } from "@/components/form";
 import { Typography } from "@/components/typography";
+import { useAccountApi } from "@/services/hooks/api/useAccountApi";
 
 import { Alert, DashboardCard, SettingsGroup } from "./index";
 
 export function PasswordSettings() {
+  const { updatePassword } = useAccountApi();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{
@@ -36,19 +38,10 @@ export function PasswordSettings() {
     }
 
     try {
-      const response = await fetch("/api/user/password", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          currentPassword: data.currentPassword,
-          newPassword: data.newPassword,
-        }),
+      await updatePassword({
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
       });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to update password");
-      }
 
       setMessage({ type: "success", text: "Password updated successfully" });
       setIsEditing(false);

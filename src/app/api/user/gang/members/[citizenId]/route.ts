@@ -1,8 +1,15 @@
-import { NextResponse } from "next/server";
-
-import { getAccountIdFromRequest } from "@/lib/apiAuth";
 import { prisma } from "@/lib/prisma";
 import { resolveCitizenIdForAccount } from "@/lib/userCitizenId";
+import { requireAccountId } from "@/services/api-guards";
+import { apiFromLegacy, apiMethodNotAllowed } from "@/services/api-response";
+import { parseJson } from "@/services/json";
+import { logger } from "@/services/logger";
+import {
+  canAssignGangGrade,
+  canManageGangMemberByGrade,
+  canManageGangMembers,
+  canModifySelf,
+} from "@/services/policies/gang-members.policy";
 
 type ParsedGang = {
   name?: string;
@@ -13,17 +20,6 @@ type ParsedGang = {
     level?: number;
     name?: string;
   };
-};
-
-const parseJson = <T>(value: string | null): T | null => {
-  if (!value) {
-    return null;
-  }
-  try {
-    return JSON.parse(value) as T;
-  } catch {
-    return null;
-  }
 };
 
 const buildGangPayload = (
@@ -45,10 +41,11 @@ const buildGangPayload = (
 });
 
 async function getActorContext(request: Request) {
-  const accountId = await getAccountIdFromRequest(request);
-  if (!accountId) {
+  const authz = await requireAccountId(request);
+  if (!authz.ok) {
     return { error: "Unauthorized", status: 401 as const };
   }
+  const accountId = authz.accountId;
 
   const resolved = await resolveCitizenIdForAccount(accountId);
   if (!resolved?.citizenId) {
@@ -62,7 +59,7 @@ async function getActorContext(request: Request) {
     where: { citizenid: resolved.citizenId },
     select: { citizenid: true, gang: true },
   });
-  const parsedGang = parseJson<ParsedGang>(actor?.gang ?? null);
+  const parsedGang = parseJson<ParsedGang | null>(actor?.gang, null);
   const gangName = parsedGang?.name?.toLowerCase();
 
   if (!gangName || gangName === "none") {
@@ -75,7 +72,7 @@ async function getActorContext(request: Request) {
   const actorGradeLevel = parsedGang?.grade?.level ?? 0;
   const actorIsBoss = Boolean(parsedGang?.isboss);
 
-  if (!actorIsBoss) {
+  if (!canManageGangMembers(actorIsBoss)) {
     return {
       error: "Only team boss can manage members.",
       status: 403 as const,
@@ -96,16 +93,16 @@ export async function PATCH(
   try {
     const context = await getActorContext(request);
     if ("error" in context) {
-      return NextResponse.json({ error: context.error }, { status: context.status });
+      return apiFromLegacy({ error: context.error }, { status: context.status });
     }
 
     const targetCitizenId = (await params).citizenId;
     if (!targetCitizenId) {
-      return NextResponse.json({ error: "Invalid target member." }, { status: 400 });
+      return apiFromLegacy({ error: "Invalid target member." }, { status: 400 });
     }
 
-    if (targetCitizenId === context.actorCitizenId) {
-      return NextResponse.json(
+    if (!canModifySelf(context.actorCitizenId, targetCitizenId)) {
+      return apiFromLegacy(
         { error: "You cannot change your own grade." },
         { status: 400 },
       );
@@ -116,11 +113,11 @@ export async function PATCH(
       | null;
     const gradeLevel = Number(body?.gradeLevel);
     if (!Number.isInteger(gradeLevel) || gradeLevel < 0) {
-      return NextResponse.json({ error: "Invalid grade level." }, { status: 400 });
+      return apiFromLegacy({ error: "Invalid grade level." }, { status: 400 });
     }
 
-    if (gradeLevel >= context.actorGradeLevel) {
-      return NextResponse.json(
+    if (!canAssignGangGrade(context.actorGradeLevel, gradeLevel)) {
+      return apiFromLegacy(
         { error: "You cannot assign grade equal or higher than your own." },
         { status: 403 },
       );
@@ -160,18 +157,20 @@ export async function PATCH(
     ]);
 
     if (!targetMembership) {
-      return NextResponse.json({ error: "Member not found in this team." }, { status: 404 });
+      return apiFromLegacy({ error: "Member not found in this team." }, { status: 404 });
     }
 
-    if (targetMembership.grade >= context.actorGradeLevel) {
-      return NextResponse.json(
+    if (
+      !canManageGangMemberByGrade(context.actorGradeLevel, targetMembership.grade)
+    ) {
+      return apiFromLegacy(
         { error: "You cannot manage members with equal or higher grade." },
         { status: 403 },
       );
     }
 
     if (!targetGrade) {
-      return NextResponse.json(
+      return apiFromLegacy(
         { error: "Selected grade does not exist in this team." },
         { status: 400 },
       );
@@ -185,7 +184,7 @@ export async function PATCH(
         ON DUPLICATE KEY UPDATE grade = ${gradeLevel}
       `;
 
-      const parsedTargetGang = parseJson<ParsedGang>(targetPlayer?.gang ?? null);
+      const parsedTargetGang = parseJson<ParsedGang | null>(targetPlayer?.gang, null);
       if (parsedTargetGang?.name?.toLowerCase() === context.gangName) {
         const payload = buildGangPayload(
           context.gangName,
@@ -203,10 +202,10 @@ export async function PATCH(
       }
     });
 
-    return NextResponse.json({ message: "Member grade updated successfully." }, { status: 200 });
+    return apiFromLegacy({ message: "Member grade updated successfully." }, { status: 200 });
   } catch (error) {
-    console.error("Update member grade error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    logger.error("Update member grade error:", error);
+    return apiFromLegacy({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -217,16 +216,16 @@ export async function DELETE(
   try {
     const context = await getActorContext(request);
     if ("error" in context) {
-      return NextResponse.json({ error: context.error }, { status: context.status });
+      return apiFromLegacy({ error: context.error }, { status: context.status });
     }
 
     const targetCitizenId = (await params).citizenId;
     if (!targetCitizenId) {
-      return NextResponse.json({ error: "Invalid target member." }, { status: 400 });
+      return apiFromLegacy({ error: "Invalid target member." }, { status: 400 });
     }
 
-    if (targetCitizenId === context.actorCitizenId) {
-      return NextResponse.json(
+    if (!canModifySelf(context.actorCitizenId, targetCitizenId)) {
+      return apiFromLegacy(
         { error: "You cannot remove yourself from team." },
         { status: 400 },
       );
@@ -259,11 +258,13 @@ export async function DELETE(
     ]);
 
     if (!targetMembership) {
-      return NextResponse.json({ error: "Member not found in this team." }, { status: 404 });
+      return apiFromLegacy({ error: "Member not found in this team." }, { status: 404 });
     }
 
-    if (targetMembership.grade >= context.actorGradeLevel) {
-      return NextResponse.json(
+    if (
+      !canManageGangMemberByGrade(context.actorGradeLevel, targetMembership.grade)
+    ) {
+      return apiFromLegacy(
         { error: "You cannot remove members with equal or higher grade." },
         { status: 403 },
       );
@@ -276,7 +277,7 @@ export async function DELETE(
         WHERE citizenid = ${targetCitizenId} AND type = ${"gang"} AND \`group\` = ${context.gangName}
       `;
 
-      const parsedTargetGang = parseJson<ParsedGang>(targetPlayer?.gang ?? null);
+      const parsedTargetGang = parseJson<ParsedGang | null>(targetPlayer?.gang, null);
       if (parsedTargetGang?.name?.toLowerCase() === context.gangName) {
         const payload = buildGangPayload(
           "none",
@@ -294,9 +295,30 @@ export async function DELETE(
       }
     });
 
-    return NextResponse.json({ message: "Member removed successfully." }, { status: 200 });
+    return apiFromLegacy({ message: "Member removed successfully." }, { status: 200 });
   } catch (error) {
-    console.error("Remove member error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    logger.error("Remove member error:", error);
+    return apiFromLegacy({ error: "Internal server error" }, { status: 500 });
   }
+}
+
+// AUTO_METHOD_NOT_ALLOWED
+export function GET() {
+  return apiMethodNotAllowed();
+}
+
+export function POST() {
+  return apiMethodNotAllowed();
+}
+
+export function PUT() {
+  return apiMethodNotAllowed();
+}
+
+export function OPTIONS() {
+  return apiMethodNotAllowed();
+}
+
+export function HEAD() {
+  return apiMethodNotAllowed();
 }

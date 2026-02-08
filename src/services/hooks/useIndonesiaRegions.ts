@@ -1,7 +1,6 @@
 "use client";
 
-import { useApiSWR } from "@/lib/swr";
-import type { CitiesResponse, ProvincesResponse } from "@/types/api/Indonesia";
+import { useApiSWR } from "@/services/swr";
 
 export function useProvinces() {
   return useApiSWR<ProvincesResponse>("/api/indonesia/provinces");

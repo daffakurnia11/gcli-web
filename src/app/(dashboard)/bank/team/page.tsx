@@ -16,8 +16,7 @@ import {
   DataTableSkeleton,
 } from "@/components/table/DataTable";
 import { Typography } from "@/components/typography";
-import { useApiSWR } from "@/lib/swr";
-import type { BankTransaction, TeamBankResponse } from "@/types/api/Bank";
+import { useApiSWR } from "@/services/swr";
 
 const DEFAULT_PAGE = 1;
 const ITEMS_PER_PAGE = 10;

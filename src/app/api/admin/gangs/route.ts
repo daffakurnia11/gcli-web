@@ -1,36 +1,45 @@
-import { NextResponse } from "next/server";
-
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { requireAdminSession } from "@/services/api-guards";
+import { apiFromLegacy, apiMethodNotAllowed } from "@/services/api-response";
+import { logger } from "@/services/logger";
+import { adminInvestmentRepository } from "@/services/repositories/admin-investment.repository";
 
 export async function GET() {
   try {
-    const session = await auth();
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const admin = await requireAdminSession();
+    if (!admin.ok) {
+      return admin.response;
     }
 
-    if (session.user.optin !== true) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    const gangs = await adminInvestmentRepository.findGangs();
 
-    const gangs = await prisma.tl_gangs.findMany({
-      where: {
-        name: {
-          not: "none",
-        },
-      },
-      select: {
-        name: true,
-        label: true,
-      },
-      orderBy: { label: "asc" },
-    });
-
-    return NextResponse.json({ gangs }, { status: 200 });
+    return apiFromLegacy({ gangs }, { status: 200 });
   } catch (error) {
-    console.error("Admin gangs fetch error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    logger.error("Admin gangs fetch error:", error);
+    return apiFromLegacy({ error: "Internal server error" }, { status: 500 });
   }
+}
+
+// AUTO_METHOD_NOT_ALLOWED
+export function POST() {
+  return apiMethodNotAllowed();
+}
+
+export function PUT() {
+  return apiMethodNotAllowed();
+}
+
+export function PATCH() {
+  return apiMethodNotAllowed();
+}
+
+export function DELETE() {
+  return apiMethodNotAllowed();
+}
+
+export function OPTIONS() {
+  return apiMethodNotAllowed();
+}
+
+export function HEAD() {
+  return apiMethodNotAllowed();
 }

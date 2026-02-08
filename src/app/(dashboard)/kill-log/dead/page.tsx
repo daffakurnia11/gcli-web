@@ -1,6 +1,5 @@
 "use client";
 
-import { format } from "date-fns";
 import { useState } from "react";
 
 import {
@@ -14,7 +13,8 @@ import {
   DataTableSkeleton,
 } from "@/components/table/DataTable";
 import { Typography } from "@/components/typography";
-import { useApiSWR } from "@/lib/swr";
+import { formatDateTime } from "@/services/date";
+import { useApiSWR } from "@/services/swr";
 
 const DEFAULT_PAGE = 1;
 const ITEMS_PER_PAGE = 10;
@@ -43,14 +43,6 @@ type KillLogResponse = {
   };
 };
 
-const formatDate = (value: string | Date) => {
-  const date = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return "-";
-  }
-  return format(date, "PPpp");
-};
-
 const columns: Array<DataTableColumn<KillLogRecord>> = [
   {
     key: "time",
@@ -59,7 +51,7 @@ const columns: Array<DataTableColumn<KillLogRecord>> = [
     cellClassName: "py-4!",
     render: (record) => (
       <Typography.Paragraph as="p" className="text-primary-200">
-        {formatDate(record.createdAt)}
+        {formatDateTime(record.createdAt, { fallback: "-" })}
       </Typography.Paragraph>
     ),
   },

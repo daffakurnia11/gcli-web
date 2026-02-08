@@ -60,9 +60,9 @@ export default function Slant({
       )}
       {...props}
     >
-      {prefix && <span className="flex-shrink-0">{prefix}</span>}
+      {prefix && <span className="shrink-0">{prefix}</span>}
       {children}
-      {suffix && <span className="flex-shrink-0">{suffix}</span>}
+      {suffix && <span className="shrink-0">{suffix}</span>}
     </button>
   );
 }

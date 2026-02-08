@@ -13,10 +13,12 @@ import {
   DataTableSkeleton,
 } from "@/components/table";
 import { Typography } from "@/components/typography";
-import { useApiSWR } from "@/lib/swr";
-import type { TeamMember, TeamMembersResponse } from "@/types/api/Gang";
+import { useTeamMembersApi } from "@/services/hooks/api/useTeamMembersApi";
+import { useApiSWR } from "@/services/swr";
 
 export default function TeamMembersPage() {
+  const { updateMemberGrade: updateMemberGradeRequest, removeMember } =
+    useTeamMembersApi();
   const { data, error, isLoading, mutate } =
     useApiSWR<TeamMembersResponse>("/api/user/gang/members");
   const [actionError, setActionError] = useState<string | null>(null);
@@ -38,18 +40,7 @@ export default function TeamMembersPage() {
       setActionError(null);
       setLoadingByMember((prev) => ({ ...prev, [member.citizenId]: true }));
       try {
-        const response = await fetch(`/api/user/gang/members/${member.citizenId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ gradeLevel: nextGrade }),
-        });
-
-        const payload = (await response.json().catch(() => null)) as
-          | { error?: string }
-          | null;
-        if (!response.ok) {
-          throw new Error(payload?.error || "Failed to update member grade.");
-        }
+        await updateMemberGradeRequest(member.citizenId, nextGrade);
 
         await mutate();
         return true;
@@ -62,7 +53,7 @@ export default function TeamMembersPage() {
         setLoadingByMember((prev) => ({ ...prev, [member.citizenId]: false }));
       }
     },
-    [mutate],
+    [mutate, updateMemberGradeRequest],
   );
 
   const fireMember = useCallback(
@@ -70,15 +61,7 @@ export default function TeamMembersPage() {
       setActionError(null);
       setLoadingByMember((prev) => ({ ...prev, [member.citizenId]: true }));
       try {
-        const response = await fetch(`/api/user/gang/members/${member.citizenId}`, {
-          method: "DELETE",
-        });
-        const payload = (await response.json().catch(() => null)) as
-          | { error?: string }
-          | null;
-        if (!response.ok) {
-          throw new Error(payload?.error || "Failed to remove member.");
-        }
+        await removeMember(member.citizenId);
 
         await mutate();
         return true;
@@ -89,7 +72,7 @@ export default function TeamMembersPage() {
         setLoadingByMember((prev) => ({ ...prev, [member.citizenId]: false }));
       }
     },
-    [mutate],
+    [mutate, removeMember],
   );
 
   const manageGradeOptions = useMemo(() => {

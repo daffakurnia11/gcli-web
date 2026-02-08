@@ -8,8 +8,6 @@ import { z } from "zod";
 import { Button } from "@/components/button";
 import { Form } from "@/components/form";
 import { Typography } from "@/components/typography";
-import { useCities, useProvinces } from "@/hooks/useIndonesiaRegions";
-import { useUniqueCheck } from "@/hooks/useUniqueCheck";
 import {
   readAuthSetupPayload,
   updateAuthSetupPayload,
@@ -21,7 +19,8 @@ import {
   accountInfoSchema,
   type FormErrors,
 } from "@/schemas/authSetup";
-import type { City, Province } from "@/types/api/Indonesia";
+import { useCities, useProvinces } from "@/services/hooks/useIndonesiaRegions";
+import { useUniqueCheck } from "@/services/hooks/useUniqueCheck";
 import type { SelectOption } from "@/types/Form";
 
 import Stepper from "./Stepper";
@@ -272,8 +271,8 @@ export default function Information({ showStepper = true }: InformationProps) {
             {/* FiveM Account Name */}
             <Form.Text
               name="username"
-              label="FiveM Account Name"
-              placeholder="Enter your FiveM in-game name"
+              label="Passport Name"
+              placeholder="Enter your FiveM passport name"
               value={accountInfo.username}
               onChange={(e) => handleInputChange("username", e.target.value)}
               error={

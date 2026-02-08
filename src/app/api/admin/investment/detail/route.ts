@@ -1,22 +1,9 @@
 import { Prisma } from "@prisma/client";
-import { NextResponse } from "next/server";
 
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-
-type InvestmentDetailRow = {
-  businessId: number | bigint;
-  bankAccountId: string;
-  label: string;
-  category: string;
-  map: string | null;
-  owner: string | null;
-  isOwned: boolean | number | bigint;
-  updatedAt: Date;
-  balance: number | bigint | null;
-  creator: string | null;
-  isFrozen: number | bigint | null;
-};
+import { requireAdminSession } from "@/services/api-guards";
+import { apiFromLegacy, apiMethodNotAllowed } from "@/services/api-response";
+import { logger } from "@/services/logger";
+import { adminInvestmentRepository } from "@/services/repositories/admin-investment.repository";
 
 const parsePositiveInt = (
   value: string | null,
@@ -35,14 +22,9 @@ const parsePositiveInt = (
 
 export async function GET(request: Request) {
   try {
-    const session = await auth();
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    if (session.user.optin !== true) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    const admin = await requireAdminSession();
+    if (!admin.ok) {
+      return admin.response;
     }
 
     const { searchParams } = new URL(request.url);
@@ -53,7 +35,7 @@ export async function GET(request: Request) {
     const limit = parsePositiveInt(searchParams.get("limit"), 10, 100);
 
     if (!category && !gang) {
-      return NextResponse.json(
+      return apiFromLegacy(
         { error: "Missing required query parameter: category or gang" },
         { status: 400 },
       );
@@ -74,39 +56,21 @@ export async function GET(request: Request) {
           )`
         : Prisma.sql``;
 
-    const countRows = await prisma.$queryRaw<Array<{ total: bigint | number }>>(
-      Prisma.sql`
-        SELECT COUNT(*) AS total
-        FROM tl_businesses tb
-        LEFT JOIN bank_accounts_new ba ON ba.id = tb.bank_account_id
-        WHERE ${baseWhere} ${searchWhere}
-      `,
+    const countRows = await adminInvestmentRepository.countDetailItems(
+      baseWhere,
+      searchWhere,
     );
     const totalItems = Number(countRows[0]?.total ?? 0);
     const totalPages = Math.max(1, Math.ceil(totalItems / limit));
     const currentPage = Math.min(page, totalPages);
     const currentOffset = (currentPage - 1) * limit;
 
-    const rows = await prisma.$queryRaw<InvestmentDetailRow[]>(Prisma.sql`
-      SELECT
-        tb.id AS businessId,
-        tb.bank_account_id AS bankAccountId,
-        tb.label AS label,
-        tb.category AS category,
-        tb.map AS map,
-        tb.owner AS owner,
-        tb.is_owned AS isOwned,
-        tb.updated_at AS updatedAt,
-        ba.amount AS balance,
-        ba.creator AS creator,
-        ba.isFrozen AS isFrozen
-      FROM tl_businesses tb
-      LEFT JOIN bank_accounts_new ba ON ba.id = tb.bank_account_id
-      WHERE ${baseWhere} ${searchWhere}
-      ORDER BY tb.label ASC, tb.bank_account_id ASC
-      LIMIT ${limit}
-      OFFSET ${currentOffset}
-    `);
+    const rows = await adminInvestmentRepository.listDetailItems(
+      baseWhere,
+      searchWhere,
+      limit,
+      currentOffset,
+    );
 
     const items = rows.map((row) => ({
       businessId: Number(row.businessId),
@@ -122,7 +86,7 @@ export async function GET(request: Request) {
       isFrozen: Number(row.isFrozen ?? 0),
     }));
 
-    return NextResponse.json(
+    return apiFromLegacy(
       {
         category: category ?? null,
         gang: gang ?? null,
@@ -139,7 +103,32 @@ export async function GET(request: Request) {
       { status: 200 },
     );
   } catch (error) {
-    console.error("Admin investment detail fetch error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    logger.error("Admin investment detail fetch error:", error);
+    return apiFromLegacy({ error: "Internal server error" }, { status: 500 });
   }
+}
+
+// AUTO_METHOD_NOT_ALLOWED
+export function POST() {
+  return apiMethodNotAllowed();
+}
+
+export function PUT() {
+  return apiMethodNotAllowed();
+}
+
+export function PATCH() {
+  return apiMethodNotAllowed();
+}
+
+export function DELETE() {
+  return apiMethodNotAllowed();
+}
+
+export function OPTIONS() {
+  return apiMethodNotAllowed();
+}
+
+export function HEAD() {
+  return apiMethodNotAllowed();
 }

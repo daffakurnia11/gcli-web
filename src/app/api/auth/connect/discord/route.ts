@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { apiFromLegacy, apiMethodNotAllowed } from "@/services/api-response";
+import { NextResponse } from "@/services/next-response";
 
 const DISCORD_AUTHORIZE_URL = "https://discord.com/api/oauth2/authorize";
 
@@ -8,7 +9,7 @@ export async function GET(request: Request) {
 
   const clientId = process.env.DISCORD_CLIENT_ID;
   if (!clientId) {
-    return NextResponse.json(
+    return apiFromLegacy(
       { error: "Discord client ID is not configured" },
       { status: 500 },
     );
@@ -27,4 +28,29 @@ export async function GET(request: Request) {
   url.searchParams.set("state", state);
 
   return NextResponse.redirect(url.toString());
+}
+
+// AUTO_METHOD_NOT_ALLOWED
+export function POST() {
+  return apiMethodNotAllowed();
+}
+
+export function PUT() {
+  return apiMethodNotAllowed();
+}
+
+export function PATCH() {
+  return apiMethodNotAllowed();
+}
+
+export function DELETE() {
+  return apiMethodNotAllowed();
+}
+
+export function OPTIONS() {
+  return apiMethodNotAllowed();
+}
+
+export function HEAD() {
+  return apiMethodNotAllowed();
 }

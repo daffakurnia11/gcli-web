@@ -1,4 +1,6 @@
-import { NextResponse } from "next/server";
+import { apiMethodNotAllowed } from "@/services/api-response";
+import { logger } from "@/services/logger";
+import { NextResponse } from "@/services/next-response";
 
 const DISCORD_TOKEN_URL = "https://discord.com/api/oauth2/token";
 const DISCORD_USER_URL = "https://discord.com/api/users/@me";
@@ -111,7 +113,32 @@ export async function GET(request: Request) {
 
     return NextResponse.redirect(redirectUrl.toString());
   } catch (error) {
-    console.error("Discord connect error:", error);
+    logger.error("Discord connect error:", error);
     return redirectWithError(callbackUrl, "DiscordConnectError", request.url);
   }
+}
+
+// AUTO_METHOD_NOT_ALLOWED
+export function POST() {
+  return apiMethodNotAllowed();
+}
+
+export function PUT() {
+  return apiMethodNotAllowed();
+}
+
+export function PATCH() {
+  return apiMethodNotAllowed();
+}
+
+export function DELETE() {
+  return apiMethodNotAllowed();
+}
+
+export function OPTIONS() {
+  return apiMethodNotAllowed();
+}
+
+export function HEAD() {
+  return apiMethodNotAllowed();
 }

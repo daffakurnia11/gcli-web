@@ -1,5 +1,7 @@
 import axios from "axios";
-import { NextResponse } from "next/server";
+
+import { apiFromLegacy, apiMethodNotAllowed } from "@/services/api-response";
+import { logger } from "@/services/logger";
 
 const DISCORD_API_BASE =
   process.env.DISCORD_API_BASE_URL || "https://discord.com/api/v10";
@@ -8,7 +10,7 @@ const DISCORD_INVITE_CODE = process.env.DISCORD_API_INVITE_CODE;
 export async function GET() {
   try {
     if (!DISCORD_INVITE_CODE) {
-      return NextResponse.json(
+      return apiFromLegacy(
         { error: "Discord invite code not configured" },
         { status: 500 },
       );
@@ -50,7 +52,7 @@ export async function GET() {
       data: transformedResponse,
     };
 
-    return NextResponse.json(proxyResponse, { status: 200 });
+    return apiFromLegacy(proxyResponse, { status: 200 });
   } catch (error: unknown) {
     if (axios.isAxiosError(error)) {
       const status = error.response?.status || 500;
@@ -58,13 +60,38 @@ export async function GET() {
         error: "Discord invite API request failed",
       };
 
-      return NextResponse.json(data, { status });
+      return apiFromLegacy(data, { status });
     }
 
-    console.error("Discord info proxy error:", error);
-    return NextResponse.json(
+    logger.error("Discord info proxy error:", error);
+    return apiFromLegacy(
       { error: "Internal server error" },
       { status: 500 },
     );
   }
+}
+
+// AUTO_METHOD_NOT_ALLOWED
+export function POST() {
+  return apiMethodNotAllowed();
+}
+
+export function PUT() {
+  return apiMethodNotAllowed();
+}
+
+export function PATCH() {
+  return apiMethodNotAllowed();
+}
+
+export function DELETE() {
+  return apiMethodNotAllowed();
+}
+
+export function OPTIONS() {
+  return apiMethodNotAllowed();
+}
+
+export function HEAD() {
+  return apiMethodNotAllowed();
 }

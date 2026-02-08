@@ -16,6 +16,8 @@ import type {
   AccountInfoDraft,
   AccountInfoFormData,
 } from "@/schemas/authSetup";
+import { useAuthSetupApi } from "@/services/hooks/api/useAuthSetupApi";
+import { useUniqueCheck } from "@/services/hooks/useUniqueCheck";
 
 import Stepper from "./Stepper";
 
@@ -36,9 +38,9 @@ export default function AccountLink({
   discordInfo,
 }: AccountLinkProps) {
   const router = useRouter();
+  const { registerAccount } = useAuthSetupApi();
   const [isMounted, setIsMounted] = useState(false);
   const [submissionError, setSubmissionError] = useState("");
-  const [discordConflict, setDiscordConflict] = useState<boolean | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [accountInfo] = useState<AccountInfoDraft | null>(() => {
     const payload = readAuthSetupPayload() as {
@@ -125,6 +127,12 @@ export default function AccountLink({
   }, [credentials]);
 
   const isConnectedToDiscord = Boolean(discordInfo?.connected);
+  const discordId = discordInfo?.connected ? (discordInfo.id ?? "") : "";
+  const {
+    exists: discordConflict,
+    isLoading: isCheckingDiscord,
+    error: discordCheckError,
+  } = useUniqueCheck("discord", discordId, (value) => value.length > 0);
 
   const isJoinDisabled = isMounted
     ? !isAccountInfoComplete ||
@@ -180,28 +188,20 @@ export default function AccountLink({
       return;
     }
 
-    try {
-      const discordCheck = await fetch(
-        `/api/account/unique-check?type=discord&value=${encodeURIComponent(
-          discordInfo.id,
-        )}`,
-      );
-      if (!discordCheck.ok) {
-        throw new Error("Failed to verify Discord account");
-      }
-      const discordCheckData = (await discordCheck.json()) as {
-        exists?: boolean;
-      };
-      if (discordCheckData.exists) {
-        setDiscordConflict(true);
-        setSubmissionError("Discord account already linked to another user");
-        return;
-      }
-    } catch (error) {
-      setDiscordConflict(false);
+    if (isCheckingDiscord) {
+      setSubmissionError("Verifying Discord account. Please wait.");
+      return;
+    }
+
+    if (discordConflict) {
+      setSubmissionError("Discord account already linked to another user");
+      return;
+    }
+
+    if (discordCheckError) {
       setSubmissionError(
-        error instanceof Error
-          ? error.message
+        discordCheckError instanceof Error
+          ? discordCheckError.message
           : "Failed to verify Discord account",
       );
       return;
@@ -240,22 +240,7 @@ export default function AccountLink({
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const data = (await response.json()) as {
-        success?: boolean;
-        error?: string;
-        message?: string;
-      };
-
-      if (!response.ok) {
-        setSubmissionError(data.error ?? "Registration failed");
-        return;
-      }
+      const data = await registerAccount(payload);
 
       if (data.success) {
         const signInResult = await signIn("credentials", {
@@ -293,38 +278,26 @@ export default function AccountLink({
   }, [discordInfo]);
 
   useEffect(() => {
-    const checkDiscord = async () => {
-      if (!discordInfo?.connected) {
-        setDiscordConflict(false);
-        return;
-      }
+    if (!discordInfo?.connected) {
+      return;
+    }
 
-      try {
-        const response = await fetch(
-          `/api/account/unique-check?type=discord&value=${encodeURIComponent(
-            discordInfo.id,
-          )}`,
-        );
-        if (!response.ok) {
-          throw new Error("Failed to verify Discord account");
-        }
-        const data = (await response.json()) as { exists?: boolean };
-        setDiscordConflict(Boolean(data.exists));
-        if (data.exists) {
-          setSubmissionError("Discord account already linked to another user");
-        }
-      } catch (error) {
-        setDiscordConflict(false);
-        setSubmissionError(
-          error instanceof Error
-            ? error.message
-            : "Failed to verify Discord account",
-        );
-      }
-    };
+    if (discordConflict) {
+      setSubmissionError("Discord account already linked to another user");
+    }
+  }, [discordConflict, discordInfo?.connected]);
 
-    void checkDiscord();
-  }, [discordInfo]);
+  useEffect(() => {
+    if (!discordInfo?.connected || !discordCheckError) {
+      return;
+    }
+
+    setSubmissionError(
+      discordCheckError instanceof Error
+        ? discordCheckError.message
+        : "Failed to verify Discord account",
+    );
+  }, [discordCheckError, discordInfo?.connected]);
 
   return (
     <>

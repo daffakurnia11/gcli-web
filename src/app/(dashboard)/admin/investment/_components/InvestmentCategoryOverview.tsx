@@ -14,12 +14,7 @@ import {
   DataTableSkeleton,
 } from "@/components/table/DataTable";
 import { Typography } from "@/components/typography";
-import { useApiSWR } from "@/lib/swr";
-import type {
-  AdminGangOwnershipItem,
-  AdminGangOwnershipResponse,
-  AdminInvestmentCategoriesResponse,
-} from "@/types/api/Bank";
+import { useApiSWR } from "@/services/swr";
 
 const numberFormatter = new Intl.NumberFormat("en-US", {
   minimumFractionDigits: 0,

@@ -8,10 +8,12 @@ import { Button } from "@/components/button";
 import { Form } from "@/components/form";
 import { Typography } from "@/components/typography";
 import { clearAuthSetupPayload } from "@/lib/authSetupPayload";
+import { useAccountApi } from "@/services/hooks/api/useAccountApi";
 
 import { Alert, DashboardCard, SettingsGroup } from "./index";
 
 export function DangerZone() {
+  const { deleteAccount } = useAccountApi();
   const [isDeleting, setIsDeleting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [message, setMessage] = useState<{
@@ -34,14 +36,7 @@ export function DangerZone() {
     }
 
     try {
-      const response = await fetch("/api/user/account", {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to delete account");
-      }
+      await deleteAccount();
 
       setMessage({ type: "success", text: "Account deleted. Signing out..." });
       clearAuthSetupPayload();

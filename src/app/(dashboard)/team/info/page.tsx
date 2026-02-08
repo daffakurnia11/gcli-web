@@ -8,8 +8,8 @@ import {
 } from "@/app/(dashboard)/_components/dashboard";
 import { DataTable, type DataTableColumn } from "@/components/table";
 import { Typography } from "@/components/typography";
-import { useApiSWR } from "@/lib/swr";
-import type { TeamGrade, TeamInfoResponse } from "@/types/api/Gang";
+import { formatDateOnly } from "@/services/date";
+import { useApiSWR } from "@/services/swr";
 
 const gradeColumns: Array<DataTableColumn<TeamGrade>> = [
   {
@@ -54,15 +54,6 @@ const gradeColumns: Array<DataTableColumn<TeamGrade>> = [
 export default function TeamPage() {
   const { data, error, isLoading } =
     useApiSWR<TeamInfoResponse>("/api/user/gang");
-
-  const formatDate = (date: Date | string | null | undefined) => {
-    if (!date) return "N/A";
-    return new Date(date).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
 
   return (
     <div className="space-y-6">
@@ -147,13 +138,13 @@ export default function TeamPage() {
                   <div className="flex items-center gap-3 text-sm">
                     <span className="text-primary-300">Created:</span>
                     <span className="text-primary-100">
-                      {formatDate(data.team.createdAt)}
+                      {formatDateOnly(data.team.createdAt)}
                     </span>
                   </div>
                   <div className="flex items-center gap-3 text-sm">
                     <span className="text-primary-300">Updated:</span>
                     <span className="text-primary-100">
-                      {formatDate(data.team.updatedAt)}
+                      {formatDateOnly(data.team.updatedAt)}
                     </span>
                   </div>
                 </div>

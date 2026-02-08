@@ -1,14 +1,15 @@
-import { NextResponse } from "next/server";
-
-import { getAccountIdFromRequest } from "@/lib/apiAuth";
 import { prisma } from "@/lib/prisma";
+import { requireAccountId } from "@/services/api-guards";
+import { apiFromLegacy, apiMethodNotAllowed } from "@/services/api-response";
+import { logger } from "@/services/logger";
 
 export async function PUT(request: Request) {
   try {
-    const accountId = await getAccountIdFromRequest(request);
-    if (!accountId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const authz = await requireAccountId(request);
+    if (!authz.ok) {
+      return authz.response;
     }
+    const accountId = authz.accountId;
 
     const body = await request.json();
     const {
@@ -33,13 +34,13 @@ export async function PUT(request: Request) {
 
     const parsedBirthDate = birthDate ? new Date(birthDate) : null;
     if (birthDate && Number.isNaN(parsedBirthDate?.getTime())) {
-      return NextResponse.json(
+      return apiFromLegacy(
         { error: "Invalid birth date" },
         { status: 400 },
       );
     }
     if (gender && gender !== "male" && gender !== "female") {
-      return NextResponse.json({ error: "Invalid gender" }, { status: 400 });
+      return apiFromLegacy({ error: "Invalid gender" }, { status: 400 });
     }
     const profileData = {
       ...(realName !== undefined && { real_name: realName }),
@@ -82,15 +83,40 @@ export async function PUT(request: Request) {
       });
     }
 
-    return NextResponse.json(
+    return apiFromLegacy(
       { message: "Profile updated successfully" },
       { status: 200 },
     );
   } catch (error) {
-    console.error("Profile update error:", error);
-    return NextResponse.json(
+    logger.error("Profile update error:", error);
+    return apiFromLegacy(
       { error: "Internal server error" },
       { status: 500 },
     );
   }
+}
+
+// AUTO_METHOD_NOT_ALLOWED
+export function GET() {
+  return apiMethodNotAllowed();
+}
+
+export function POST() {
+  return apiMethodNotAllowed();
+}
+
+export function PATCH() {
+  return apiMethodNotAllowed();
+}
+
+export function DELETE() {
+  return apiMethodNotAllowed();
+}
+
+export function OPTIONS() {
+  return apiMethodNotAllowed();
+}
+
+export function HEAD() {
+  return apiMethodNotAllowed();
 }

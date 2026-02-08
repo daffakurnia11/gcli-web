@@ -42,13 +42,13 @@ export function Alert({
       )}
       role={role}
     >
-      <span className="flex-shrink-0 mt-0.5">{icon}</span>
+      <span className="shrink-0 mt-0.5">{icon}</span>
       <div className="flex-1 text-sm">{children}</div>
       {onDismiss && (
         <button
           type="button"
           onClick={onDismiss}
-          className="flex-shrink-0 hover:opacity-70 transition-opacity"
+          className="shrink-0 hover:opacity-70 transition-opacity"
           aria-label="Dismiss"
         >
           <X size={16} />

@@ -7,8 +7,8 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/button";
 import { Form } from "@/components/form";
 import { Typography } from "@/components/typography";
-import { useCities, useProvinces } from "@/hooks/useIndonesiaRegions";
-import type { City, Province } from "@/types/api/Indonesia";
+import { useAccountApi } from "@/services/hooks/api/useAccountApi";
+import { useCities, useProvinces } from "@/services/hooks/useIndonesiaRegions";
 import type { SelectOption } from "@/types/Form";
 
 import { Alert, DashboardCard, DashboardSection } from "./index";
@@ -55,6 +55,7 @@ export function ProfileSection({
   avatarUrl,
   allowFivemChange = true,
 }: ProfileSectionProps) {
+  const { updateProfile } = useAccountApi();
   const initialFormValues = () => ({
     realName: realName ?? "",
     fivemName: fivemName ?? "",
@@ -135,10 +136,14 @@ export function ProfileSection({
     const resolvedCityName = formValues.cityId
       ? (selectedCity?.label ?? cityName ?? null)
       : null;
+    const normalizedGender: "male" | "female" | null =
+      formValues.gender === "male" || formValues.gender === "female"
+        ? formValues.gender
+        : null;
     const data = {
       realName: formValues.realName,
       ...(allowFivemChange ? { fivemName: formValues.fivemName } : {}),
-      gender: formValues.gender || null,
+      gender: normalizedGender,
       birthDate: formValues.birthDate || null,
       provinceId: formValues.provinceId || null,
       provinceName: resolvedProvinceName,
@@ -147,16 +152,7 @@ export function ProfileSection({
     };
 
     try {
-      const response = await fetch("/api/user/profile", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to update profile");
-      }
+      await updateProfile(data);
 
       setMessage({ type: "success", text: "Profile updated successfully" });
       setIsEditing(false);

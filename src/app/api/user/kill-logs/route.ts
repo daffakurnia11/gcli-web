@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
-
-import { getAccountIdFromRequest } from "@/lib/apiAuth";
 import { prisma } from "@/lib/prisma";
 import { resolveCitizenIdForAccount } from "@/lib/userCitizenId";
+import { requireAccountId } from "@/services/api-guards";
+import { apiFromLegacy, apiMethodNotAllowed } from "@/services/api-response";
+import { logger } from "@/services/logger";
 
 type KillLogType = "kill" | "dead";
 
@@ -16,10 +16,11 @@ const parseType = (value: string | null): KillLogType => {
 
 export async function GET(request: Request) {
   try {
-    const accountId = await getAccountIdFromRequest(request);
-    if (!accountId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const authz = await requireAccountId(request);
+    if (!authz.ok) {
+      return authz.response;
     }
+    const accountId = authz.accountId;
 
     const url = new URL(request.url);
     const type = parseType(url.searchParams.get("type"));
@@ -35,7 +36,7 @@ export async function GET(request: Request) {
     const resolved = await resolveCitizenIdForAccount(accountId);
 
     if (!resolved?.citizenId) {
-      return NextResponse.json(
+      return apiFromLegacy(
         {
           type,
           citizenId: null,
@@ -81,7 +82,7 @@ export async function GET(request: Request) {
       },
     });
 
-    return NextResponse.json(
+    return apiFromLegacy(
       {
         type,
         citizenId: resolved.citizenId,
@@ -105,11 +106,35 @@ export async function GET(request: Request) {
       { status: 200 },
     );
   } catch (error) {
-    console.error("Kill log fetch error:", error);
-    return NextResponse.json(
+    logger.error("Kill log fetch error:", error);
+    return apiFromLegacy(
       { error: "Internal server error" },
       { status: 500 },
     );
   }
 }
 
+// AUTO_METHOD_NOT_ALLOWED
+export function POST() {
+  return apiMethodNotAllowed();
+}
+
+export function PUT() {
+  return apiMethodNotAllowed();
+}
+
+export function PATCH() {
+  return apiMethodNotAllowed();
+}
+
+export function DELETE() {
+  return apiMethodNotAllowed();
+}
+
+export function OPTIONS() {
+  return apiMethodNotAllowed();
+}
+
+export function HEAD() {
+  return apiMethodNotAllowed();
+}

@@ -1,9 +1,10 @@
 import { Prisma } from "@prisma/client";
-import { NextResponse } from "next/server";
 
-import { getAccountIdFromRequest } from "@/lib/apiAuth";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { requireAccountId } from "@/services/api-guards";
+import { apiFromLegacy, apiMethodNotAllowed } from "@/services/api-response";
+import { logger } from "@/services/logger";
 
 type InvestmentAccount = {
   id: string;
@@ -15,16 +16,16 @@ type InvestmentAccount = {
 
 export async function GET(request: Request) {
   try {
-    const accountId = await getAccountIdFromRequest(request);
-    if (!accountId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const authz = await requireAccountId(request);
+    if (!authz.ok) {
+      return authz.response;
     }
 
     const session = await auth();
     const gangName = session?.user?.gang?.name;
 
     if (!gangName) {
-      return NextResponse.json(
+      return apiFromLegacy(
         {
           investments: [],
           message: "No gang membership found for this account.",
@@ -47,7 +48,7 @@ export async function GET(request: Request) {
       ORDER BY COALESCE(tb.label, ba.id) ASC
     `);
 
-    return NextResponse.json(
+    return apiFromLegacy(
       {
         gangName,
         investments: investments as InvestmentAccount[],
@@ -55,7 +56,32 @@ export async function GET(request: Request) {
       { status: 200 },
     );
   } catch (error) {
-    console.error("Investment accounts fetch error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    logger.error("Investment accounts fetch error:", error);
+    return apiFromLegacy({ error: "Internal server error" }, { status: 500 });
   }
+}
+
+// AUTO_METHOD_NOT_ALLOWED
+export function POST() {
+  return apiMethodNotAllowed();
+}
+
+export function PUT() {
+  return apiMethodNotAllowed();
+}
+
+export function PATCH() {
+  return apiMethodNotAllowed();
+}
+
+export function DELETE() {
+  return apiMethodNotAllowed();
+}
+
+export function OPTIONS() {
+  return apiMethodNotAllowed();
+}
+
+export function HEAD() {
+  return apiMethodNotAllowed();
 }

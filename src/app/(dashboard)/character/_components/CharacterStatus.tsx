@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 
 import { Typography } from "@/components/typography";
-import { Character } from "@/types/api/Character";
+import { formatDateTime } from "@/services/date";
 
 import { DashboardCard, DashboardSection } from "../../_components/dashboard";
 import StatusBar from "./StatusBar";
@@ -25,17 +25,24 @@ export default function CharacterStatus({
 }) {
   const showNoData = !isLoading && !data;
   const showLoading = isLoading;
-  const formatDate = (date: Date | string | null | undefined) => {
-    if (!date) return "N/A";
-    return new Date(date).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "numeric",
-      second: "numeric",
-    });
-  };
+  const healthCandidates = [
+    data?.metadata?.health,
+    (data as Partial<{ health: number }> | undefined)?.health,
+    (
+      data?.metadata as
+        | Partial<{ playerHealth: number; hp: number }>
+        | undefined
+    )?.playerHealth,
+    (data?.metadata as Partial<{ hp: number }> | undefined)?.hp,
+  ];
+
+  const resolvedHealth =
+    healthCandidates
+      .map((value) => Number(value))
+      .find((value) => Number.isFinite(value) && value > 0) ??
+    (data?.metadata?.isdead ? 100 : 200);
+
+  const normalizedHealth = Math.min(Math.max(resolvedHealth, 100), 200) - 100;
 
   return (
     <div className="space-y-6">
@@ -67,9 +74,9 @@ export default function CharacterStatus({
               icon={
                 <Heart size={20} fill="#f87171" className="text-[#f87171]" />
               }
-              current={data?.metadata?.health || 0}
-              min={100}
-              max={200}
+              current={normalizedHealth}
+              min={0}
+              max={100}
               barColor="bg-[#f87171]"
             />
             <StatusBar
@@ -110,7 +117,7 @@ export default function CharacterStatus({
                 <LogOut size={18} className="text-primary-300 shrink-0" />
                 <span className="text-primary-300 shrink-0">Last Logout:</span>
                 <span className="text-primary-100 shrink-0">
-                  {formatDate(data?.last_logged_out)}
+                  {formatDateTime(data?.last_logged_out, { includeSeconds: true })}
                 </span>
               </div>
 
@@ -118,7 +125,7 @@ export default function CharacterStatus({
                 <Upload size={18} className="text-primary-300 shrink-0" />
                 <span className="text-primary-300 shrink-0">Last Update:</span>
                 <span className="text-primary-100 shrink-0">
-                  {formatDate(data?.last_updated)}
+                  {formatDateTime(data?.last_updated, { includeSeconds: true })}
                 </span>
               </div>
 

@@ -1,16 +1,40 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 
+import { getEnv } from "@/services/env";
+
 export async function middleware(request: NextRequest) {
+  getEnv();
+
   const nextUrl = request.nextUrl;
   const pathname = nextUrl.pathname;
+  const requestId = request.headers.get("x-request-id") || crypto.randomUUID();
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-request-id", requestId);
+
+  const withRequestId = (response: NextResponse) => {
+    response.headers.set("x-request-id", requestId);
+    return response;
+  };
+
+  if (pathname === "/api/v1" || pathname.startsWith("/api/v1/")) {
+    const rewrittenPath = pathname.replace(/^\/api\/v1/, "/api");
+    const url = new URL(rewrittenPath + nextUrl.search, nextUrl.origin);
+    return withRequestId(NextResponse.rewrite(url));
+  }
 
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api") ||
     /\.[^/]+$/.test(pathname)
   ) {
-    return NextResponse.next();
+    return withRequestId(
+      NextResponse.next({
+        request: {
+          headers: requestHeaders,
+        },
+      }),
+    );
   }
 
   const token =
@@ -36,16 +60,16 @@ export async function middleware(request: NextRequest) {
   const hasAdminAccess = token?.optin === true;
 
   if ((isDashboardPage || isAdminPage) && !isAuthenticated) {
-    return NextResponse.redirect(new URL("/auth", nextUrl));
+    return withRequestId(NextResponse.redirect(new URL("/auth", nextUrl)));
   }
 
   if (isAdminPage && !hasAdminAccess) {
-    return NextResponse.redirect(new URL("/dashboard", nextUrl));
+    return withRequestId(NextResponse.redirect(new URL("/dashboard", nextUrl)));
   }
 
   if (pathname.startsWith("/auth")) {
     if (isAuthenticated && isRegistered) {
-      return NextResponse.redirect(new URL("/dashboard", nextUrl));
+      return withRequestId(NextResponse.redirect(new URL("/dashboard", nextUrl)));
     }
 
     if (isAuthenticated && !isRegistered) {
@@ -53,16 +77,26 @@ export async function middleware(request: NextRequest) {
         return NextResponse.next();
       }
       if (isAuthPage) {
-        return NextResponse.redirect(new URL("/auth/setup?step=1", nextUrl));
+        return withRequestId(
+          NextResponse.redirect(new URL("/auth/setup?step=1", nextUrl)),
+        );
       }
     }
   }
 
   if (isAuthenticated && !isRegistered && !isSetupPage && !isApiRoute) {
-    return NextResponse.redirect(new URL("/auth/setup?step=1", nextUrl));
+    return withRequestId(
+      NextResponse.redirect(new URL("/auth/setup?step=1", nextUrl)),
+    );
   }
 
-  return NextResponse.next();
+  return withRequestId(
+    NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    }),
+  );
 }
 
 export const config = {

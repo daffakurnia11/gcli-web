@@ -1,20 +1,22 @@
-import { NextResponse } from "next/server";
-
-import { getAccountIdFromRequest } from "@/lib/apiAuth";
 import { prisma } from "@/lib/prisma";
 import { resolveCitizenIdForAccount } from "@/lib/userCitizenId";
+import { requireAccountId } from "@/services/api-guards";
+import { apiFromLegacy, apiMethodNotAllowed } from "@/services/api-response";
+import { parseJson } from "@/services/json";
+import { logger } from "@/services/logger";
 
 export async function GET(request: Request) {
   try {
-    const accountId = await getAccountIdFromRequest(request);
-    if (!accountId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const authz = await requireAccountId(request);
+    if (!authz.ok) {
+      return authz.response;
     }
+    const accountId = authz.accountId;
 
     const resolved = await resolveCitizenIdForAccount(accountId);
 
     if (!resolved?.citizenId) {
-      return NextResponse.json(
+      return apiFromLegacy(
         null,
         { status: 400 },
       );
@@ -43,22 +45,22 @@ export async function GET(request: Request) {
     });
 
     if (!player) {
-      return NextResponse.json(
+      return apiFromLegacy(
         null,
         { status: 400 },
       );
     }
 
     // Parse JSON fields
-    const money = JSON.parse(player.money as string);
-    const charinfo = JSON.parse(player.charinfo as string);
-    const job = JSON.parse(player.job as string);
-    const gang = player.gang ? JSON.parse(player.gang) : null;
-    const position = JSON.parse(player.position as string);
-    const metadata = JSON.parse(player.metadata as string);
-    const inventory = player.inventory ? JSON.parse(player.inventory) : [];
+    const money = parseJson(player.money, {});
+    const charinfo = parseJson(player.charinfo, {});
+    const job = parseJson(player.job, {});
+    const gang = parseJson(player.gang, null);
+    const position = parseJson(player.position, {});
+    const metadata = parseJson(player.metadata, {});
+    const inventory = parseJson(player.inventory, []);
 
-    return NextResponse.json(
+    return apiFromLegacy(
       {
         id: player.id,
         userId: player.userId,
@@ -80,7 +82,32 @@ export async function GET(request: Request) {
       { status: 200 },
     );
   } catch (error) {
-    console.error("Character data fetch error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    logger.error("Character data fetch error:", error);
+    return apiFromLegacy({ error: "Internal server error" }, { status: 500 });
   }
+}
+
+// AUTO_METHOD_NOT_ALLOWED
+export function POST() {
+  return apiMethodNotAllowed();
+}
+
+export function PUT() {
+  return apiMethodNotAllowed();
+}
+
+export function PATCH() {
+  return apiMethodNotAllowed();
+}
+
+export function DELETE() {
+  return apiMethodNotAllowed();
+}
+
+export function OPTIONS() {
+  return apiMethodNotAllowed();
+}
+
+export function HEAD() {
+  return apiMethodNotAllowed();
 }

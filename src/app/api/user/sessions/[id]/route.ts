@@ -1,22 +1,23 @@
-import { NextResponse } from "next/server";
-
-import { getAccountIdFromRequest } from "@/lib/apiAuth";
 import { prisma } from "@/lib/prisma";
+import { requireAccountId } from "@/services/api-guards";
+import { apiFromLegacy, apiMethodNotAllowed } from "@/services/api-response";
+import { logger } from "@/services/logger";
 
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const accountId = await getAccountIdFromRequest(request);
-    if (!accountId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const authz = await requireAccountId(request);
+    if (!authz.ok) {
+      return authz.response;
     }
+    const accountId = authz.accountId;
 
     const sessionId = Number.parseInt((await params).id, 10);
 
     if (Number.isNaN(accountId) || Number.isNaN(sessionId)) {
-      return NextResponse.json(
+      return apiFromLegacy(
         { error: "Invalid account or session ID" },
         { status: 400 },
       );
@@ -31,7 +32,7 @@ export async function DELETE(
     });
 
     if (!targetSession) {
-      return NextResponse.json({ error: "Session not found" }, { status: 404 });
+      return apiFromLegacy({ error: "Session not found" }, { status: 404 });
     }
 
     // Delete the session
@@ -39,15 +40,40 @@ export async function DELETE(
       where: { id: sessionId },
     });
 
-    return NextResponse.json(
+    return apiFromLegacy(
       { message: "Session revoked successfully" },
       { status: 200 },
     );
   } catch (error) {
-    console.error("Revoke session error:", error);
-    return NextResponse.json(
+    logger.error("Revoke session error:", error);
+    return apiFromLegacy(
       { error: "Internal server error" },
       { status: 500 },
     );
   }
+}
+
+// AUTO_METHOD_NOT_ALLOWED
+export function GET() {
+  return apiMethodNotAllowed();
+}
+
+export function POST() {
+  return apiMethodNotAllowed();
+}
+
+export function PUT() {
+  return apiMethodNotAllowed();
+}
+
+export function PATCH() {
+  return apiMethodNotAllowed();
+}
+
+export function OPTIONS() {
+  return apiMethodNotAllowed();
+}
+
+export function HEAD() {
+  return apiMethodNotAllowed();
 }

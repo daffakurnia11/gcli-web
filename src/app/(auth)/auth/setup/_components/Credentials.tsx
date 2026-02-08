@@ -7,7 +7,6 @@ import { z } from "zod";
 import { Button } from "@/components/button";
 import { Form } from "@/components/form";
 import { Typography } from "@/components/typography";
-import { useUniqueCheck } from "@/hooks/useUniqueCheck";
 import {
   readAuthSetupPayload,
   updateAuthSetupPayload,
@@ -18,6 +17,7 @@ import {
   type PasswordFormData,
   passwordSchema,
 } from "@/schemas/authSetup";
+import { useUniqueCheck } from "@/services/hooks/useUniqueCheck";
 
 import Stepper from "./Stepper";
 

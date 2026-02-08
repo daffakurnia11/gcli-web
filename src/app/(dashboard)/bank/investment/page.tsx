@@ -9,8 +9,7 @@ import {
   DashboardSection,
 } from "@/app/(dashboard)/_components/dashboard";
 import { Typography } from "@/components/typography";
-import { useApiSWR } from "@/lib/swr";
-import type { InvestmentsResponse } from "@/types/api/Bank";
+import { useApiSWR } from "@/services/swr";
 
 export default function InvestmentPage() {
   const { data: session } = useSession();

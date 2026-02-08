@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server";
-
-import { getAccountIdFromRequest } from "@/lib/apiAuth";
 import { prisma } from "@/lib/prisma";
 import { resolveCitizenIdForAccount } from "@/lib/userCitizenId";
+import { requireAccountId } from "@/services/api-guards";
+import { apiFromLegacy, apiMethodNotAllowed } from "@/services/api-response";
+import { parseJson } from "@/services/json";
+import { logger } from "@/services/logger";
 
 const formatInitials = (value: string) => {
   const words = value
@@ -38,14 +39,15 @@ type ParsedCharinfo = {
 
 export async function GET(request: Request) {
   try {
-    const accountId = await getAccountIdFromRequest(request);
-    if (!accountId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const authz = await requireAccountId(request);
+    if (!authz.ok) {
+      return authz.response;
     }
+    const accountId = authz.accountId;
 
     const resolved = await resolveCitizenIdForAccount(accountId);
     if (!resolved?.citizenId) {
-      return NextResponse.json(
+      return apiFromLegacy(
         {
           team: null,
           grades: [],
@@ -74,32 +76,18 @@ export async function GET(request: Request) {
       }),
     ]);
 
-    let parsedCharinfo: ParsedCharinfo | null = null;
-    if (player?.charinfo) {
-      try {
-        parsedCharinfo = JSON.parse(player.charinfo) as ParsedCharinfo;
-      } catch {
-        parsedCharinfo = null;
-      }
-    }
+    const parsedCharinfo = parseJson<ParsedCharinfo | null>(player?.charinfo, null);
 
     const characterName = [parsedCharinfo?.firstname, parsedCharinfo?.lastname]
       .filter((value): value is string => Boolean(value && value.trim()))
       .join(" ")
       .trim();
 
-    let parsedGang: ParsedGang | null = null;
-    if (player?.gang) {
-      try {
-        parsedGang = JSON.parse(player.gang) as ParsedGang;
-      } catch {
-        parsedGang = null;
-      }
-    }
+    const parsedGang = parseJson<ParsedGang | null>(player?.gang, null);
 
     const gangName = parsedGang?.name?.toLowerCase();
     if (!gangName || gangName === "none") {
-      return NextResponse.json(
+      return apiFromLegacy(
         {
           team: null,
           grades: [],
@@ -132,7 +120,7 @@ export async function GET(request: Request) {
     ]);
 
     if (!team) {
-      return NextResponse.json(
+      return apiFromLegacy(
         {
           team: null,
           grades: [],
@@ -172,7 +160,7 @@ export async function GET(request: Request) {
       gradeCountMap.set(item.grade, item._count._all);
     });
 
-    return NextResponse.json(
+    return apiFromLegacy(
       {
         team: {
           code: team.name,
@@ -214,7 +202,32 @@ export async function GET(request: Request) {
       { status: 200 },
     );
   } catch (error) {
-    console.error("Team info fetch error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    logger.error("Team info fetch error:", error);
+    return apiFromLegacy({ error: "Internal server error" }, { status: 500 });
   }
+}
+
+// AUTO_METHOD_NOT_ALLOWED
+export function POST() {
+  return apiMethodNotAllowed();
+}
+
+export function PUT() {
+  return apiMethodNotAllowed();
+}
+
+export function PATCH() {
+  return apiMethodNotAllowed();
+}
+
+export function DELETE() {
+  return apiMethodNotAllowed();
+}
+
+export function OPTIONS() {
+  return apiMethodNotAllowed();
+}
+
+export function HEAD() {
+  return apiMethodNotAllowed();
 }

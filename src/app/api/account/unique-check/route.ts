@@ -1,21 +1,30 @@
-import { NextResponse } from "next/server";
-
 import { prisma } from "@/lib/prisma";
+import { apiFromLegacy, apiMethodNotAllowed } from "@/services/api-response";
+import { checkRateLimit } from "@/services/rate-limit";
 
 export async function GET(request: Request) {
+  const rateLimited = await checkRateLimit(request, {
+    keyPrefix: "api:unique-check",
+    limit: 60,
+    windowMs: 60_000,
+  });
+  if (rateLimited) {
+    return rateLimited;
+  }
+
   const { searchParams } = new URL(request.url);
   const type = searchParams.get("type");
   const value = searchParams.get("value")?.trim() ?? "";
 
   if (!type || !value) {
-    return NextResponse.json(
+    return apiFromLegacy(
       { error: "Missing query params" },
       { status: 400 },
     );
   }
 
   if (type !== "username" && type !== "email" && type !== "discord") {
-    return NextResponse.json({ error: "Invalid type" }, { status: 400 });
+    return apiFromLegacy({ error: "Invalid type" }, { status: 400 });
   }
 
   if (type === "email") {
@@ -23,7 +32,7 @@ export async function GET(request: Request) {
       where: { email: value },
       select: { id: true },
     });
-    return NextResponse.json({ exists: Boolean(existing) });
+    return apiFromLegacy({ exists: Boolean(existing) });
   }
 
   if (type === "discord") {
@@ -33,7 +42,7 @@ export async function GET(request: Request) {
       select: { id: true, password: true, profile: { select: { id: true } } },
     });
     const isTaken = Boolean(existing?.password || existing?.profile);
-    return NextResponse.json({ exists: isTaken });
+    return apiFromLegacy({ exists: isTaken });
   }
 
   const [userMatch, profileMatch] = await Promise.all([
@@ -47,5 +56,30 @@ export async function GET(request: Request) {
     }),
   ]);
 
-  return NextResponse.json({ exists: Boolean(userMatch || profileMatch) });
+  return apiFromLegacy({ exists: Boolean(userMatch || profileMatch) });
+}
+
+// AUTO_METHOD_NOT_ALLOWED
+export function POST() {
+  return apiMethodNotAllowed();
+}
+
+export function PUT() {
+  return apiMethodNotAllowed();
+}
+
+export function PATCH() {
+  return apiMethodNotAllowed();
+}
+
+export function DELETE() {
+  return apiMethodNotAllowed();
+}
+
+export function OPTIONS() {
+  return apiMethodNotAllowed();
+}
+
+export function HEAD() {
+  return apiMethodNotAllowed();
 }

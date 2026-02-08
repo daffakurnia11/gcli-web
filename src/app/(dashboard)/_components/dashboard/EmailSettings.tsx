@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Button } from "@/components/button";
 import { Form } from "@/components/form";
 import { Typography } from "@/components/typography";
+import { useAccountApi } from "@/services/hooks/api/useAccountApi";
 
 import { Alert, DashboardCard, SettingsGroup } from "./index";
 
@@ -14,6 +15,7 @@ export interface EmailSettingsProps {
 }
 
 export function EmailSettings({ currentEmail }: EmailSettingsProps) {
+  const { updateEmail } = useAccountApi();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState<{
@@ -33,16 +35,7 @@ export function EmailSettings({ currentEmail }: EmailSettingsProps) {
     };
 
     try {
-      const response = await fetch("/api/user/email", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to update email");
-      }
+      await updateEmail(data);
 
       setMessage({ type: "success", text: "Email updated successfully" });
       setIsEditing(false);

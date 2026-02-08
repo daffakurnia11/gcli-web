@@ -17,9 +17,10 @@ export default function StatusBar({
   min?: number;
   barColor: string;
 }) {
-  const percentageCalculator = (current: number, max: number) => {
-    return ((current - min) / (max - min)) * 100;
-  };
+  const range = Math.max(1, max - min);
+  const normalizedCurrent = Math.min(Math.max(current, min), max) - min;
+  const percentage = (normalizedCurrent / range) * 100;
+
   return (
     <div className="flex flex-col gap-2">
       <Typography.Small className="text-primary-300 shrink-0">
@@ -31,12 +32,12 @@ export default function StatusBar({
           <div
             className={classNames("h-4", barColor)}
             style={{
-              width: `${percentageCalculator(current, max)}%`,
+              width: `${percentage}%`,
             }}
           />
         </div>
         <Typography.Small className="text-primary-300 shrink-0 w-full max-w-16 text-right">
-          {(current - min).toFixed(0)} / {max - min}
+          {normalizedCurrent.toFixed(0)} / {range}
         </Typography.Small>
       </div>
     </div>

@@ -16,6 +16,17 @@ type TeamInventoryRow = {
   data: string | null;
 };
 
+const ASSETS_BASE_URL = (
+  process.env.FIVEM_ASSETS_URL || "http://assets.gclindonesia.com:8080"
+).replace(/\/+$/, "");
+
+function withImageUrl(item: InventoryItem): InventoryItem {
+  return {
+    ...item,
+    imageUrl: `${ASSETS_BASE_URL}/items/${encodeURIComponent(item.name)}.png`,
+  };
+}
+
 export async function GET(request: Request) {
   try {
     const authz = await requireAccountId(request);
@@ -57,15 +68,17 @@ export async function GET(request: Request) {
     );
 
     const inventoryRaw = parseJson<unknown[]>(rows[0]?.data ?? null, []);
-    const inventory = inventoryRaw.filter((item): item is InventoryItem => {
-      if (!item || typeof item !== "object") return false;
-      const candidate = item as Partial<InventoryItem>;
-      return (
-        typeof candidate.slot === "number" &&
-        typeof candidate.name === "string" &&
-        typeof candidate.count === "number"
-      );
-    });
+    const inventory = inventoryRaw
+      .filter((item): item is InventoryItem => {
+        if (!item || typeof item !== "object") return false;
+        const candidate = item as Partial<InventoryItem>;
+        return (
+          typeof candidate.slot === "number" &&
+          typeof candidate.name === "string" &&
+          typeof candidate.count === "number"
+        );
+      })
+      .map(withImageUrl);
 
     return apiFromLegacy(
       {

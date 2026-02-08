@@ -5,6 +5,17 @@ import { apiFromLegacy, apiMethodNotAllowed } from "@/services/api-response";
 import { parseJson } from "@/services/json";
 import { logger } from "@/services/logger";
 
+const ASSETS_BASE_URL = (
+  process.env.FIVEM_ASSETS_URL || "http://assets.gclindonesia.com:8080"
+).replace(/\/+$/, "");
+
+function withImageUrl(item: InventoryItem): InventoryItem {
+  return {
+    ...item,
+    imageUrl: `${ASSETS_BASE_URL}/items/${encodeURIComponent(item.name)}.png`,
+  };
+}
+
 export async function GET(request: Request) {
   try {
     const authz = await requireAccountId(request);
@@ -58,7 +69,18 @@ export async function GET(request: Request) {
     const gang = parseJson(player.gang, null);
     const position = parseJson(player.position, {});
     const metadata = parseJson(player.metadata, {});
-    const inventory = parseJson(player.inventory, []);
+    const inventoryRaw = parseJson<unknown[]>(player.inventory, []);
+    const inventory = inventoryRaw
+      .filter((item): item is InventoryItem => {
+        if (!item || typeof item !== "object") return false;
+        const candidate = item as Partial<InventoryItem>;
+        return (
+          typeof candidate.slot === "number" &&
+          typeof candidate.name === "string" &&
+          typeof candidate.count === "number"
+        );
+      })
+      .map(withImageUrl);
 
     return apiFromLegacy(
       {

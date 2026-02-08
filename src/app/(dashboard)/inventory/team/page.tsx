@@ -18,41 +18,11 @@ type TeamInventoryResponse = {
 };
 
 const TOTAL_SLOTS = 200;
-const FIVEM_ASSETS_URL = process.env.NEXT_PUBLIC_FIVEM_ASSETS_URL ?? "";
-
-function normalizeAssetsBaseUrl(baseUrl: string) {
-  if (!baseUrl) return "";
-
-  try {
-    const parsed = new URL(baseUrl);
-
-    // Current assets endpoint is served over http:8080.
-    // If env is set to https default port, rewrite to a reachable endpoint.
-    if (
-      parsed.hostname === "assets.gclindonesia.com" &&
-      parsed.protocol === "https:" &&
-      parsed.port === ""
-    ) {
-      parsed.protocol = "http:";
-      parsed.port = "8080";
-    }
-
-    return parsed.toString().replace(/\/+$/, "");
-  } catch {
-    return baseUrl.replace(/\/+$/, "");
-  }
-}
 
 function getItemDisplayName(itemName: string) {
   return itemName
     .replaceAll("_", " ")
     .replace(/\b\w/g, (char) => char.toUpperCase());
-}
-
-function getItemImageUrl(itemName: string) {
-  if (!FIVEM_ASSETS_URL) return "";
-  const base = normalizeAssetsBaseUrl(FIVEM_ASSETS_URL);
-  return `${base}/items/${itemName}.png`;
 }
 
 export default function TeamInventoryPage() {
@@ -116,9 +86,9 @@ export default function TeamInventoryPage() {
 
                 <div className="w-full p-3 flex flex-col">
                   <div className="flex-1 rounded-sm bg-primary-900/80 border border-primary-700/60 h-full! w-auto! aspect-square flex items-center justify-center overflow-hidden p-4">
-                    {item && getItemImageUrl(item.name) && (
+                    {item?.imageUrl && (
                       <Image
-                        src={getItemImageUrl(item.name)}
+                        src={item.imageUrl}
                         alt={item.name}
                         width={100}
                         height={100}
@@ -126,20 +96,7 @@ export default function TeamInventoryPage() {
                         className="col-start-1 row-start-1 object-cover"
                         loading="lazy"
                         onError={(event) => {
-                          const target = event.currentTarget;
-                          if (target.dataset.upperTried === "true") {
-                            target.style.display = "none";
-                            return;
-                          }
-
-                          const upperName = item.name.toUpperCase();
-                          if (upperName !== item.name) {
-                            target.dataset.upperTried = "true";
-                            target.src = getItemImageUrl(upperName);
-                            return;
-                          }
-
-                          target.style.display = "none";
+                          event.currentTarget.style.display = "none";
                         }}
                       />
                     )}

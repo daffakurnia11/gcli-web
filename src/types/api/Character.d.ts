@@ -124,6 +124,7 @@ declare global {
     name: string;
     count: number;
     metadata?: InventoryItemMetadata;
+    imageUrl?: string;
   };
 
   type Character = {

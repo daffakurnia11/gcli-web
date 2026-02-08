@@ -69,7 +69,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
-      <body className="antialiased">
+      <body className="antialiased bg-primary-900">
         <AppProviders session={session}>{children}</AppProviders>
       </body>
     </html>

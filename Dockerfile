@@ -8,7 +8,9 @@ RUN pnpm install --frozen-lockfile
 
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+COPY prisma ./prisma
+COPY prisma.config.ts ./
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # Consume build args passed by CapRover to avoid "not consumed" warnings.
 ARG ALLOW_DISCORD_CHANGE
@@ -40,12 +42,15 @@ ENV NEXT_PUBLIC_FIVEM_ASSETS_URL=$NEXT_PUBLIC_FIVEM_ASSETS_URL
 # prisma generate setelah schema sudah ada
 RUN pnpm exec prisma generate
 
+COPY . .
+
 # build next
 RUN pnpm build
 
 FROM node:22-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # standalone output: copy only the server bundle + static assets
 COPY --from=builder /app/.next/standalone ./

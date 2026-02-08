@@ -12,6 +12,8 @@ const envSchema = z
     DISCORD_API_INVITE_CODE: z.string().min(1).optional(),
     FIVEM_API_BASE: z.string().url().optional(),
     FIVEM_API_BASE_URL: z.string().url().optional(),
+    FIVEM_ASSETS_URL: z.string().url().optional(),
+    NEXT_PUBLIC_FIVEM_ASSETS_URL: z.string().url().optional(),
     UPSTASH_REDIS_REST_URL: z.string().url().optional(),
     UPSTASH_REDIS_REST_TOKEN: z.string().min(1).optional(),
   })

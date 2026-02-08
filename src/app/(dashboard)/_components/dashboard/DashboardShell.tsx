@@ -51,8 +51,18 @@ const getSidebarItems = (
 ): SidebarEntry[] => {
   if (isAdminRoute) {
     return [
-      { type: "item", href: "/admin/overview", label: "Overview", sidebar: true },
-      { type: "item", href: "/admin/investment", label: "Investment", sidebar: true },
+      {
+        type: "item",
+        href: "/admin/overview",
+        label: "Overview",
+        sidebar: true,
+      },
+      {
+        type: "item",
+        href: "/admin/investment",
+        label: "Investment",
+        sidebar: true,
+      },
       { type: "item", href: "/profile", label: "Profile" },
       { type: "item", href: "/settings", label: "Settings" },
     ];
@@ -73,6 +83,30 @@ const getSidebarItems = (
     ...baseItems.slice(0, 2),
     { type: "group", title: "Game Info" },
     { type: "item", href: "/character", label: "Character", sidebar: true },
+    ...(hasGang
+      ? ([
+          {
+            type: "item",
+            href: "/team",
+            label: "Team",
+            sidebar: true,
+            children: [
+              { href: "/team/info", label: "Overview" },
+              { href: "/team/members", label: "Members" },
+            ],
+          },
+        ] as SidebarEntry[])
+      : []),
+    {
+      type: "item",
+      href: "/inventory",
+      label: "Inventory",
+      sidebar: true,
+      children: [
+        { href: "/inventory/personal", label: "Personal Inventory" },
+        { href: "/inventory/team", label: "Team Inventory" },
+      ],
+    },
     {
       type: "item",
       href: "/bank",
@@ -88,20 +122,6 @@ const getSidebarItems = (
           : []),
       ],
     },
-    ...(hasGang
-      ? ([
-          {
-            type: "item",
-            href: "/team",
-            label: "Team",
-            sidebar: true,
-            children: [
-              { href: "/team/info", label: "Overview" },
-              { href: "/team/members", label: "Members" },
-            ],
-          },
-        ] as SidebarEntry[])
-      : []),
     { type: "group", title: "Log" },
     {
       type: "item",
@@ -133,7 +153,8 @@ export default function DashboardShell({
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const sidebarItems = useMemo(
-    () => getSidebarItems(Boolean(isAdminRoute), isGangBoss, hasCharinfo, hasGang),
+    () =>
+      getSidebarItems(Boolean(isAdminRoute), isGangBoss, hasCharinfo, hasGang),
     [isAdminRoute, isGangBoss, hasCharinfo, hasGang],
   );
   const matchesPath = useCallback(

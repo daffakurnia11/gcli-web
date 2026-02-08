@@ -108,7 +108,7 @@ export default function KillLogKillPage() {
     <div className="space-y-6">
       <div>
         <Typography.Heading
-          level={6}
+          level={4}
           as="h2"
           type="display"
           className="uppercase tracking-wider text-primary-100"

@@ -9,12 +9,7 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "ui-avatars.com", pathname: "/api/**" },
       { protocol: "https", hostname: "images.unsplash.com", pathname: "/**" },
       { protocol: "https", hostname: "cdn.discordapp.com", pathname: "/**" },
-      {
-        protocol: "http",
-        hostname: "assets.gclindonesia.com",
-        port: "8080",
-        pathname: "/**",
-      },
+      { protocol: "https", hostname: "assets.gclindonesia.com", pathname: "/**" },
     ],
   },
   output: "standalone",

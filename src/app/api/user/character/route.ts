@@ -6,7 +6,7 @@ import { parseJson } from "@/services/json";
 import { logger } from "@/services/logger";
 
 const ASSETS_BASE_URL = (
-  process.env.FIVEM_ASSETS_URL || "http://assets.gclindonesia.com:8080"
+  process.env.FIVEM_ASSETS_URL || "https://assets.gclindonesia.com"
 ).replace(/\/+$/, "");
 
 function withImageUrl(item: InventoryItem): InventoryItem {

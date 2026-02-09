@@ -17,8 +17,17 @@ export function useTeamMembersApi() {
     });
   };
 
+  const recruitMember = async (citizenId: string) => {
+    return apiRequest<unknown>("/api/user/gang/members/recruit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ citizenId }),
+    });
+  };
+
   return {
     updateMemberGrade,
     removeMember,
+    recruitMember,
   };
 }

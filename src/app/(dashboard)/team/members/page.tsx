@@ -17,7 +17,11 @@ import { useTeamMembersApi } from "@/services/hooks/api/useTeamMembersApi";
 import { useApiSWR } from "@/services/swr";
 
 export default function TeamMembersPage() {
-  const { updateMemberGrade: updateMemberGradeRequest, removeMember } =
+  const {
+    updateMemberGrade: updateMemberGradeRequest,
+    removeMember,
+    recruitMember,
+  } =
     useTeamMembersApi();
   const { data, error, isLoading, mutate } =
     useApiSWR<TeamMembersResponse>("/api/user/gang/members");
@@ -30,6 +34,9 @@ export default function TeamMembersPage() {
     "update-grade",
   );
   const [selectedGradeLevel, setSelectedGradeLevel] = useState<number>(0);
+  const [isRecruitModalOpen, setIsRecruitModalOpen] = useState(false);
+  const [recruitCitizenId, setRecruitCitizenId] = useState("");
+  const [isRecruiting, setIsRecruiting] = useState(false);
 
   const updateMemberGrade = useCallback(
     async (member: TeamMember, nextGrade: number) => {
@@ -104,6 +111,38 @@ export default function TeamMembersPage() {
     setSelectedMember(null);
     setActionError(null);
   };
+
+  const openRecruitModal = () => {
+    setIsRecruitModalOpen(true);
+    setRecruitCitizenId("");
+    setActionError(null);
+  };
+
+  const closeRecruitModal = useCallback(() => {
+    setIsRecruitModalOpen(false);
+    setRecruitCitizenId("");
+    setActionError(null);
+  }, []);
+
+  const submitRecruitMember = useCallback(async () => {
+    const citizenId = recruitCitizenId.trim();
+    if (!citizenId) {
+      setActionError("Citizen ID is required.");
+      return;
+    }
+
+    setActionError(null);
+    setIsRecruiting(true);
+    try {
+      await recruitMember(citizenId);
+      await mutate();
+      closeRecruitModal();
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : "Failed to recruit member.");
+    } finally {
+      setIsRecruiting(false);
+    }
+  }, [closeRecruitModal, mutate, recruitCitizenId, recruitMember]);
 
   const submitModalAction = async () => {
     if (!selectedMember) {
@@ -222,7 +261,20 @@ export default function TeamMembersPage() {
         </Typography.Paragraph>
       </div>
 
-      <DashboardSection title="Member List">
+      <DashboardSection
+        title="Member List"
+        actionButton={
+          data?.currentMember?.isBoss ? (
+            <button
+              type="button"
+              onClick={openRecruitModal}
+              className="rounded border border-primary-600 px-3 py-1.5 text-sm text-primary-100"
+            >
+              Recruit Member
+            </button>
+          ) : null
+        }
+      >
         <DashboardCard>
           {actionError && (
             <Typography.Paragraph className="text-tertiary-red mb-4">
@@ -362,6 +414,50 @@ export default function TeamMembersPage() {
             )}
           </div>
         )}
+      </Modal.Global>
+
+      <Modal.Global
+        open={isRecruitModalOpen}
+        title="Recruit Member"
+        onClose={closeRecruitModal}
+        footer={
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={closeRecruitModal}
+              disabled={isRecruiting}
+              className="rounded border border-primary-700 px-3 py-1.5 text-sm text-primary-300 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => void submitRecruitMember()}
+              disabled={isRecruiting || recruitCitizenId.trim().length === 0}
+              className="rounded border border-primary-600 px-3 py-1.5 text-sm text-primary-100 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isRecruiting ? "Recruiting..." : "Recruit"}
+            </button>
+          </div>
+        }
+      >
+        <div className="space-y-3">
+          {actionError && (
+            <Typography.Paragraph className="text-tertiary-red">
+              {actionError}
+            </Typography.Paragraph>
+          )}
+          <Typography.Paragraph className="text-primary-300 text-sm">
+            Enter the player citizen ID to recruit into your team.
+          </Typography.Paragraph>
+          <input
+            type="text"
+            value={recruitCitizenId}
+            onChange={(event) => setRecruitCitizenId(event.target.value)}
+            placeholder="Citizen ID"
+            className="w-full rounded border border-primary-700 bg-primary-800 px-3 py-2 text-sm text-primary-100"
+          />
+        </div>
       </Modal.Global>
     </div>
   );

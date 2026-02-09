@@ -6,6 +6,7 @@ export interface DashboardSectionProps {
   title: string;
   children: ReactNode;
   className?: string;
+  actionButton?: ReactNode;
   actions?: ReactNode;
 }
 
@@ -13,8 +14,11 @@ export function DashboardSection({
   title,
   children,
   className = "",
+  actionButton,
   actions,
 }: DashboardSectionProps) {
+  const headerAction = actionButton ?? actions;
+
   return (
     <section className={`space-y-4 ${className}`}>
       <div className="flex items-center justify-between border-b border-primary-700 pb-3">
@@ -24,7 +28,7 @@ export function DashboardSection({
         >
           {title}
         </Typography.Heading>
-        {actions}
+        {headerAction}
       </div>
       {children}
     </section>

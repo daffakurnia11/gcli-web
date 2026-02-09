@@ -9,6 +9,7 @@ const stringify = (value: unknown) => {
 };
 
 const write = (level: LogLevel, message: string, context?: unknown) => {
+  return;
   const entry = {
     ts: new Date().toISOString(),
     level,

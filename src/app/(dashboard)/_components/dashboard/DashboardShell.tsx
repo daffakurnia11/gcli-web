@@ -104,7 +104,7 @@ const getSidebarItems = (
       sidebar: true,
       children: [
         { href: "/inventory/personal", label: "Personal Inventory" },
-        { href: "/inventory/team", label: "Team Inventory" },
+        ...(hasGang ? [{ href: "/inventory/team", label: "Team Inventory" }] : []),
       ],
     },
     {
@@ -122,17 +122,21 @@ const getSidebarItems = (
           : []),
       ],
     },
-    { type: "group", title: "Log" },
-    {
-      type: "item",
-      href: "/kill-log",
-      label: "Kill Log",
-      sidebar: true,
-      children: [
-        { href: "/kill-log/kill", label: "Kill Records" },
-        { href: "/kill-log/dead", label: "Death Records" },
-      ],
-    },
+    ...(hasGang
+      ? [
+          { type: "group", title: "Log" } as SidebarEntry,
+          {
+            type: "item",
+            href: "/kill-log",
+            label: "Kill Log",
+            sidebar: true,
+            children: [
+              { href: "/kill-log/kill", label: "Kill Records" },
+              { href: "/kill-log/dead", label: "Death Records" },
+            ],
+          } as SidebarEntry,
+        ]
+      : []),
     ...baseItems.slice(2),
   ];
 };

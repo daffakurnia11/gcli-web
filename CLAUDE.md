@@ -22,6 +22,9 @@ pnpm exec prisma generate   # Generate Prisma client (auto-runs on postinstall)
 pnpm exec prisma db push    # Push schema changes to database (dev)
 pnpm exec prisma studio     # Open Prisma Studio for database inspection
 pnpm exec prisma migrate reset  # Reset database (WARNING: deletes all data)
+
+# Testing
+pnpm test          # Run tests (Vitest)
 ```
 
 ## Configuration
@@ -36,6 +39,7 @@ pnpm exec prisma migrate reset  # Reset database (WARNING: deletes all data)
 - `src/lib/auth.ts` — NextAuth configuration
 - `pnpm-workspace.yaml` — Workspace with `onlyBuiltDependencies: [@prisma/*, bcrypt]`
 - `.env.example` — Environment variable templates (copy to `.env` for local dev)
+- `vitest.config.ts` — Vitest configuration for testing
 
 **Image Remote Patterns** (`next.config.ts`):
 - `cdn.discordapp.com` — Discord avatars and images
@@ -59,7 +63,7 @@ The app uses Next.js App Router with route groups for organization:
 
 ### Protected Routes `(dashboard)`
 - `/dashboard` — User dashboard main page with profile overview
-- `/dashboard/character` — Character information page (personal info, job, gang, money)
+- `/dashboard/character` — Character information page (personal info, job, gang, money, status bars)
 - `/dashboard/profile` — Profile editing section
 - `/dashboard/settings` — User settings (email, password, sessions, account linkage)
 - `/dashboard/bank/personal` — Personal bank transactions with cash/bank balance
@@ -68,8 +72,19 @@ The app uses Next.js App Router with route groups for organization:
 - `/dashboard/bank/investment/[id]` — Investment account transaction details
 - `/dashboard/kill-log/kill` — Kill records page showing user's kills
 - `/dashboard/kill-log/dead` — Death records page showing user's deaths
+- `/dashboard/inventory/personal` — Personal inventory (OX-style slot-based display)
+- `/dashboard/inventory/team` — Team/gang inventory (OX-style slot-based display)
+- `/dashboard/team/info` — Team information, rank structure, and permissions
+- `/dashboard/team/members` — Team member management with recruit/fire/update grade functionality
+- `/dashboard/admin/overview` — Admin dashboard (requires opt-in via `ENABLE_ADMIN_DASHBOARD`)
+- `/dashboard/admin/investment` — Admin investment management overview
+- `/dashboard/admin/investment/detail` — Investment category details table
+- `/dashboard/admin/investment/categories` — Investment categories management
 
-**Note:** Bank routes (Character, Bank, Kill Log) are hidden when user has no `charinfo` data. Team Bank and Investment are only visible for gang bosses (`isboss = true`).
+**Visibility Rules:**
+- **Character, Inventory, Kill Log** routes hidden when user has no `charinfo` data
+- **Team Bank, Investment** routes only visible for gang bosses (`isboss = true`)
+- **Admin** routes only accessible when `ENABLE_ADMIN_DASHBOARD` environment variable is enabled
 
 ## API Routes
 
@@ -102,6 +117,22 @@ The app uses Next.js App Router with route groups for organization:
 - `/api/user/bank/investments/route.ts` — Get investment accounts list where `creator = gang.name`
 - `/api/user/bank/investments/[id]/transactions/route.ts` — Get transactions for specific investment account with ownership verification
 
+### Team/Gang API
+- `/api/user/gang/route.ts` — Get team/gang information (name, label, grades, stash location)
+- `/api/user/gang/members/route.ts` — Get team members list with pagination
+- `/api/user/gang/members/[citizenId]/route.ts` — Get specific member info
+- `/api/user/gang/members/recruit/route.ts` — Recruit new member (boss only)
+
+### Inventory API
+- `/api/user/inventory/team/route.ts` — Get team/gang inventory from `ox_inventory` table
+
+### Admin API
+- `/api/admin/investment/gang-ownership/route.ts` — Verify gang ownership for investment operations
+- `/api/admin/investment/detail/route.ts` — Get investment category details
+- `/api/admin/investment/assign/route.ts` — Assign investment to gang
+- `/api/admin/investment/categories/route.ts` — Get investment categories
+- `/api/admin/gangs/route.ts` — Gang management (list, create, update)
+
 ### External Proxies
 - `/api/info/discord/route.ts` — Discord server info proxy (GET)
 - `/api/info/fivem/route.ts` — FiveM server info proxy (GET)
@@ -109,6 +140,9 @@ The app uses Next.js App Router with route groups for organization:
 ### Regional Data
 - `/api/indonesia/provinces/route.ts` — Get Indonesian provinces
 - `/api/indonesia/cities/[provinceId]/route.ts` — Get cities by province
+
+### OpenAPI
+- `/api/openapi/route.ts` — OpenAPI specification for API documentation
 
 ## Architecture
 
@@ -150,9 +184,15 @@ The app uses Next.js App Router with route groups for organization:
 - `Pagination.tsx` — Reusable pagination component with first/last/prev/next buttons, page numbers with ellipsis, mobile support, and "X to Y of Z" info label
 - `index.ts` — Barrel exports for table components
 
+**Modal Components (`src/components/modal/`):**
+- `GlobalModal.tsx` — Global modal component for dialogs
+
 **Provider Components (`src/components/providers/`):**
 - `AppProviders.tsx` — App-level providers wrapper
 - `SessionProvider.tsx` — NextAuth session provider
+
+**Documentation Components (`src/components/docs/`):**
+- `RedocDocs.tsx` — API documentation viewer using Redoc
 
 **Other Components:**
 - `Logo.tsx` — Logo component with icon/name variants
@@ -169,10 +209,12 @@ The app uses Next.js App Router with route groups for organization:
 **Navigation:**
 - `DashboardSidebar.tsx` — Collapsible sidebar with nested menu support ("use client")
 - `SidebarUserMenu.tsx` — User menu in sidebar
-- Sidebar menu items (dynamic based on user data):
-  - **Always visible:** Dashboard → Overview, Profile, Settings
-  - **When `charinfo` exists:** Game Info → Character, Bank (Personal, Team + Investment for bosses), Log → Kill Log
-  - **Team Bank and Investment:** Only shown for gang bosses (`isboss = true`)
+
+**Sidebar menu items (dynamic based on user data):**
+- **Always visible:** Dashboard → Overview, Profile, Settings
+- **When `charinfo` exists:** Game Info → Character, Inventory (Personal, Team), Bank (Personal, Team + Investment for bosses), Log → Kill Log, Team → Info, Members
+- **Team Bank, Investment, Team Members:** Only shown for gang bosses (`isboss = true`)
+- **Admin:** Only shown when `ENABLE_ADMIN_DASHBOARD` is enabled
 
 **Dashboard Components (`src/app/(dashboard)/_components/dashboard/`):**
 - `DashboardCard.tsx` — Card container for dashboard sections
@@ -186,23 +228,34 @@ The app uses Next.js App Router with route groups for organization:
 - `DashboardSection.tsx` — Section wrapper
 - `Alert.tsx` — Alert/notification component
 - `RegistrationCleanup.tsx` — Client component for cleaning up auth setup state
+- `ServerStatusCards.tsx` — Server status display (Discord/FiveM)
 - `index.tsx` — Barrel exports
 
+#### Character Components (`src/app/(dashboard)/character/_components/`)
+- `CharacterInfo.tsx` — Character information display (personal info, job, gang)
+- `CharacterStatus.tsx` — Character status bar (health, armor, hunger, thirst, stamina)
+- `StatusBar.tsx` — Reusable status bar component
+
+#### Bank Components (`src/app/(dashboard)/bank/`)
+- `personal/_components/` — Personal bank transactions table
+- `team/_components/` — Team bank transactions table
+- `investment/_components/` — Investment accounts list
+- `investment/[id]/_components/` — Investment transaction details
+
 #### Kill Log Components (`src/app/(dashboard)/kill-log/_components/`)
+- Table component for displaying kill/death records uses the shared `DataTable` component
 
-Note: Based on the current structure, kill-log components are co-located with their pages. The table component for displaying kill/death records uses the shared `DataTable` component.
+#### Inventory Components (`src/app/(dashboard)/inventory/`)
+- `personal/_components/` — Personal inventory slot-based display
+- `team/_components/` — Team inventory slot-based display
 
-#### Demo Components (`src/app/demo/_components/`)
+#### Team Components (`src/app/(dashboard)/team/`)
+- `info/_components/` — Team overview, code, rank structure, and permissions
+- `members/_components/` — Member management table with recruit/fire/grade actions
 
-- `ButtonDemo.tsx` — Button component showcase
-- `ColorPaletteDemo.tsx` — Color palette display
-- `FormDemo.tsx` — Form components showcase
-- `LogoDemo.tsx` — Logo variations
-- `TypographyDemo.tsx` — Typography components
-- `PrimaryButtonDemo.tsx` — Primary button examples
-- `SecondaryButtonDemo.tsx` — Secondary button examples
-- `LeftSlantButtonDemo.tsx` — Left-slant CTA buttons
-- `RightSlantButtonDemo.tsx` — Right-slant CTA buttons
+#### Admin Components (`src/app/(dashboard)/admin/`)
+- `investment/_components/InvestmentCategoryOverview.tsx` — Investment category overview
+- `investment/detail/_components/InvestmentCategoryDetailTable.tsx` — Investment category details table
 
 #### Public Page Components (`src/app/(public)/_components/`)
 
@@ -222,17 +275,29 @@ Note: Based on the current structure, kill-log components are co-located with th
 - `PlayerToDo.tsx` — Player to-do list
 - `ProsCons.tsx` — Pros and cons section
 
-#### Auth Page Components (`src/app/(auth)/auth/_components/`)
+#### Auth Page Components (`src/app/(public)/auth/_components/`)
 
 - `Login.tsx` — Login form component
 
-#### Auth Setup Components (`src/app/(auth)/auth/setup/_components/`)
+#### Auth Setup Components (`src/app/(public)/auth/setup/_components/`)
 
 - `Stepper.tsx` — Multi-step form stepper
 - `Information.tsx` — Information step (name, username, gender, birth date, location)
 - `Credentials.tsx` — Credentials step (email, password)
 - `AccountLink.tsx` — Account link step display
 - `AccountLinkWrapper.tsx` — Wrapper for account linking
+
+#### Demo Components (`src/app/demo/_components/`)
+
+- `ButtonDemo.tsx` — Button component showcase
+- `ColorPaletteDemo.tsx` — Color palette display
+- `FormDemo.tsx` — Form components showcase
+- `LogoDemo.tsx` — Logo variations
+- `TypographyDemo.tsx` — Typography components
+- `PrimaryButtonDemo.tsx` — Primary button examples
+- `SecondaryButtonDemo.tsx` — Secondary button examples
+- `LeftSlantButtonDemo.tsx` — Left-slant CTA buttons
+- `RightSlantButtonDemo.tsx` — Right-slant CTA buttons
 
 #### Molecules (`src/molecules/`)
 
@@ -260,16 +325,25 @@ All `index.tsx` files export default namespace, named exports, and types.
 - `components/Stepper.d.ts` — Stepper component types
 - `components/Cards.d.ts` — Card component types
 - `components/table/DataTable.d.ts` — DataTable component types
+- `Modal.d.ts` — Modal component types
 
 **Provider Types:**
 - `providers/AppProviders.d.ts` — App providers types
 - `providers/SessionProvider.d.ts` — Session provider types
 
 **API Types:**
+- `api/AccountPayload.d.ts` — Account management payload types
+- `api/Account.d.ts` — Account API types
+- `api/AdminPayload.d.ts` — Admin management types
+- `api/AuthPayload.d.ts` — Authentication payload types
 - `api/Bank.d.ts` — Bank API types (PersonalBankResponse, TeamBankResponse, InvestmentsResponse, InvestmentTransactionsResponse, PaginationMeta)
+- `api/Character.d.ts` — Character API types
+- `api/Common.d.ts` — Common types
 - `api/Discord.d.ts` — Discord API types
 - `api/FiveM.d.ts` — FiveM API types
-- `api/Indonesia.d.ts` — Indonesia API types
+- `api/Gang.d.ts` — Gang API types
+- `api/Indonesia.d.ts` — Indonesia regional data types
+- `api/TeamPayload.d.ts` — Team management types
 
 **Auth Types:**
 - `next-auth.d.ts` — NextAuth type extensions
@@ -287,18 +361,58 @@ All `index.tsx` files export default namespace, named exports, and types.
   - `PasswordFormData` — Inferred type from passwordSchema
   - `FormErrors<T>` — Generic form error type
 
-### Hooks (`src/hooks/`)
+### Hooks (`src/services/hooks/`)
 
+**Region Hooks:**
 - `useIndonesiaRegions.ts` — Hook for fetching Indonesian provincial and city data
   - `useProvinces()` — Fetch provinces
   - `useCities(provinceId)` — Fetch cities by province
+
+**Validation Hooks:**
 - `useUniqueCheck.ts` — Hook for checking email/username uniqueness via API
 
-### Custom SWR Hook (`src/lib/swr.ts`)
+**API Hooks:**
+- `api/useAccountApi.ts` — Account management API hooks
+- `api/useAdminInvestmentApi.ts` — Admin investment API hooks
+- `api/useAuthSetupApi.ts` — Auth setup API hooks
+- `api/useOpenApiSpec.ts` — OpenAPI spec hook
+- `api/useServerInfo.ts` — Server info hooks
+- `api/useTeamMembersApi.ts` — Team member management hooks
+
+### Custom SWR Hook (`src/services/swr.ts`)
 
 - `useApiSWR<T>()` — Custom SWR hook with error handling and default configuration
 - `apiFetcher<T>()` — Fetcher function with error handling
 - `ApiError` — Extended Error type with status and payload
+
+### Services (`src/services/`)
+
+**Core Services:**
+- `api-client.ts` — API client configuration
+- `api-response.ts` — API response utilities
+- `next-response.ts` — Next.js response utilities
+- `openapi.ts` — OpenAPI utilities
+- `rate-limit.ts` — Rate limiting utilities
+- `api-guards.ts` — API guard utilities
+
+**Utility Services:**
+- `date.ts` — Date formatting utilities
+- `json.ts` — JSON utilities
+- `env.ts` — Environment variable utilities
+- `logger.ts` — Logger utilities
+
+**Policies (`src/services/policies/`):**
+- `gang-members.policy.ts` — Gang member access policy (canFire, canRecruit, canUpdateGrade)
+
+**Repositories (`src/services/repositories/`):**
+- `admin-investment.repository.ts` — Admin investment data access layer
+
+**Tests (`src/services/__tests__/`):**
+- `api-response.test.ts` — API response utilities tests
+- `admin-investment.repository.test.ts` — Admin investment repository tests
+- `env.test.ts` — Environment utilities tests
+- `gang-members.policy.test.ts` — Gang members policy tests
+- `rate-limit.test.ts` — Rate limiting tests
 
 ## Authentication & Middleware
 
@@ -327,6 +441,7 @@ All `index.tsx` files export default namespace, named exports, and types.
 4. Redirects authenticated + registered users from `/auth` to `/dashboard`
 5. Redirects authenticated + unregistered users to `/auth/setup`
 6. Redirects authenticated + unregistered users from non-API, non-setup routes to `/auth/setup`
+7. Blocks admin routes unless `ENABLE_ADMIN_DASHBOARD` is enabled
 
 ### Auth Flow
 
@@ -414,6 +529,16 @@ The JWT token includes the following user data fetched during authentication:
 - `player_outfits` & `player_outfit_codes` — Player outfit system
 - `playerskins` — Player skin customizations
 - `player_transactions` — Bank transactions (citizenid, transactions JSON, isFrozen)
+- `tl_gangs` — Gang definitions (name, label, off_duty_pay)
+- `tl_gang_grades` — Gang rank structure (grade, name, payment, isboss, bankauth)
+- `tl_businesses` — Business locations linked to bank accounts
+
+#### Player Data
+- `tl_crafting_locations` — Crafting station locations (x, y, z, heading)
+- `tl_gangstash_locations` — Gang stash locations (x, y, z, heading)
+- `tl_kill_logs` — Kill/death records with killer_citizenid, victim_citizenid, weapon, created_at
+
+#### Banking System
 - `bank_accounts_new` — Banking system for FiveM
   - `id` — Account identifier (gang.name for team bank, any string for investment)
   - `amount` — Account balance
@@ -421,8 +546,9 @@ The JWT token includes the following user data fetched during authentication:
   - `auth` — Authorized users JSON array (for gang bank)
   - `creator` — Creator identifier (gang.name for investment accounts)
   - `isFrozen` — Frozen status
-- `management_outfits` — Management outfit system
-- `ox_doorlock` — Door lock system
+
+#### Inventory System
+- `ox_inventory` — Player inventory data (owner, name, data, lastupdated)
 
 #### Phone System (npwd_*)
 - `npwd_calls` — Phone call records
@@ -439,13 +565,12 @@ The JWT token includes the following user data fetched during authentication:
 - `npwd_twitter_likes` — Twitter likes
 - `npwd_twitter_reports` — Twitter reports
 
-#### Player Data
-- `tl_crafting_locations` — Crafting station locations (x, y, z, heading)
-- `tl_gangstash_locations` — Gang stash locations (x, y, z, heading)
-- `tl_kill_logs` — Kill/death records with killer_citizenid, victim_citizenid, weapon, created_at
+#### Management Models
+- `management_outfits` — Management outfit system
+- `ox_doorlock` — Door lock system
 
 #### Web Application
-- `web_accounts` — Web authentication accounts (email, password, discord_id, fivem_id)
+- `web_accounts` — Web authentication accounts (email, password, discord_id, fivem_id, email_verified)
 - `web_profiles` — User profile data (real_name, fivem_name, gender, birth_date, province, city)
 - `web_discord_accounts` — Linked Discord accounts (discord_id, username, global_name, email, image)
 - `web_sessions` — Active user sessions (session_token, user_id, expires)
@@ -526,6 +651,7 @@ async function Page() {
 ### Feature Flags
 - `ALLOW_FIVEM_CHANGE` — Allow FiveM username changes (default: false)
 - `ALLOW_DISCORD_CHANGE` — Allow Discord account re-linking (default: false)
+- `ENABLE_ADMIN_DASHBOARD` — Enable admin dashboard routes (default: false)
 
 ## SEO & Metadata
 
@@ -823,7 +949,7 @@ import { Pagination } from "@/components/table";
 ### useApiSWR Hook
 
 ```tsx
-import { useApiSWR } from "@/lib/swr";
+import { useApiSWR } from "@/services/swr";
 
 const { data, error, isLoading } = useApiSWR<KillLog[]>("/api/user/kill-logs?type=kill");
 ```
@@ -832,15 +958,30 @@ const { data, error, isLoading } = useApiSWR<KillLog[]>("/api/user/kill-logs?typ
 
 ```tsx
 // Indonesian Regions
-import { useProvinces, useCities } from "@/hooks/useIndonesiaRegions";
+import { useProvinces, useCities } from "@/services/hooks/useIndonesiaRegions";
 
 const { data: provinces } = useProvinces();
 const { data: cities } = useCities("11"); // province ID
 
 // Unique Check
-import { useUniqueCheck } from "@/hooks/useUniqueCheck";
+import { useUniqueCheck } from "@/services/hooks/useUniqueCheck";
 
 const { checkEmail, checkUsername, isChecking } = useUniqueCheck();
+
+// Account API
+import { useAccountApi } from "@/services/hooks/api/useAccountApi";
+
+const { deleteAccount } = useAccountApi();
+
+// Team Members API
+import { useTeamMembersApi } from "@/services/hooks/api/useTeamMembersApi";
+
+const { recruitMember, fireMember, updateGrade } = useTeamMembersApi();
+
+// Admin Investment API
+import { useAdminInvestmentApi } from "@/services/hooks/api/useAdminInvestmentApi";
+
+const { getCategories, getCategoryDetail } = useAdminInvestmentApi();
 ```
 
 ## Code Quality
@@ -854,7 +995,19 @@ const { checkEmail, checkUsername, isChecking } = useUniqueCheck();
 
 ### Testing
 
-None configured.
+Vitest is configured for testing. Test files are located in `src/services/__tests__/`:
+- `api-response.test.ts` — API response utilities tests
+- `admin-investment.repository.test.ts` — Admin investment repository tests
+- `env.test.ts` — Environment utilities tests
+- `gang-members.policy.test.ts` — Gang members policy tests
+- `rate-limit.test.ts` — Rate limiting tests
+
+Run tests with:
+```bash
+pnpm test          # Run tests once
+pnpm test:watch    # Run tests in watch mode
+pnpm test:coverage # Run tests with coverage
+```
 
 ### Conventions
 
@@ -866,6 +1019,8 @@ None configured.
 - All form validation uses Zod schemas
 - Protected routes use middleware for authentication checks
 - Database operations use Prisma client via `src/lib/prisma.ts`
+- API policies in `src/services/policies/` for access control
+- Repositories in `src/services/repositories/` for data access
 
 ## Libraries & Utilities
 
@@ -904,6 +1059,10 @@ None configured.
 **Utilities:**
 - `date-fns@^4.1.0` — Date formatting and manipulation
 
+**Testing:**
+- `vitest@^2` — Test runner
+- `@testing-library/react@^16` — React testing utilities
+
 ### Utilities (`src/lib/`)
 
 - `formValidation.ts` — Zod error handling utilities:
@@ -917,12 +1076,48 @@ None configured.
 - `swr.ts` — Custom SWR configuration and useApiSWR hook
 - `auth.ts` — NextAuth configuration
 
+### Services (`src/services/`)
+
+**API & Response:**
+- `api-client.ts` — API client configuration
+- `api-response.ts` — API response utilities
+- `next-response.ts` — Next.js response utilities
+- `api-guards.ts` — API guard utilities
+
+**Utilities:**
+- `date.ts` — Date formatting utilities
+- `json.ts` — JSON utilities
+- `env.ts` — Environment variable utilities
+- `logger.ts` — Logger utilities
+- `openapi.ts` — OpenAPI utilities
+- `rate-limit.ts` — Rate limiting utilities
+- `swr.ts` — Custom SWR configuration
+
+**Policies:**
+- `policies/gang-members.policy.ts` — Gang member access control (canFire, canRecruit, canUpdateGrade)
+
+**Repositories:**
+- `repositories/admin-investment.repository.ts` — Admin investment data access
+
+**Hooks:**
+- `hooks/useIndonesiaRegions.ts` — Indonesian regions data
+- `hooks/useUniqueCheck.ts` — Email/username validation
+- `hooks/api/useAccountApi.ts` — Account API hooks
+- `hooks/api/useAdminInvestmentApi.ts` — Admin investment hooks
+- `hooks/api/useAuthSetupApi.ts` — Auth setup hooks
+- `hooks/api/useOpenApiSpec.ts` — OpenAPI spec hook
+- `hooks/api/useServerInfo.ts` — Server info hooks
+- `hooks/api/useTeamMembersApi.ts` — Team member management hooks
+
 ### API Usage Patterns
 
 - All external API calls go through Next.js API routes (server-side proxy)
 - Never call external APIs directly from Client Components
 - Server Components fetch data, pass to Client Components as props
 - SWR used for client-side data fetching with revalidation
+- API guards for access control validation
+- Policies for business logic authorization
+- Repositories for data access abstraction
 
 ### Server-Side Pagination Pattern
 
@@ -959,3 +1154,39 @@ return {
   },
 };
 ```
+
+## Feature Summary
+
+### User Features
+1. **Authentication** — Email/password and Discord OAuth login
+2. **Account Setup** — Multi-step form for new Discord users
+3. **Profile Management** — Edit profile, change email/password, manage sessions
+4. **Account Linking** — Link Discord account
+5. **Character Info** — View FiveM character data (job, gang, money)
+
+### Game Integration Features
+1. **Kill Logs** — View kill/death records with pagination
+2. **Bank System** — Personal and team bank transactions
+3. **Investments** — View gang investment accounts
+4. **Inventory** — View personal and team inventory (OX-style slots)
+5. **Team Management** — View team info, manage members (recruit/fire/promote)
+
+### Admin Features (requires `ENABLE_ADMIN_DASHBOARD`)
+1. **Admin Dashboard** — Overview of admin functions
+2. **Investment Management** — View and manage investment categories
+3. **Gang Management** — View and manage gangs
+
+### Public Features
+1. **Landing Page** — Hero, game loop, server info, team carousel, standings
+2. **About Page** — Vision, core pillars, player to-do, pros/cons
+3. **Demo Page** — Design system showcase
+4. **Server Info** — Discord and FiveM server status
+
+### Technical Features
+1. **Mixed Authentication** — Session and Bearer token support
+2. **Rate Limiting** — API rate limiting
+3. **OpenAPI Documentation** — Auto-generated API docs
+4. **Responsive Design** — Mobile-first approach
+5. **Type Safety** — Full TypeScript coverage
+6. **Testing** — Vitest for unit tests
+7. **Dark Theme** — Default dark theme with gold accents

@@ -12,6 +12,9 @@ import { Typography } from "@/components/typography";
 
 import SidebarUserMenu from "./SidebarUserMenu";
 
+const PENDING_LEAGUE_JOIN_STORAGE_KEY = "gcli:leagueJoinPendingInvoice";
+const PENDING_LEAGUE_JOIN_MAX_AGE_MS = 1000 * 60 * 60 * 24;
+
 type DashboardShellProps = {
   children: React.ReactNode;
   displayName: string;
@@ -261,6 +264,82 @@ export default function DashboardShell({
       }
     });
   }, [matchesPath, sidebarItems]);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    const verifyPendingLeagueJoin = async () => {
+      if (typeof window === "undefined") {
+        return;
+      }
+
+      const rawStored = window.localStorage.getItem(
+        PENDING_LEAGUE_JOIN_STORAGE_KEY,
+      );
+      if (!rawStored) {
+        return;
+      }
+
+      let parsed: { invoiceNumber?: unknown; createdAt?: unknown } | null = null;
+      try {
+        parsed = JSON.parse(rawStored) as
+          | { invoiceNumber?: unknown; createdAt?: unknown }
+          | null;
+      } catch {
+        window.localStorage.removeItem(PENDING_LEAGUE_JOIN_STORAGE_KEY);
+        return;
+      }
+      const invoiceNumber =
+        parsed && typeof parsed.invoiceNumber === "string"
+          ? parsed.invoiceNumber.trim()
+          : "";
+      const createdAt =
+        parsed && typeof parsed.createdAt === "number" ? parsed.createdAt : 0;
+
+      if (!invoiceNumber) {
+        window.localStorage.removeItem(PENDING_LEAGUE_JOIN_STORAGE_KEY);
+        return;
+      }
+
+      if (!Number.isFinite(createdAt) || Date.now() - createdAt > PENDING_LEAGUE_JOIN_MAX_AGE_MS) {
+        window.localStorage.removeItem(PENDING_LEAGUE_JOIN_STORAGE_KEY);
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `/api/user/league/join/verify?invoiceNumber=${encodeURIComponent(invoiceNumber)}`,
+          {
+            method: "GET",
+            cache: "no-store",
+          },
+        );
+
+        if (!response.ok) {
+          return;
+        }
+
+        const payload = (await response.json().catch(() => null)) as
+          | {
+              success?: boolean;
+              data?: { paid?: boolean };
+            }
+          | null;
+        const paid = payload?.success === true && payload.data?.paid === true;
+        if (paid && !isCancelled) {
+          window.localStorage.removeItem(PENDING_LEAGUE_JOIN_STORAGE_KEY);
+        }
+      } catch {
+        return;
+      }
+    };
+
+    void verifyPendingLeagueJoin();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-primary-900 text-primary-100">

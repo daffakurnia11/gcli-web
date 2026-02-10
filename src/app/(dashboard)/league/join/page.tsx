@@ -6,18 +6,41 @@ import {
   DashboardCard,
   DashboardSection,
 } from "@/app/(dashboard)/_components/dashboard";
+import { Modal } from "@/components";
 import { Button } from "@/components/button";
 import { Form } from "@/components/form";
 import { DataTable, type DataTableColumn } from "@/components/table";
 import { Typography } from "@/components/typography";
+import { formatDateTime } from "@/services/date";
 import { useLeagueJoinApi } from "@/services/hooks/api/useLeagueJoinApi";
 import { useApiSWR } from "@/services/swr";
 
+const PENDING_LEAGUE_JOIN_STORAGE_KEY = "gcli:leagueJoinPendingInvoice";
+
 const formatAmount = (value: number) => {
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat("id-ID", {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(value);
+};
+
+const formatLeagueStatus = (status: LeagueStatus) =>
+  `${status.charAt(0).toUpperCase()}${status.slice(1)}`;
+
+const formatRulesJson = (value: unknown) => {
+  if (value === undefined || value === null) {
+    return "No rules configured.";
+  }
+
+  if (typeof value === "string") {
+    return value.trim().length > 0 ? value : "No rules configured.";
+  }
+
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return String(value);
+  }
 };
 
 const memberColumns: Array<DataTableColumn<TeamMember>> = [
@@ -85,6 +108,7 @@ export default function LeagueJoinPage() {
   const [selectedLeagueId, setSelectedLeagueId] = useState("");
   const [actionError, setActionError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
   const availableLeagues = useMemo(
     () => (leagueData?.leagues ?? []).filter((league) => !league.alreadyJoined),
@@ -95,7 +119,7 @@ export default function LeagueJoinPage() {
     () =>
       availableLeagues.map((league) => ({
         value: String(league.id),
-        label: `${league.name} (${league.status}) - $${formatAmount(league.price)}`,
+        label: `${league.name} (${formatLeagueStatus(league.status)}) - Rp ${formatAmount(league.price)}`,
       })),
     [availableLeagues],
   );
@@ -109,6 +133,23 @@ export default function LeagueJoinPage() {
   const selectedLeague = availableLeagues.find(
     (league) => String(league.id) === selectedLeagueId,
   );
+
+  const openConfirmModal = () => {
+    if (!selectedLeagueId) {
+      setActionError("Please select a league first.");
+      return;
+    }
+
+    setActionError("");
+    setIsConfirmModalOpen(true);
+  };
+
+  const closeConfirmModal = () => {
+    if (isSubmitting) {
+      return;
+    }
+    setIsConfirmModalOpen(false);
+  };
 
   const submitJoin = async () => {
     const leagueId = Number.parseInt(selectedLeagueId, 10);
@@ -124,6 +165,13 @@ export default function LeagueJoinPage() {
       const result = await createLeagueJoinCheckout({ leagueId });
 
       if (result.checkoutUrl) {
+        window.localStorage.setItem(
+          PENDING_LEAGUE_JOIN_STORAGE_KEY,
+          JSON.stringify({
+            invoiceNumber: result.invoiceNumber,
+            createdAt: Date.now(),
+          }),
+        );
         window.location.href = result.checkoutUrl;
         return;
       }
@@ -138,6 +186,7 @@ export default function LeagueJoinPage() {
           : "Failed to create payment checkout.",
       );
     } finally {
+      setIsConfirmModalOpen(false);
       setIsSubmitting(false);
     }
   };
@@ -273,10 +322,10 @@ export default function LeagueJoinPage() {
                         League: {selectedLeague.name}
                       </Typography.Paragraph>
                       <Typography.Paragraph className="text-primary-300 text-sm">
-                        Status: {selectedLeague.status}
+                        Status: {formatLeagueStatus(selectedLeague.status)}
                       </Typography.Paragraph>
                       <Typography.Paragraph className="text-primary-300 text-sm">
-                        Price: ${formatAmount(selectedLeague.price)}
+                        Price: Rp {formatAmount(selectedLeague.price)}
                       </Typography.Paragraph>
                     </div>
                   ) : null}
@@ -290,7 +339,7 @@ export default function LeagueJoinPage() {
                   <Button.Primary
                     type="button"
                     variant="solid"
-                    onClick={() => void submitJoin()}
+                    onClick={openConfirmModal}
                     disabled={isSubmitting || !selectedLeagueId}
                     className="w-full"
                   >
@@ -308,6 +357,77 @@ export default function LeagueJoinPage() {
           </DashboardSection>
         </div>
       </div>
+
+      <Modal.Global
+        open={isConfirmModalOpen}
+        title="Confirm League Checkout"
+        onClose={closeConfirmModal}
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button.Secondary
+              type="button"
+              variant="outline"
+              onClick={closeConfirmModal}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button.Secondary>
+            <Button.Primary
+              type="button"
+              variant="solid"
+              onClick={() => void submitJoin()}
+              disabled={isSubmitting || !selectedLeague}
+            >
+              {isSubmitting ? "Processing..." : "Confirm & Pay"}
+            </Button.Primary>
+          </div>
+        }
+      >
+        {selectedLeague ? (
+          <div className="space-y-4">
+            <Typography.Paragraph className="text-primary-200">
+              You are about to join <span className="font-semibold text-primary-100">{selectedLeague.name}</span>.
+            </Typography.Paragraph>
+
+            <div className="grid grid-cols-1 gap-2 rounded border border-primary-700 bg-primary-800/40 p-3">
+              <Typography.Paragraph className="text-sm text-primary-300">
+                Status: <span className="text-primary-100">{formatLeagueStatus(selectedLeague.status)}</span>
+              </Typography.Paragraph>
+              <Typography.Paragraph className="text-sm text-primary-300">
+                Price: <span className="text-primary-100">Rp {formatAmount(selectedLeague.price)}</span>
+              </Typography.Paragraph>
+              <Typography.Paragraph className="text-sm text-primary-300">
+                Max Team: <span className="text-primary-100">{selectedLeague.maxTeam === 0 ? "Unlimited" : formatAmount(selectedLeague.maxTeam)}</span>
+              </Typography.Paragraph>
+              <Typography.Paragraph className="text-sm text-primary-300">
+                Start At: <span className="text-primary-100">{formatDateTime(selectedLeague.startAt, { fallback: "-" })}</span>
+              </Typography.Paragraph>
+              <Typography.Paragraph className="text-sm text-primary-300">
+                End At: <span className="text-primary-100">{formatDateTime(selectedLeague.endAt, { fallback: "-" })}</span>
+              </Typography.Paragraph>
+            </div>
+
+            <div className="space-y-2">
+              <Typography.Paragraph className="text-sm text-primary-300">
+                Rules Configuration
+              </Typography.Paragraph>
+              <pre className="max-h-56 overflow-auto rounded border border-primary-700 bg-primary-800/40 p-3 text-xs text-primary-100 whitespace-pre-wrap break-words">
+                {formatRulesJson(selectedLeague.rulesJson)}
+              </pre>
+            </div>
+
+            {actionError ? (
+              <Typography.Paragraph className="text-sm text-tertiary-red">
+                {actionError}
+              </Typography.Paragraph>
+            ) : null}
+          </div>
+        ) : (
+          <Typography.Paragraph className="text-primary-300">
+            No league selected.
+          </Typography.Paragraph>
+        )}
+      </Modal.Global>
     </div>
   );
 }

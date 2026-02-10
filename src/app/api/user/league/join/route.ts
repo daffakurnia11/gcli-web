@@ -108,7 +108,7 @@ export async function GET(request: Request) {
 
     const leagues = await prisma.leagues.findMany({
       where: {
-        status: { in: ["upcoming", "active"] },
+        status: "upcoming",
       },
       orderBy: [{ start_at: "asc" }, { id: "desc" }],
     });
@@ -178,7 +178,7 @@ export async function POST(request: Request) {
       return apiFromLegacy({ error: "League not found." }, { status: 404 });
     }
 
-    if (league.status !== "upcoming" && league.status !== "active") {
+    if (league.status !== "upcoming") {
       return apiFromLegacy(
         { error: "Selected league is not open for joining." },
         { status: 400 },
@@ -201,14 +201,22 @@ export async function POST(request: Request) {
     }
 
     const invoiceNumber = `LEAGUE-${league.id}-${context.gangName}-${Date.now()}`;
+    const successRedirectUrl = new URL(
+      `/api/user/league/join/complete?invoiceNumber=${encodeURIComponent(invoiceNumber)}`,
+      request.url,
+    ).toString();
     const customerName =
       context.accountUsername ?? context.gangLabel ?? `ACC-${context.accountId}`;
 
     const paymentPayload = {
+      // callback_url: successRedirectUrl,
+      callback_url: 'https://webhook.site/bf0c8542-8975-485f-ad11-885706aff769',
+      return_url: successRedirectUrl,
       order: {
         amount: league.price,
         invoice_number: invoiceNumber,
         currency: "IDR",
+        callback_url: successRedirectUrl,
       },
       payment: {
         payment_due_date: 60,

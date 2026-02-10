@@ -135,6 +135,13 @@ const getSidebarItems = (
                 },
               ]
             : []),
+          { type: "group", title: "League" },
+          {
+            type: "item",
+            href: "/league/join",
+            label: "Join League",
+            sidebar: true,
+          },
           { type: "group", title: "Log" },
           {
             type: "item",

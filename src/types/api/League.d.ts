@@ -32,6 +32,40 @@ declare global {
     endAt: string | null;
     rulesJson?: unknown;
   };
+
+  type LeagueJoinListItem = {
+    id: number;
+    name: string;
+    status: LeagueStatus;
+    startAt: string | null;
+    endAt: string | null;
+    price: number;
+    maxTeam: number;
+    rulesJson?: unknown;
+    alreadyJoined: boolean;
+  };
+
+  type LeagueJoinListResponse = {
+    teamCode: string;
+    teamName: string;
+    leagues: LeagueJoinListItem[];
+  };
+
+  type LeagueJoinCheckoutPayload = {
+    leagueId: number;
+  };
+
+  type LeagueJoinCheckoutResponse = {
+    message: string;
+    invoiceNumber: string;
+    checkoutUrl: string | null;
+    league: {
+      id: number;
+      name: string;
+      price: number;
+    };
+    paymentGatewayResponse: unknown;
+  };
 }
 
 export {};

@@ -88,13 +88,13 @@ const getSidebarItems = (
 
   return [
     ...baseItems.slice(0, 2),
-    { type: "group", title: "Player Info" },
+    { type: "group", title: "Player" },
     { type: "item", href: "/character", label: "Character", sidebar: true },
     { type: "item", href: "/inventory", label: "My Inventory", sidebar: true },
     { type: "item", href: "/bank", label: "My Bank", sidebar: true },
+    { type: "group", title: "Team" },
     ...(hasGang
       ? ([
-          { type: "group", title: "Team Info" },
           {
             type: "item",
             href: "/team/info",
@@ -127,13 +127,15 @@ const getSidebarItems = (
                   label: "Investment Bank",
                   sidebar: true,
                 },
+                {
+                  type: "item",
+                  href: "/team/options",
+                  label: "Team Options",
+                  sidebar: true,
+                },
               ]
             : []),
-        ] as SidebarEntry[])
-      : []),
-    ...(hasGang
-      ? [
-          { type: "group", title: "Log" } as SidebarEntry,
+          { type: "group", title: "Log" },
           {
             type: "item",
             href: "/kill-log",
@@ -143,9 +145,16 @@ const getSidebarItems = (
               { href: "/kill-log/kill", label: "Kill Records" },
               { href: "/kill-log/dead", label: "Death Records" },
             ],
-          } as SidebarEntry,
-        ]
-      : []),
+          },
+        ] as SidebarEntry[])
+      : ([
+          {
+            type: "item",
+            href: "/team/create",
+            label: "Create Team",
+            sidebar: true,
+          },
+        ] as SidebarEntry[])),
     ...baseItems.slice(2),
   ];
 };

@@ -12,6 +12,9 @@ type ParsedGang = {
   isboss?: boolean;
 };
 
+const PAYMENT_SERVICE_BASE_URL =
+  process.env.PAYMENT_SERVICE_BASE_URL ?? "http://localhost:3001";
+
 const resolveBossGangContext = async (request: Request) => {
   const authz = await requireAccountId(request);
   if (!authz.ok) {
@@ -224,27 +227,32 @@ export async function POST(request: Request) {
       },
     };
 
-    const proxyUrl = `${new URL(request.url).origin}/api/proxy/payment/checkout`;
-    const proxyResponse = await fetch(proxyUrl, {
+    const paymentResponse = await fetch(
+      `${PAYMENT_SERVICE_BASE_URL}/api/payments`,
+      {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(paymentPayload),
       cache: "no-store",
-    });
+      },
+    );
 
-    const proxyResult = (await proxyResponse.json().catch(() => null)) as
-      | { data?: { result?: unknown }; message?: string; error?: string }
+    const paymentResult = (await paymentResponse.json().catch(() => null)) as
+      | { message?: string; error?: string }
       | null;
 
-    if (!proxyResponse.ok) {
+    if (!paymentResponse.ok) {
       const errorMessage =
-        proxyResult?.message ||
-        proxyResult?.error ||
+        paymentResult?.message ||
+        paymentResult?.error ||
         "Failed to initiate QRIS payment.";
-      return apiFromLegacy({ error: errorMessage }, { status: proxyResponse.status });
+      return apiFromLegacy(
+        { error: errorMessage },
+        { status: paymentResponse.status },
+      );
     }
 
-    const upstreamData = proxyResult?.data?.result ?? null;
+    const upstreamData = paymentResult;
     const checkoutUrl = extractCheckoutUrl(upstreamData);
 
     return apiFromLegacy(

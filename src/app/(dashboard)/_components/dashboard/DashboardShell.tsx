@@ -63,6 +63,13 @@ const getSidebarItems = (
         label: "Investment",
         sidebar: true,
       },
+      { type: "group", title: "League" },
+      {
+        type: "item",
+        href: "/admin/league/list",
+        label: "List",
+        sidebar: true,
+      },
       { type: "item", href: "/profile", label: "Profile" },
       { type: "item", href: "/settings", label: "Settings" },
     ];
@@ -104,7 +111,9 @@ const getSidebarItems = (
       sidebar: true,
       children: [
         { href: "/inventory/personal", label: "Personal Inventory" },
-        ...(hasGang ? [{ href: "/inventory/team", label: "Team Inventory" }] : []),
+        ...(hasGang
+          ? [{ href: "/inventory/team", label: "Team Inventory" }]
+          : []),
       ],
     },
     {

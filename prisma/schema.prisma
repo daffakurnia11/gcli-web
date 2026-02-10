@@ -35,6 +35,102 @@ model tl_businesses {
   @@index([owner], map: "tl_businesses_owner_idx")
 }
 
+model leagues {
+  id                   Int                    @id @default(autoincrement())
+  name                 String                 @db.VarChar(255)
+  status               String                 @db.VarChar(50)
+  start_at             DateTime?              @db.Timestamp(0)
+  end_at               DateTime?              @db.Timestamp(0)
+  creator              String                 @db.VarChar(100)
+  price                Int
+  max_team             Int                    @default(0)
+  rules_json           Json?
+  created_at           DateTime               @default(now()) @db.Timestamp(0)
+  updated_at           DateTime               @updatedAt @db.Timestamp(0)
+  league_teams         league_teams[]
+  league_matches       league_matches[]
+
+  @@index([status], map: "leagues_status_idx")
+  @@index([creator], map: "leagues_creator_idx")
+}
+
+model league_teams {
+  id                               Int                          @id @default(autoincrement())
+  league_id                        Int
+  code                             String                       @db.VarChar(100)
+  name                             String                       @db.VarChar(255)
+  status                           String                       @db.VarChar(50)
+  joined_at                        DateTime?                    @db.Timestamp(0)
+  created_at                       DateTime                     @default(now()) @db.Timestamp(0)
+  updated_at                       DateTime                     @updatedAt @db.Timestamp(0)
+  leagues                          leagues                      @relation(fields: [league_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "league_teams_league_id_fkey")
+  home_league_matches              league_matches[]             @relation("league_matches_home_team_id_fkey")
+  away_league_matches              league_matches[]             @relation("league_matches_away_team_id_fkey")
+  league_match_roster_players      league_match_roster_players[]
+  winning_league_match_results     league_match_results[]       @relation("league_match_results_winner_team_id_fkey")
+
+  @@index([league_id], map: "league_teams_league_id_idx")
+  @@index([code], map: "league_teams_code_idx")
+  @@index([status], map: "league_teams_status_idx")
+}
+
+model league_matches {
+  id                            Int                           @id @default(autoincrement())
+  league_id                     Int
+  home_team_id                  Int
+  away_team_id                  Int
+  scheduled_at                  DateTime?                     @db.Timestamp(0)
+  round                         Int?
+  stage                         String?                       @db.VarChar(50)
+  zone                          String?                       @db.VarChar(100)
+  status                        String                        @db.VarChar(50)
+  created_at                    DateTime                      @default(now()) @db.Timestamp(0)
+  updated_at                    DateTime                      @updatedAt @db.Timestamp(0)
+  leagues                       leagues                       @relation(fields: [league_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "league_matches_league_id_fkey")
+  home_team                     league_teams                  @relation("league_matches_home_team_id_fkey", fields: [home_team_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "league_matches_home_team_id_fkey")
+  away_team                     league_teams                  @relation("league_matches_away_team_id_fkey", fields: [away_team_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "league_matches_away_team_id_fkey")
+  league_match_roster_players   league_match_roster_players[]
+  league_match_results          league_match_results?
+
+  @@index([league_id], map: "league_matches_league_id_idx")
+  @@index([home_team_id], map: "league_matches_home_team_id_idx")
+  @@index([away_team_id], map: "league_matches_away_team_id_idx")
+  @@index([status], map: "league_matches_status_idx")
+  @@index([round], map: "league_matches_round_idx")
+}
+
+model league_match_roster_players {
+  id              Int            @id @default(autoincrement())
+  match_id        Int
+  team_id         Int
+  citizenid       String         @db.VarChar(50)
+  created_at      DateTime       @default(now()) @db.Timestamp(0)
+  updated_at      DateTime       @updatedAt @db.Timestamp(0)
+  league_matches  league_matches @relation(fields: [match_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "league_match_roster_players_match_id_fkey")
+  league_teams    league_teams   @relation(fields: [team_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "league_match_roster_players_team_id_fkey")
+
+  @@index([match_id], map: "league_match_roster_players_match_id_idx")
+  @@index([team_id], map: "league_match_roster_players_team_id_idx")
+  @@index([citizenid], map: "league_match_roster_players_citizenid_idx")
+}
+
+model league_match_results {
+  id             Int            @id @default(autoincrement())
+  match_id       Int            @unique(map: "league_match_results_match_id_key")
+  home_score     Int            @default(0)
+  away_score     Int            @default(0)
+  result_status  String         @db.VarChar(50)
+  winner_team_id Int?
+  kill_logs_json Json?
+  created_at     DateTime       @default(now()) @db.Timestamp(0)
+  updated_at     DateTime       @updatedAt @db.Timestamp(0)
+  league_matches league_matches @relation(fields: [match_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "league_match_results_match_id_fkey")
+  winner_team    league_teams?  @relation("league_match_results_winner_team_id_fkey", fields: [winner_team_id], references: [id], onDelete: SetNull, onUpdate: Restrict, map: "league_match_results_winner_team_id_fkey")
+
+  @@index([winner_team_id], map: "league_match_results_winner_team_id_idx")
+  @@index([result_status], map: "league_match_results_result_status_idx")
+}
+
 model bans {
   id       Int     @id @default(autoincrement())
   name     String? @db.VarChar(50)

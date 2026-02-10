@@ -6,7 +6,7 @@ import { useMemo } from "react";
 import { Typography } from "@/components/typography";
 import { useApiSWR } from "@/services/swr";
 
-import { DashboardCard } from "../../_components/dashboard";
+import { DashboardCard } from "../_components/dashboard";
 
 const TOTAL_SLOTS = 50;
 

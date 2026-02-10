@@ -88,49 +88,49 @@ const getSidebarItems = (
 
   return [
     ...baseItems.slice(0, 2),
-    { type: "group", title: "Game Info" },
+    { type: "group", title: "Player Info" },
     { type: "item", href: "/character", label: "Character", sidebar: true },
+    { type: "item", href: "/inventory", label: "My Inventory", sidebar: true },
+    { type: "item", href: "/bank", label: "My Bank", sidebar: true },
     ...(hasGang
       ? ([
+          { type: "group", title: "Team Info" },
           {
             type: "item",
-            href: "/team",
-            label: "Team",
+            href: "/team/info",
+            label: "Overview",
             sidebar: true,
-            children: [
-              { href: "/team/info", label: "Overview" },
-              { href: "/team/members", label: "Members" },
-            ],
           },
+          {
+            type: "item",
+            href: "/team/members",
+            label: "Members",
+            sidebar: true,
+          },
+          {
+            type: "item",
+            href: "/team/inventory",
+            label: "Inventory",
+            sidebar: true,
+          },
+          ...(isGangBoss
+            ? [
+                {
+                  type: "item",
+                  href: "/team/bank",
+                  label: "Team Bank",
+                  sidebar: true,
+                },
+                {
+                  type: "item",
+                  href: "/team/investment",
+                  label: "Investment Bank",
+                  sidebar: true,
+                },
+              ]
+            : []),
         ] as SidebarEntry[])
       : []),
-    {
-      type: "item",
-      href: "/inventory",
-      label: "Inventory",
-      sidebar: true,
-      children: [
-        { href: "/inventory/personal", label: "Personal Inventory" },
-        ...(hasGang
-          ? [{ href: "/inventory/team", label: "Team Inventory" }]
-          : []),
-      ],
-    },
-    {
-      type: "item",
-      href: "/bank",
-      label: "Bank",
-      sidebar: true,
-      children: [
-        { href: "/bank/personal", label: "Personal Bank" },
-        ...(isGangBoss
-          ? [
-              { href: "/bank/team", label: "Team Bank" },
-              { href: "/bank/investment", label: "Investment Bank" },
-            ]
-          : []),
-      ],
-    },
     ...(hasGang
       ? [
           { type: "group", title: "Log" } as SidebarEntry,

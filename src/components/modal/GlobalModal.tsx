@@ -11,6 +11,7 @@ export default function GlobalModal({
   children,
   footer,
   onClose,
+  size = "lg",
 }: GlobalModalProps) {
   useEffect(() => {
     if (!open) {
@@ -37,9 +38,19 @@ export default function GlobalModal({
     return null;
   }
 
+  const sizeClass =
+    size === "2xl"
+      ? "max-w-2xl"
+      : size === "xl"
+        ? "max-w-xl"
+        : size === "md"
+          ? "max-w-md"
+          : "max-w-lg";
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="w-full max-w-lg rounded-lg border border-primary-700 bg-primary-900 shadow-xl">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 p-4">
+      <div className="flex min-h-full items-start justify-center py-4 sm:items-center">
+      <div className={`w-full ${sizeClass} max-h-[calc(100dvh-2rem)] overflow-hidden rounded-lg border border-primary-700 bg-primary-900 shadow-xl flex flex-col`}>
         <div className="flex items-center justify-between border-b border-primary-700 px-5 py-4">
           <h3 className="text-base font-semibold uppercase tracking-wider text-primary-100">
             {title}
@@ -53,8 +64,9 @@ export default function GlobalModal({
             <X size={16} />
           </button>
         </div>
-        <div className="px-5 py-4">{children}</div>
+        <div className="min-h-0 overflow-y-auto px-5 py-4">{children}</div>
         {footer && <div className="border-t border-primary-700 px-5 py-4">{footer}</div>}
+      </div>
       </div>
     </div>
   );

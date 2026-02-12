@@ -1,7 +1,8 @@
 import {
   extractPaymentStatus,
-  insertLeagueTeamFromInvoice,
+  finalizeLeagueJoinFromInvoice,
   isLeagueJoinPaidStatus,
+  syncLeagueJoinPaymentStatus,
 } from "@/lib/leagueJoin";
 import { requireAccountId } from "@/services/api-guards";
 import { apiFromLegacy, apiMethodNotAllowed } from "@/services/api-response";
@@ -38,23 +39,49 @@ export async function GET(request: Request) {
     const paymentStatus = extractPaymentStatus(paymentStatusPayload);
     const paid = paymentStatusResponse.ok && isLeagueJoinPaidStatus(paymentStatus);
 
+    const synced = await syncLeagueJoinPaymentStatus({
+      invoiceNumber,
+      providerStatus: paymentStatus,
+      providerPayload: paymentStatusPayload,
+    });
+
     if (!paid) {
       return apiFromLegacy(
         {
           paid: false,
           inserted: false,
           status: paymentStatus,
+          paymentTracked: synced.ok,
         },
         { status: 200 },
       );
     }
 
-    const insertResult = await insertLeagueTeamFromInvoice(invoiceNumber);
-    if (!insertResult.ok && insertResult.reason === "league_not_found") {
+    if (!synced.ok && synced.reason === "invalid_purpose") {
+      return apiFromLegacy(
+        { error: "Payment purpose is invalid for league join." },
+        { status: 400 },
+      );
+    }
+
+    const finalizeResult = await finalizeLeagueJoinFromInvoice(invoiceNumber);
+    if (!finalizeResult.ok && finalizeResult.reason === "league_not_found") {
       return apiFromLegacy({ error: "League not found." }, { status: 404 });
     }
 
-    if (!insertResult.ok) {
+    if (!finalizeResult.ok && finalizeResult.reason === "payment_not_paid") {
+      return apiFromLegacy(
+        {
+          paid: false,
+          inserted: false,
+          status: paymentStatus,
+          paymentTracked: synced.ok,
+        },
+        { status: 200 },
+      );
+    }
+
+    if (!finalizeResult.ok) {
       return apiFromLegacy(
         { error: "Failed to finalize league join." },
         { status: 400 },
@@ -64,8 +91,9 @@ export async function GET(request: Request) {
     return apiFromLegacy(
       {
         paid: true,
-        inserted: insertResult.inserted,
+        inserted: finalizeResult.inserted,
         status: paymentStatus,
+        paymentTracked: synced.ok,
       },
       { status: 200 },
     );

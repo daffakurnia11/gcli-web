@@ -66,6 +66,13 @@ const getSidebarItems = (
         label: "Investment",
         sidebar: true,
       },
+      { type: "group", title: "Payment" },
+      {
+        type: "item",
+        href: "/admin/payment",
+        label: "Recap",
+        sidebar: true,
+      },
       { type: "group", title: "League" },
       {
         type: "item",

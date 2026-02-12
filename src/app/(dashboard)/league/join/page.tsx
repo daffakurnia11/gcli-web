@@ -119,7 +119,7 @@ export default function LeagueJoinPage() {
     () =>
       availableLeagues.map((league) => ({
         value: String(league.id),
-        label: `${league.name} (${formatLeagueStatus(league.status)}) - Rp ${formatAmount(league.price)}`,
+        label: `${league.name} - Rp ${formatAmount(league.price)}`,
       })),
     [availableLeagues],
   );
@@ -405,15 +405,6 @@ export default function LeagueJoinPage() {
               <Typography.Paragraph className="text-sm text-primary-300">
                 End At: <span className="text-primary-100">{formatDateTime(selectedLeague.endAt, { fallback: "-" })}</span>
               </Typography.Paragraph>
-            </div>
-
-            <div className="space-y-2">
-              <Typography.Paragraph className="text-sm text-primary-300">
-                Rules Configuration
-              </Typography.Paragraph>
-              <pre className="max-h-56 overflow-auto rounded border border-primary-700 bg-primary-800/40 p-3 text-xs text-primary-100 whitespace-pre-wrap break-words">
-                {formatRulesJson(selectedLeague.rulesJson)}
-              </pre>
             </div>
 
             {actionError ? (

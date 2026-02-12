@@ -1,3 +1,9 @@
+import { Prisma } from "@prisma/client";
+
+import {
+  extractPaymentChannel,
+  LEAGUE_JOIN_PURPOSE_TYPE,
+} from "@/lib/leagueJoin";
 import { prisma } from "@/lib/prisma";
 import { resolveCitizenIdForAccount } from "@/lib/userCitizenId";
 import { leagueJoinCheckoutSchema } from "@/schemas/leagueJoin";
@@ -97,6 +103,12 @@ const extractCheckoutUrl = (payload: unknown): string | null => {
   }
 
   return null;
+};
+
+const toNullableJsonInput = (value: unknown) => {
+  return value === null
+    ? Prisma.JsonNull
+    : (value as Prisma.InputJsonValue);
 };
 
 export async function GET(request: Request) {
@@ -209,8 +221,7 @@ export async function POST(request: Request) {
       context.accountUsername ?? context.gangLabel ?? `ACC-${context.accountId}`;
 
     const paymentPayload = {
-      // callback_url: successRedirectUrl,
-      callback_url: 'https://webhook.site/bf0c8542-8975-485f-ad11-885706aff769',
+      callback_url: successRedirectUrl,
       return_url: successRedirectUrl,
       order: {
         amount: league.price,
@@ -235,6 +246,30 @@ export async function POST(request: Request) {
       },
     };
 
+    const paymentRecord = await prisma.payments.create({
+      data: {
+        invoice_number: invoiceNumber,
+        provider: "doku",
+        channel: null,
+        amount: league.price,
+        currency: "IDR",
+        status: "pending",
+        payer_account_id: context.accountId,
+        purpose_type: LEAGUE_JOIN_PURPOSE_TYPE,
+        purpose_ref: `${league.id}:${context.gangName}`,
+        metadata_json: {
+          leagueId: league.id,
+          leagueName: league.name,
+          gangCode: context.gangName,
+          gangName: context.gangLabel,
+          accountId: context.accountId,
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
     const paymentResponse = await fetch(
       `${PAYMENT_SERVICE_BASE_URL}/api/payments`,
       {
@@ -254,6 +289,15 @@ export async function POST(request: Request) {
         paymentResult?.message ||
         paymentResult?.error ||
         "Failed to initiate QRIS payment.";
+
+      await prisma.payments.update({
+        where: { id: paymentRecord.id },
+        data: {
+          status: "failed",
+          provider_payload_json: toNullableJsonInput(paymentResult),
+        },
+      });
+
       return apiFromLegacy(
         { error: errorMessage },
         { status: paymentResponse.status },
@@ -262,6 +306,17 @@ export async function POST(request: Request) {
 
     const upstreamData = paymentResult;
     const checkoutUrl = extractCheckoutUrl(upstreamData);
+    const paymentChannel = extractPaymentChannel(upstreamData);
+
+    await prisma.payments.update({
+      where: { id: paymentRecord.id },
+      data: {
+        checkout_url: checkoutUrl,
+        ...(paymentChannel ? { channel: paymentChannel } : {}),
+        provider_payload_json: toNullableJsonInput(upstreamData),
+        status: "pending",
+      },
+    });
 
     return apiFromLegacy(
       {

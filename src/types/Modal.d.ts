@@ -6,6 +6,7 @@ export interface GlobalModalProps {
   children: ReactNode;
   footer?: ReactNode;
   onClose: () => void;
+  size?: "md" | "lg" | "xl" | "2xl";
 }
 
 export interface ModalComponent {

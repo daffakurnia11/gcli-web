@@ -1,7 +1,8 @@
 import {
   extractPaymentStatus,
-  insertLeagueTeamFromInvoice,
+  finalizeLeagueJoinFromInvoice,
   isLeagueJoinPaidStatus,
+  syncLeagueJoinPaymentStatus,
 } from "@/lib/leagueJoin";
 import { apiMethodNotAllowed } from "@/services/api-response";
 import { logger } from "@/services/logger";
@@ -34,11 +35,17 @@ export async function GET(request: Request) {
     const paymentStatusPayload = await paymentStatusResponse.json().catch(() => null);
     const paymentStatus = extractPaymentStatus(paymentStatusPayload);
 
+    await syncLeagueJoinPaymentStatus({
+      invoiceNumber,
+      providerStatus: paymentStatus,
+      providerPayload: paymentStatusPayload,
+    });
+
     if (!paymentStatusResponse.ok || !isLeagueJoinPaidStatus(paymentStatus)) {
       return redirectToDashboard(request.url);
     }
 
-    const result = await insertLeagueTeamFromInvoice(invoiceNumber);
+    const result = await finalizeLeagueJoinFromInvoice(invoiceNumber);
     if (!result.ok && result.reason !== "league_not_found") {
       logger.error("Failed to finalize league join from callback", {
         invoiceNumber,

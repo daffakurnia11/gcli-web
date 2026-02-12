@@ -1,4 +1,7 @@
-import { insertLeagueTeamFromInvoice } from "@/lib/leagueJoin";
+import {
+  finalizeLeagueJoinFromInvoice,
+  syncLeagueJoinPaymentStatus,
+} from "@/lib/leagueJoin";
 import { apiFromLegacy, apiMethodNotAllowed } from "@/services/api-response";
 import { logger } from "@/services/logger";
 
@@ -19,6 +22,14 @@ export async function POST(request: Request) {
       rawBody && typeof rawBody === "object" && "invoiceNumber" in rawBody
         ? String((rawBody as { invoiceNumber?: unknown }).invoiceNumber ?? "")
         : "";
+    const providerStatus =
+      rawBody &&
+      typeof rawBody === "object" &&
+      "transactionStatus" in rawBody &&
+      typeof (rawBody as { transactionStatus?: unknown }).transactionStatus ===
+        "string"
+        ? String((rawBody as { transactionStatus?: string }).transactionStatus)
+        : null;
 
     if (!invoiceNumber) {
       return apiFromLegacy(
@@ -27,14 +38,36 @@ export async function POST(request: Request) {
       );
     }
 
-    const result = await insertLeagueTeamFromInvoice(invoiceNumber);
-    if (!result.ok && result.reason === "invalid_invoice") {
+    const synced = await syncLeagueJoinPaymentStatus({
+      invoiceNumber,
+      providerStatus,
+      providerPayload: rawBody,
+    });
+    if (!synced.ok && synced.reason === "payment_not_found") {
       return apiFromLegacy(
-        { error: "Invalid league invoice number." },
+        { error: "Payment not found." },
+        { status: 404 },
+      );
+    }
+
+    if (!synced.ok && synced.reason === "invalid_purpose") {
+      return apiFromLegacy(
+        { error: "Payment purpose is invalid for league join." },
         { status: 400 },
       );
     }
 
+    if (synced.ok && !synced.paid) {
+      return apiFromLegacy(
+        {
+          message: "Payment is not paid yet.",
+          inserted: false,
+        },
+        { status: 200 },
+      );
+    }
+
+    const result = await finalizeLeagueJoinFromInvoice(invoiceNumber);
     if (!result.ok && result.reason === "league_not_found") {
       return apiFromLegacy({ error: "League not found." }, { status: 404 });
     }

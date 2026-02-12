@@ -131,6 +131,31 @@ model league_match_results {
   @@index([result_status], map: "league_match_results_result_status_idx")
 }
 
+model payments {
+  id                    Int              @id @default(autoincrement())
+  invoice_number        String           @unique(map: "payments_invoice_number_key") @db.VarChar(128)
+  provider              String           @db.VarChar(50)
+  channel               String?          @db.VarChar(50)
+  amount                Int
+  currency              String           @default("IDR") @db.VarChar(10)
+  status                String           @db.VarChar(50)
+  checkout_url          String?          @db.VarChar(512)
+  payer_account_id      Int?
+  purpose_type          String           @db.VarChar(100)
+  purpose_ref           String?          @db.VarChar(191)
+  metadata_json         Json?
+  provider_payload_json Json?
+  paid_at               DateTime?        @db.Timestamp(0)
+  expired_at            DateTime?        @db.Timestamp(0)
+  created_at            DateTime         @default(now()) @db.Timestamp(0)
+  updated_at            DateTime         @updatedAt @db.Timestamp(0)
+
+  @@index([status], map: "payments_status_idx")
+  @@index([purpose_type], map: "payments_purpose_type_idx")
+  @@index([purpose_type, purpose_ref], map: "payments_purpose_lookup_idx")
+  @@index([payer_account_id], map: "payments_payer_account_id_idx")
+}
+
 model bans {
   id       Int     @id @default(autoincrement())
   name     String? @db.VarChar(50)

@@ -10,6 +10,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Logo } from "@/components";
 import { Typography } from "@/components/typography";
 
+import { getSidebarItems } from "./sidebar-menu.utils";
 import SidebarUserMenu from "./SidebarUserMenu";
 
 const PENDING_LEAGUE_JOIN_STORAGE_KEY = "gcli:leagueJoinPendingInvoice";
@@ -24,158 +25,6 @@ type DashboardShellProps = {
   hasCharinfo?: boolean;
   hasGang?: boolean;
   canAccessAdmin?: boolean;
-};
-
-type SidebarGroup = {
-  type: "group";
-  title: string;
-};
-
-type SidebarChildItem = {
-  href: string;
-  label: string;
-};
-
-type SidebarLinkItem = {
-  type: "item";
-  href: string;
-  label: string;
-  sidebar?: boolean;
-  children?: SidebarChildItem[];
-};
-
-type SidebarEntry = SidebarGroup | SidebarLinkItem;
-
-const getSidebarItems = (
-  isAdminRoute: boolean,
-  isGangBoss: boolean,
-  hasCharinfo: boolean,
-  hasGang: boolean,
-): SidebarEntry[] => {
-  if (isAdminRoute) {
-    return [
-      {
-        type: "item",
-        href: "/admin/overview",
-        label: "Overview",
-        sidebar: true,
-      },
-      {
-        type: "item",
-        href: "/admin/investment",
-        label: "Investment",
-        sidebar: true,
-      },
-      { type: "group", title: "Payment" },
-      {
-        type: "item",
-        href: "/admin/payment",
-        label: "Recap",
-        sidebar: true,
-      },
-      { type: "group", title: "League" },
-      {
-        type: "item",
-        href: "/admin/league/list",
-        label: "List",
-        sidebar: true,
-      },
-      { type: "item", href: "/profile", label: "Profile" },
-      { type: "item", href: "/settings", label: "Settings" },
-    ];
-  }
-
-  const baseItems: SidebarEntry[] = [
-    { type: "group", title: "Dashboard" },
-    { type: "item", href: "/dashboard", label: "Overview", sidebar: true },
-    { type: "item", href: "/profile", label: "Profile" },
-    { type: "item", href: "/settings", label: "Settings" },
-  ];
-
-  if (!hasCharinfo) {
-    return baseItems;
-  }
-
-  return [
-    ...baseItems.slice(0, 2),
-    { type: "group", title: "Player" },
-    { type: "item", href: "/character", label: "Character", sidebar: true },
-    { type: "item", href: "/inventory", label: "My Inventory", sidebar: true },
-    { type: "item", href: "/bank", label: "My Bank", sidebar: true },
-    { type: "group", title: "Payment" },
-    { type: "item", href: "/payment", label: "My Payments", sidebar: true },
-    { type: "group", title: "Team" },
-    ...(hasGang
-      ? ([
-          {
-            type: "item",
-            href: "/team/info",
-            label: "Overview",
-            sidebar: true,
-          },
-          {
-            type: "item",
-            href: "/team/members",
-            label: "Members",
-            sidebar: true,
-          },
-          {
-            type: "item",
-            href: "/team/inventory",
-            label: "Inventory",
-            sidebar: true,
-          },
-          ...(isGangBoss
-            ? [
-                {
-                  type: "item",
-                  href: "/team/bank",
-                  label: "Team Bank",
-                  sidebar: true,
-                },
-                {
-                  type: "item",
-                  href: "/team/investment",
-                  label: "Investment Bank",
-                  sidebar: true,
-                },
-                {
-                  type: "item",
-                  href: "/team/options",
-                  label: "Team Options",
-                  sidebar: true,
-                },
-              ]
-            : []),
-          { type: "group", title: "League" },
-          {
-            type: "item",
-            href: "/league/join",
-            label: "Join League",
-            sidebar: true,
-          },
-          { type: "group", title: "Log" },
-          {
-            type: "item",
-            href: "/kill-log",
-            label: "Kill Log",
-            sidebar: true,
-            children: [
-              { href: "/kill-log/kill", label: "Kill Records" },
-              { href: "/kill-log/dead", label: "Death Records" },
-            ],
-          },
-        ] as SidebarEntry[])
-      : ([
-          {
-            type: "item",
-            href: "/team/create",
-            label: "Create Team",
-            sidebar: true,
-          },
-        ] as SidebarEntry[])),
-    ...baseItems.slice(2),
-  ];
 };
 
 export default function DashboardShell({
@@ -289,11 +138,13 @@ export default function DashboardShell({
         return;
       }
 
-      let parsed: { invoiceNumber?: unknown; createdAt?: unknown } | null = null;
+      let parsed: { invoiceNumber?: unknown; createdAt?: unknown } | null =
+        null;
       try {
-        parsed = JSON.parse(rawStored) as
-          | { invoiceNumber?: unknown; createdAt?: unknown }
-          | null;
+        parsed = JSON.parse(rawStored) as {
+          invoiceNumber?: unknown;
+          createdAt?: unknown;
+        } | null;
       } catch {
         window.localStorage.removeItem(PENDING_LEAGUE_JOIN_STORAGE_KEY);
         return;
@@ -310,7 +161,10 @@ export default function DashboardShell({
         return;
       }
 
-      if (!Number.isFinite(createdAt) || Date.now() - createdAt > PENDING_LEAGUE_JOIN_MAX_AGE_MS) {
+      if (
+        !Number.isFinite(createdAt) ||
+        Date.now() - createdAt > PENDING_LEAGUE_JOIN_MAX_AGE_MS
+      ) {
         window.localStorage.removeItem(PENDING_LEAGUE_JOIN_STORAGE_KEY);
         return;
       }
@@ -328,12 +182,10 @@ export default function DashboardShell({
           return;
         }
 
-        const payload = (await response.json().catch(() => null)) as
-          | {
-              success?: boolean;
-              data?: { paid?: boolean };
-            }
-          | null;
+        const payload = (await response.json().catch(() => null)) as {
+          success?: boolean;
+          data?: { paid?: boolean };
+        } | null;
         const paid = payload?.success === true && payload.data?.paid === true;
         if (paid && !isCancelled) {
           window.localStorage.removeItem(PENDING_LEAGUE_JOIN_STORAGE_KEY);

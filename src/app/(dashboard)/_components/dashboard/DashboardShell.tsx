@@ -102,6 +102,8 @@ const getSidebarItems = (
     { type: "item", href: "/character", label: "Character", sidebar: true },
     { type: "item", href: "/inventory", label: "My Inventory", sidebar: true },
     { type: "item", href: "/bank", label: "My Bank", sidebar: true },
+    { type: "group", title: "Payment" },
+    { type: "item", href: "/payment", label: "My Payments", sidebar: true },
     { type: "group", title: "Team" },
     ...(hasGang
       ? ([

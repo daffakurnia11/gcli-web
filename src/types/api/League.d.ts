@@ -11,6 +11,7 @@ declare global {
     creatorUsername: string;
     price: number;
     maxTeam: number;
+    minPlayer: number;
     totalTeams: number;
     totalMatches: number;
     rulesJson?: unknown;
@@ -28,6 +29,7 @@ declare global {
     status: LeagueStatus;
     price: number;
     maxTeam: number;
+    minPlayer: number;
     startAt: string | null;
     endAt: string | null;
     rulesJson?: unknown;

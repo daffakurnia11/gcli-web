@@ -6,6 +6,7 @@ declare global {
     endAt: string;
     price: string;
     maxTeam: string;
+    minPlayer: string;
     rulesJson: string;
   };
 

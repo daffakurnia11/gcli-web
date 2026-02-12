@@ -104,6 +104,18 @@ export function LeagueForm({
           fullWidth
         />
 
+        <Form.Number
+          name="minPlayer"
+          label="Minimum Player"
+          value={values.minPlayer}
+          min={0}
+          onChange={(event) => updateField("minPlayer", event.target.value)}
+          error={errors.minPlayer}
+          helperText="Use 0 for no minimum requirement"
+          required
+          fullWidth
+        />
+
         <Form.Date
           name="startAt"
           label="Start At"

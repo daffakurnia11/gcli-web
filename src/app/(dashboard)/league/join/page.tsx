@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import {
@@ -26,22 +27,6 @@ const formatAmount = (value: number) => {
 
 const formatLeagueStatus = (status: LeagueStatus) =>
   `${status.charAt(0).toUpperCase()}${status.slice(1)}`;
-
-const formatRulesJson = (value: unknown) => {
-  if (value === undefined || value === null) {
-    return "No rules configured.";
-  }
-
-  if (typeof value === "string") {
-    return value.trim().length > 0 ? value : "No rules configured.";
-  }
-
-  try {
-    return JSON.stringify(value, null, 2);
-  } catch {
-    return String(value);
-  }
-};
 
 const memberColumns: Array<DataTableColumn<TeamMember>> = [
   {
@@ -85,6 +70,7 @@ const memberColumns: Array<DataTableColumn<TeamMember>> = [
 ];
 
 export default function LeagueJoinPage() {
+  const router = useRouter();
   const { createLeagueJoinCheckout } = useLeagueJoinApi();
 
   const {
@@ -109,6 +95,8 @@ export default function LeagueJoinPage() {
   const [actionError, setActionError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [isErrorModalOpen, setIsErrorModalOpen] = useState(false);
+  const [errorModalMessage, setErrorModalMessage] = useState("");
 
   const availableLeagues = useMemo(
     () => (leagueData?.leagues ?? []).filter((league) => !league.alreadyJoined),
@@ -136,7 +124,8 @@ export default function LeagueJoinPage() {
 
   const openConfirmModal = () => {
     if (!selectedLeagueId) {
-      setActionError("Please select a league first.");
+      setErrorModalMessage("Please select a league first.");
+      setIsErrorModalOpen(true);
       return;
     }
 
@@ -154,7 +143,8 @@ export default function LeagueJoinPage() {
   const submitJoin = async () => {
     const leagueId = Number.parseInt(selectedLeagueId, 10);
     if (!Number.isInteger(leagueId) || leagueId < 1) {
-      setActionError("Please select a league first.");
+      setErrorModalMessage("Please select a league first.");
+      setIsErrorModalOpen(true);
       return;
     }
 
@@ -176,15 +166,17 @@ export default function LeagueJoinPage() {
         return;
       }
 
-      setActionError(
+      setErrorModalMessage(
         "Payment created but checkout URL was not returned. Please contact admin.",
       );
+      setIsErrorModalOpen(true);
     } catch (submitError) {
-      setActionError(
+      setErrorModalMessage(
         submitError instanceof Error
           ? submitError.message
           : "Failed to create payment checkout.",
       );
+      setIsErrorModalOpen(true);
     } finally {
       setIsConfirmModalOpen(false);
       setIsSubmitting(false);
@@ -330,12 +322,6 @@ export default function LeagueJoinPage() {
                     </div>
                   ) : null}
 
-                  {actionError ? (
-                    <Typography.Paragraph className="text-tertiary-red text-sm">
-                      {actionError}
-                    </Typography.Paragraph>
-                  ) : null}
-
                   <Button.Primary
                     type="button"
                     variant="solid"
@@ -418,6 +404,40 @@ export default function LeagueJoinPage() {
             No league selected.
           </Typography.Paragraph>
         )}
+      </Modal.Global>
+
+      <Modal.Global
+        open={isErrorModalOpen}
+        title="Cannot Continue League Join"
+        onClose={() => setIsErrorModalOpen(false)}
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button.Secondary
+              type="button"
+              variant="outline"
+              onClick={() => setIsErrorModalOpen(false)}
+            >
+              Close
+            </Button.Secondary>
+            <Button.Primary
+              type="button"
+              variant="solid"
+              onClick={() => {
+                setIsErrorModalOpen(false);
+                router.push("/team/members");
+              }}
+            >
+              Manage Team Members
+            </Button.Primary>
+          </div>
+        }
+      >
+        <Typography.Paragraph className="text-primary-200">
+          {errorModalMessage || "Unable to continue checkout."}
+        </Typography.Paragraph>
+        <Typography.Paragraph className="mt-2 text-sm text-primary-300">
+          Invite more players from Team Members before joining this league.
+        </Typography.Paragraph>
       </Modal.Global>
     </div>
   );

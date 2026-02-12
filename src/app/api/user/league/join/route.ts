@@ -183,6 +183,7 @@ export async function POST(request: Request) {
         name: true,
         status: true,
         price: true,
+        min_player: true,
       },
     });
 
@@ -210,6 +211,24 @@ export async function POST(request: Request) {
         { error: "Your team has already joined this league." },
         { status: 409 },
       );
+    }
+
+    if (league.min_player > 0) {
+      const memberCount = await prisma.player_groups.count({
+        where: {
+          type: "gang",
+          group: context.gangName,
+        },
+      });
+
+      if (memberCount < league.min_player) {
+        return apiFromLegacy(
+          {
+            error: `Minimum ${league.min_player} team members required to join this league. Current members: ${memberCount}.`,
+          },
+          { status: 400 },
+        );
+      }
     }
 
     const invoiceNumber = `LEAGUE-${league.id}-${context.gangName}-${Date.now()}`;

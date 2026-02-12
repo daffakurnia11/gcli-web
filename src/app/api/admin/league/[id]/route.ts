@@ -72,6 +72,7 @@ export async function GET(
           creatorUsername,
           price: league.price,
           maxTeam: league.max_team,
+          minPlayer: league.min_player,
           totalTeams: teamCount,
           totalMatches: matchCount,
           rulesJson: league.rules_json,
@@ -139,6 +140,7 @@ export async function PUT(
       ...(payload.status !== undefined ? { status: payload.status } : {}),
       ...(payload.price !== undefined ? { price: payload.price } : {}),
       ...(payload.maxTeam !== undefined ? { max_team: payload.maxTeam } : {}),
+      ...(payload.minPlayer !== undefined ? { min_player: payload.minPlayer } : {}),
       ...(payload.startAt !== undefined ? { start_at: startAt } : {}),
       ...(payload.endAt !== undefined ? { end_at: endAt } : {}),
       ...(payload.rulesJson !== undefined
@@ -175,6 +177,7 @@ export async function PUT(
           creatorUsername,
           price: updated.price,
           maxTeam: updated.max_team,
+          minPlayer: updated.min_player,
           totalTeams: teamCount,
           totalMatches: matchCount,
           rulesJson: updated.rules_json,

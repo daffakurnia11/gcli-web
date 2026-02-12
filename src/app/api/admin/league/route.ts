@@ -138,6 +138,7 @@ export async function GET(request: Request) {
         creatorUsername,
         price: league.price,
         maxTeam: league.max_team,
+        minPlayer: league.min_player,
         totalTeams: teamCountMap.get(league.id) ?? 0,
         totalMatches: matchCountMap.get(league.id) ?? 0,
         rulesJson: league.rules_json,
@@ -206,6 +207,7 @@ export async function POST(request: Request) {
         creator: String(account.user_id),
         price: payload.price,
         max_team: payload.maxTeam,
+        min_player: payload.minPlayer,
         start_at: payload.startAt ? new Date(payload.startAt) : null,
         end_at: payload.endAt ? new Date(payload.endAt) : null,
         rules_json:
@@ -232,6 +234,7 @@ export async function POST(request: Request) {
           creatorUsername: creatorMap.get(creatorUserId) ?? created.creator,
           price: created.price,
           maxTeam: created.max_team,
+          minPlayer: created.min_player,
           totalTeams: 0,
           totalMatches: 0,
           rulesJson: created.rules_json,

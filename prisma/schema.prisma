@@ -43,6 +43,7 @@ model leagues {
   end_at               DateTime?              @db.Timestamp(0)
   creator              String                 @db.VarChar(100)
   price                Int
+  min_player           Int                    @default(0)
   max_team             Int                    @default(0)
   rules_json           Json?
   created_at           DateTime               @default(now()) @db.Timestamp(0)

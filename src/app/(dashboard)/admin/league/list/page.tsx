@@ -26,6 +26,7 @@ const defaultLeagueForm: LeagueFormValues = {
   endAt: "",
   price: "0",
   maxTeam: "0",
+  minPlayer: "0",
   rulesJson: "",
 };
 
@@ -96,6 +97,7 @@ export default function LeagueListPage() {
       endAt: toDateTimeLocalValue(league.endAt),
       price: String(league.price),
       maxTeam: String(league.maxTeam),
+      minPlayer: String(league.minPlayer),
       rulesJson: league.rulesJson ? JSON.stringify(league.rulesJson) : "",
     });
     setFormActionError("");

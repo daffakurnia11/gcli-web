@@ -39,6 +39,10 @@ export const leagueFormSchema = z
       .string()
       .min(1, "Max team is required")
       .regex(/^\d+$/, "Max team must be a non-negative integer"),
+    minPlayer: z
+      .string()
+      .min(1, "Minimum player is required")
+      .regex(/^\d+$/, "Minimum player must be a non-negative integer"),
     rulesJson: z
       .string()
       .optional()
@@ -73,6 +77,7 @@ const leagueUpsertBaseSchema = z.object({
   endAt: z.string().datetime().nullable().optional(),
   price: z.number().int().min(0),
   maxTeam: z.number().int().min(0),
+  minPlayer: z.number().int().min(0),
   rulesJson: z.unknown().optional(),
 });
 
@@ -118,5 +123,6 @@ export const toLeaguePayload = (form: LeagueFormValues): AdminLeagueUpsertPayloa
   endAt: form.endAt ? new Date(form.endAt).toISOString() : null,
   price: Number.parseInt(form.price, 10),
   maxTeam: Number.parseInt(form.maxTeam, 10),
+  minPlayer: Number.parseInt(form.minPlayer, 10),
   rulesJson: parseJson(form.rulesJson),
 });

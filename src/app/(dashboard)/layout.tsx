@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import DashboardShell from "@/app/(dashboard)/_components/dashboard/DashboardShell";
 import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 export default async function DashboardLayout({
   children,
@@ -24,6 +25,12 @@ export default async function DashboardLayout({
   const hasGang = Boolean(
     session?.user?.gang?.name && session.user.gang.name !== "none",
   );
+  const gangCode = session?.user?.gang?.name?.toLowerCase() ?? null;
+  const hasJoinedLeague = hasGang && gangCode
+    ? (await prisma.league_teams.count({
+        where: { code: gangCode },
+      })) > 0
+    : false;
   const canAccessAdmin = session?.user?.optin === true;
 
   return (
@@ -34,6 +41,7 @@ export default async function DashboardLayout({
       isGangBoss={isGangBoss}
       hasCharinfo={hasCharinfo}
       hasGang={hasGang}
+      hasJoinedLeague={hasJoinedLeague}
       canAccessAdmin={canAccessAdmin}
     >
       {children}

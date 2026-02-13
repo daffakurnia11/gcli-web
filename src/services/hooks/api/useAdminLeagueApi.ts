@@ -28,9 +28,16 @@ export function useAdminLeagueApi() {
     });
   };
 
+  const startLeague = async (id: number) => {
+    return apiRequest<unknown>(`/api/admin/league/${id}/start`, {
+      method: "POST",
+    });
+  };
+
   return {
     createLeague,
     updateLeague,
     deleteLeague,
+    startLeague,
   };
 }

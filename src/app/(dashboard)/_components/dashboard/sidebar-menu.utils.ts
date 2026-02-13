@@ -45,6 +45,18 @@ const ADMIN_MENU_ITEMS: SidebarEntry[] = [
     label: "List",
     sidebar: true,
   },
+  {
+    type: "item",
+    href: "/admin/league/status",
+    label: "Status",
+    sidebar: true,
+  },
+  {
+    type: "item",
+    href: "/admin/league/schedule",
+    label: "Schedule",
+    sidebar: true,
+  },
   { type: "item", href: "/profile", label: "Profile" },
   { type: "item", href: "/settings", label: "Settings" },
 ];
@@ -110,6 +122,11 @@ const TEAM_MENU_ITEMS_FOR_MEMBER = (): SidebarEntry[] => [
   },
 ];
 
+const LEAGUE_MENU_TRACKING_CHILDREN: SidebarChildItem[] = [
+  { href: "/league/status", label: "Status" },
+  { href: "/league/schedule", label: "Schedule" },
+];
+
 const TEAM_BOSS_CHILDREN: SidebarChildItem[] = [
   { href: "/team/bank", label: "Team Bank" },
   { href: "/team/investment", label: "Investment Bank" },
@@ -130,6 +147,7 @@ export const getSidebarItems = (
   isGangBoss: boolean,
   hasCharinfo: boolean,
   hasGang: boolean,
+  hasJoinedLeague: boolean,
 ): SidebarEntry[] => {
   if (isAdminRoute) {
     return ADMIN_MENU_ITEMS;
@@ -141,6 +159,15 @@ export const getSidebarItems = (
 
   const teamItems = hasGang
     ? TEAM_MENU_ITEMS_FOR_MEMBER().map((item) => {
+        if (item.type === "item" && item.href === "/league" && item.children) {
+          return {
+            ...item,
+            children: hasJoinedLeague
+              ? LEAGUE_MENU_TRACKING_CHILDREN
+              : item.children,
+          };
+        }
+
         if (
           item.type !== "item" ||
           item.href !== "/team" ||

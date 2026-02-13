@@ -24,6 +24,7 @@ type DashboardShellProps = {
   isGangBoss?: boolean;
   hasCharinfo?: boolean;
   hasGang?: boolean;
+  hasJoinedLeague?: boolean;
   canAccessAdmin?: boolean;
 };
 
@@ -35,6 +36,7 @@ export default function DashboardShell({
   isGangBoss = false,
   hasCharinfo = false,
   hasGang = false,
+  hasJoinedLeague = false,
   canAccessAdmin = false,
 }: DashboardShellProps) {
   const pathname = usePathname();
@@ -44,8 +46,14 @@ export default function DashboardShell({
   const userMenuRef = useRef<HTMLDivElement>(null);
   const sidebarItems = useMemo(
     () =>
-      getSidebarItems(Boolean(isAdminRoute), isGangBoss, hasCharinfo, hasGang),
-    [isAdminRoute, isGangBoss, hasCharinfo, hasGang],
+      getSidebarItems(
+        Boolean(isAdminRoute),
+        isGangBoss,
+        hasCharinfo,
+        hasGang,
+        hasJoinedLeague,
+      ),
+    [isAdminRoute, isGangBoss, hasCharinfo, hasGang, hasJoinedLeague],
   );
   const matchesPath = useCallback(
     (href: string) => pathname === href || pathname?.startsWith(`${href}/`),
@@ -53,7 +61,7 @@ export default function DashboardShell({
   );
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
-    getSidebarItems(false, false, false, false).forEach((entry) => {
+    getSidebarItems(false, false, false, false, false).forEach((entry) => {
       if (entry.type !== "item" || !entry.children?.length) {
         return;
       }

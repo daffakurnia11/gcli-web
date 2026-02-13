@@ -67,10 +67,15 @@ export default function LeagueListPage() {
   const [searchInput, setSearchInput] = useState("");
   const [query, setQuery] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingLeague, setEditingLeague] = useState<AdminLeagueItem | null>(null);
-  const [formValues, setFormValues] = useState<LeagueFormValues>(defaultLeagueForm);
+  const [editingLeague, setEditingLeague] = useState<AdminLeagueItem | null>(
+    null,
+  );
+  const [formValues, setFormValues] =
+    useState<LeagueFormValues>(defaultLeagueForm);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [deletingLeague, setDeletingLeague] = useState<AdminLeagueItem | null>(null);
+  const [deletingLeague, setDeletingLeague] = useState<AdminLeagueItem | null>(
+    null,
+  );
   const [formActionError, setFormActionError] = useState("");
   const [tableActionError, setTableActionError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -167,7 +172,9 @@ export default function LeagueListPage() {
       closeForm();
     } catch (requestError) {
       setFormActionError(
-        requestError instanceof Error ? requestError.message : "Failed to save league.",
+        requestError instanceof Error
+          ? requestError.message
+          : "Failed to save league.",
       );
     } finally {
       setIsSubmitting(false);
@@ -181,22 +188,18 @@ export default function LeagueListPage() {
         header: "League",
         render: (row) => (
           <div className="space-y-1">
-            <Typography.Paragraph className="text-primary-100 font-semibold">
+            <Typography.Paragraph className="text-primary-100 font-semibold mb-0!">
               {row.name}
             </Typography.Paragraph>
-            <Typography.Small className="text-primary-300">ID: {row.id}</Typography.Small>
+            <Typography.Small className="text-primary-300">
+              ID: {row.id}
+            </Typography.Small>
+            <span
+              className={`inline-flex rounded-md border mt-2 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide ${getStatusClassName(row.status)}`}
+            >
+              {row.status}
+            </span>
           </div>
-        ),
-      },
-      {
-        key: "status",
-        header: "Status",
-        render: (row) => (
-          <span
-            className={`inline-flex rounded-md border px-2.5 py-1 text-xs font-semibold uppercase tracking-wide ${getStatusClassName(row.status)}`}
-          >
-            {row.status}
-          </span>
         ),
       },
       {
@@ -242,7 +245,9 @@ export default function LeagueListPage() {
         align: "right",
         render: (row) => (
           <Typography.Paragraph className="text-primary-100">
-            {row.maxTeam === 0 ? "Unlimited" : numberFormatter.format(row.maxTeam)}
+            {row.maxTeam === 0
+              ? "Unlimited"
+              : numberFormatter.format(row.maxTeam)}
           </Typography.Paragraph>
         ),
       },
@@ -272,6 +277,15 @@ export default function LeagueListPage() {
         align: "center",
         render: (row) => (
           <div className="flex items-center justify-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                window.location.href = `/admin/league/list/${row.id}`;
+              }}
+              className="rounded border border-secondary-700 px-2 py-1 text-xs text-secondary-700 hover:bg-secondary-700/15 transition-colors"
+            >
+              Detail
+            </button>
             <button
               type="button"
               onClick={() => openEditForm(row)}
@@ -442,7 +456,8 @@ export default function LeagueListPage() {
               : "Delete selected league?"}
           </Typography.Paragraph>
           <Typography.Paragraph className="text-sm text-tertiary-red">
-            This action cannot be undone and may remove related teams and matches.
+            This action cannot be undone and may remove related teams and
+            matches.
           </Typography.Paragraph>
           {tableActionError ? (
             <Typography.Paragraph className="text-sm text-tertiary-red">
